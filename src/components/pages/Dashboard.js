@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase'; // Assure-toi que ton fichier firebase.js contient les bonnes configurations Firebase
-import { onAuthStateChanged } from 'firebase/auth';
-import { MDBContainer } from 'mdb-react-ui-kit';  // Ou ton propre design
+import { onAuthStateChanged, signOut } from 'firebase/auth'; // Importation de signOut pour déconnexion
+import { MDBContainer, MDBBtn } from 'mdb-react-ui-kit'; // Ou ton propre design
 
 function Dashboard() {
   const [user, setUser] = useState(null);
@@ -37,13 +37,43 @@ function Dashboard() {
     return () => unsubscribe();  // Clean-up de l'abonnement
   }, [navigate]);
 
+  // Fonction de déconnexion
+  const handleLogout = async () => {
+    try {
+      // Déconnexion avec Firebase
+      await signOut(auth); 
+      console.log('Utilisateur déconnecté');
+
+      // Vider le localStorage et le sessionStorage pour effacer les informations persistantes
+      localStorage.removeItem('user');
+      sessionStorage.clear();  // Effacer le sessionStorage
+
+      // Vider le cache du navigateur
+      if ('caches' in window) {
+        caches.keys().then(cacheNames => {
+          cacheNames.forEach(cacheName => {
+            caches.delete(cacheName);  // Supprimer tous les caches
+          });
+        });
+      }
+
+      // Redirection vers la page de connexion
+      navigate('/login');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion :', error);
+    }
+  };
+
   return (
     <MDBContainer>
       <h1>Bienvenue sur votre dashboard</h1>
       {user ? (
         <div>
           <p>Utilisateur connecté : {user}</p>
-          {/* Tu peux ajouter plus de contenu et de fonctionnalités pour l'utilisateur ici */}
+          {/* Affichage du bouton de déconnexion */}
+          <MDBBtn color="danger" size="lg" onClick={handleLogout}>
+            Déconnexion
+          </MDBBtn>
         </div>
       ) : (
         <p>Chargement...</p>  // Cela se produira si la vérification de l'authentification prend un peu de temps

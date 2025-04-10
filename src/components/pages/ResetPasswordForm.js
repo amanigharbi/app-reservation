@@ -1,53 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { auth } from '../../firebase';
+import { confirmPasswordReset } from 'firebase/auth';
 import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBInput } from 'mdb-react-ui-kit';
-import { auth } from '../../firebase'; // Importer auth de firebase.js
-import { sendPasswordResetEmail, fetchSignInMethodsForEmail } from 'firebase/auth'; // Importer la fonction fetchSignInMethodsForEmail
-import { Link } from 'react-router-dom';
-import '../styles/Pages.css';
-import 'mdb-react-ui-kit/dist/css/mdb.min.css'; // Importation du CSS de MDB React UI Kit
 import logo from '../../images/logo.png'; // Importer le logo
+import { Link } from 'react-router-dom';
 
-function ResetPassword() {
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
+function ResetPasswordForm() {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false); // Indicateur de chargement
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Récupérer le code de réinitialisation dans l'URL
+  const urlParams = new URLSearchParams(location.search);
+  const oobCode = urlParams.get('oobCode'); // 'oobCode' est le code de réinitialisation dans l'URL
+
+  useEffect(() => {
+    // Vérifier si le code est valide (peut être ajouté si nécessaire)
+    if (!oobCode) {
+      setError('Code de réinitialisation invalide.');
+    }
+  }, [oobCode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
 
-    if (!email) {
-      setError('Veuillez entrer une adresse email.');
+    if (!newPassword || !confirmPassword) {
+      setError('Veuillez entrer les deux mots de passe.');
       return;
     }
 
-    // Simple validation pour vérifier si l'email est bien formé
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-      setError('L\'adresse email n\'est pas valide.');
+    if (newPassword !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas.');
       return;
     }
 
-    setLoading(true);  // Démarrer l'animation de chargement
+    setLoading(true);
 
     try {
-      // Vérification si l'email existe dans la base de données
-      const methods = await fetchSignInMethodsForEmail(auth, email);
-      if (methods.length === 0) {
-        setError('Aucun utilisateur trouvé avec cet email.');
-        setLoading(false);
-        return;
-      }
+      // Confirmer le code et réinitialiser le mot de passe
+      await confirmPasswordReset(auth, oobCode, newPassword);
+      setMessage('Le mot de passe a été réinitialisé avec succès.');
+      
+      // Redirection vers la page de connexion après réinitialisation
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
 
-      // Si l'email existe, on envoie le lien de réinitialisation
-      await sendPasswordResetEmail(auth, email);
-      setMessage('Un lien de réinitialisation a été envoyé à votre adresse email.');
     } catch (err) {
-      setError('Une erreur s\'est produite. Veuillez vérifier l\'adresse email.');
+      setError('Une erreur s\'est produite. Veuillez vérifier le code de réinitialisation.');
     } finally {
-      setLoading(false);  // Arrêter l'animation de chargement
+      setLoading(false);
     }
   };
 
@@ -68,7 +77,7 @@ function ResetPassword() {
             <img src={logo} alt="ReserGo Logo" className="img-fluid" style={{ maxWidth: '200px', maxHeight: '150px', marginTop: '-10%' }} />
           </div>
 
-          <h3 className="text-center mb-4">Réinitialiser le mot de passe</h3>
+          <h3 className="text-center mb-4">Réinitialiser votre mot de passe</h3>
 
           {/* Affichage du message d'erreur ou de confirmation */}
           {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
@@ -76,12 +85,22 @@ function ResetPassword() {
 
           <MDBInput
             wrapperClass='mb-4'
-            label='Adresse e-mail'
+            label='Nouveau mot de passe'
             id='formControlLg'
-            type='email'
+            type='password'
             size="lg"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}  // Mettre à jour l'email
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+
+          <MDBInput
+            wrapperClass='mb-4'
+            label='Confirmer le mot de passe'
+            id='formControlLg'
+            type='password'
+            size="lg"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
           />
 
           <div className='text-center text-md-center mt-4 pt-2'>
@@ -92,7 +111,7 @@ function ResetPassword() {
               style={{ textTransform: 'none' }}
               disabled={loading}  // Désactiver le bouton pendant l'envoi
             >
-              {loading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
+              {loading ? 'Réinitialisation en cours...' : 'Réinitialiser le mot de passe'}
             </MDBBtn>
           </div>
 
@@ -114,4 +133,4 @@ function ResetPassword() {
   );
 }
 
-export default ResetPassword;
+export default ResetPasswordForm;
