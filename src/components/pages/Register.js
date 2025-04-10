@@ -104,7 +104,7 @@ function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccessMessage(''); // Réinitialiser le message de succès
+    setSuccessMessage(''); 
   
     // Vérification des erreurs avant l'envoi
     if (Object.values(formErrors).some((error) => error !== '')) {

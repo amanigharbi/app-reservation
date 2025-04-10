@@ -9,20 +9,6 @@ function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkUser = () => {
-      const savedUser = localStorage.getItem('user');  // Vérifier si l'utilisateur est dans le localStorage
-
-      if (savedUser) {
-        // Si l'utilisateur est dans le localStorage, on l'affiche
-        setUser(savedUser);
-      } else {
-        // Si l'utilisateur n'est pas connecté, on redirige vers la page de login
-        navigate('/login');
-      }
-    };
-
-    checkUser();
-
     // Vérification de l'état d'authentification Firebase (en temps réel)
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -31,6 +17,7 @@ function Dashboard() {
       } else {
         // Utilisateur déconnecté
         setUser(null);
+        navigate('/login');  // Redirige vers la page de login si l'utilisateur est déconnecté
       }
     });
 

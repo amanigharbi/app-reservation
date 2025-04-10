@@ -32,17 +32,18 @@ function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);  // Connexion avec Firebase
       setSuccessMessage('Utilisateur connecté avec succès');
-      console.log('Utilisateur connecté avec succès');
+      console.log('Utilisateur connecté avec succès' + rememberMe);
 
       // Si "Se souvenir de moi" est coché, stocker l'état de l'utilisateur dans localStorage
       if (rememberMe) {
-        localStorage.setItem('user', email);  // Tu peux stocker plus d'infos si nécessaire (par exemple un token ou UID)
+        localStorage.setItem('user', email);  // Redirection immédiate après succès
       } else {
-        localStorage.removeItem('user');
+        localStorage.setItem('user', false);
+         // Redirection immédiate après succès
       }
+      navigate('/dashboard');  
 
-      // Redirection immédiate après succès
-      navigate('/dashboard');  // Redirige vers une page après connexion
+   
     } catch (err) {
       setError('Email ou mot de passe incorrect');
     }
@@ -59,12 +60,15 @@ function Login() {
       // Si "Se souvenir de moi" est coché, stocker l'état de l'utilisateur dans localStorage
       if (rememberMe) {
         localStorage.setItem('user', user.email);  // Stocker l'email de l'utilisateur dans le localStorage
+         // Redirection immédiate après succès
+      navigate('/dashboard');  
       } else {
-        localStorage.removeItem('user');
+        localStorage.setItem('user', false);
+         // Redirection immédiate après succès
+      navigate('/dashboard');  
       }
 
-      // Redirection immédiate après succès
-      navigate('/dashboard');  // Redirige vers une page après connexion
+     // Redirige vers une page après connexion
     } catch (err) {
       setError('Erreur lors de la connexion avec Google');
       console.error('Erreur de connexion Google:', err);
@@ -95,11 +99,11 @@ function Login() {
               <MDBIcon fab icon='google' />
             </MDBBtn>
             <MDBBtn floating size='md' tag='a' className='me-2'>
-                       <MDBIcon fab icon='facebook-f' />
-                     </MDBBtn>
-                     <MDBBtn floating size='md' tag='a' className='me-2'>
-                       <MDBIcon fab icon='twitter' />
-                     </MDBBtn>
+              <MDBIcon fab icon='facebook-f' />
+            </MDBBtn>
+            <MDBBtn floating size='md' tag='a' className='me-2'>
+              <MDBIcon fab icon='twitter' />
+            </MDBBtn>
           </div>
 
           <div className="divider d-flex align-items-center my-4">
@@ -183,3 +187,4 @@ function Login() {
 }
 
 export default Login;
+  
