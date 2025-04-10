@@ -4,6 +4,7 @@ import { auth } from '../../firebase'; // Importer auth de firebase.js
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Importer la fonction pour la connexion
 import '../styles/LoginPage.css';
 import 'mdb-react-ui-kit/dist/css/mdb.min.css'; // Importation du CSS de MDB React UI Kit
+import { Link } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -82,7 +83,10 @@ function Login() {
 
           <div className='text-center text-md-start mt-4 pt-2'>
             <MDBBtn className="mb-0 px-5" size='lg' onClick={handleSubmit}>Se connecter</MDBBtn>
-            <p className="small fw-bold mt-2 pt-1 mb-2">Vous n'avez pas de compte ? <a href="#!" className="link-danger">S'inscrire</a></p>
+            <p className="small fw-bold mt-2 pt-1 mb-2">Vous n'avez pas de compte ? 
+            <Link to="/register" className="link-danger">S'inscrire</Link>
+
+                </p>
           </div>
         </MDBCol>
       </MDBRow>
