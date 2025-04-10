@@ -1,16 +1,15 @@
-// src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";  // Importer l'authentification
-import { getFirestore } from "firebase/firestore";  // Firestore pour la base de données
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore"; // Importer Firestore pour ajouter des documents
 
 // Configuration de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDzLDIpLYo0OnBrfgA5d9hz7dVv5m3S24g",
-  authDomain: "app-reservation-d30ab.firebaseapp.com",
-  projectId: "app-reservation-d30ab",
-  storageBucket: "app-reservation-d30ab.firebasestorage.app",
-  messagingSenderId: "305156149086",
-  appId: "1:305156149086:web:350eb8b892aa58573d09cf"
+  apiKey: "AIzaSyBFp1fyxgoDaH_PC1looZNUvWhrqX2zk0Y",
+  authDomain: "app-reservation-2.firebaseapp.com",
+  projectId: "app-reservation-2",
+  storageBucket: "app-reservation-2.firebasestorage.app",
+  messagingSenderId: "136303015264",
+  appId: "1:136303015264:web:b39a396f8472d27f1cda05"
 };
 
 // Initialiser l'application Firebase
@@ -21,4 +20,4 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Exporter les instances pour les utiliser ailleurs dans ton application
-export { auth, db };
+export { auth, db, createUserWithEmailAndPassword, setDoc, doc };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBIcon, MDBInput } from 'mdb-react-ui-kit';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebase';
+import { auth, db, setDoc, doc } from '../../firebase'; // Importer Firestore pour ajouter les données
 import '../styles/Pages.css';
 import 'mdb-react-ui-kit/dist/css/mdb.min.css';
 import { useNavigate } from 'react-router-dom';
@@ -15,23 +15,127 @@ function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState({
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [successMessage, setSuccessMessage] = useState(''); // Message de succès
   const navigate = useNavigate();
+
+  // Fonction de validation du mot de passe
+  const validatePassword = (password) => {
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return regex.test(password);
+  };
+
+  // Fonction pour gérer la vérification en temps réel
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+
+    // Mettre à jour la valeur du champ
+    switch (id) {
+      case 'firstName':
+        setFirstName(value);
+        break;
+      case 'lastName':
+        setLastName(value);
+        break;
+      case 'username':
+        setUsername(value);
+        break;
+      case 'email':
+        setEmail(value);
+        break;
+      case 'password':
+        setPassword(value);
+        break;
+      case 'confirmPassword':
+        setConfirmPassword(value);
+        break;
+      default:
+        break;
+    }
+
+    // Validation en temps réel des champs
+    let errors = { ...formErrors };
+
+    switch (id) {
+      case 'firstName':
+        errors.firstName = value ? '' : "Le prénom est requis.";
+        break;
+      case 'lastName':
+        errors.lastName = value ? '' : "Le nom est requis.";
+        break;
+      case 'username':
+        errors.username = value ? '' : "Le nom d'utilisateur est requis.";
+        break;
+      case 'email':
+        errors.email = value
+          ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+            ? ''
+            : "Veuillez entrer un email valide."
+          : "L'adresse e-mail est requise.";
+        break;
+      case 'password':
+        errors.password = value
+          ? validatePassword(value)
+            ? ''
+            : "Le mot de passe doit contenir au moins 8 caractères, une lettre majuscule, une lettre minuscule, un chiffre et un caractère spécial."
+          : "Le mot de passe est requis.";
+        break;
+      case 'confirmPassword':
+        errors.confirmPassword = value
+          ? value === password
+            ? ''
+            : "Les mots de passe ne correspondent pas."
+          : "La confirmation du mot de passe est requise.";
+        break;
+      default:
+        break;
+    }
+
+    setFormErrors(errors);
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
+    setSuccessMessage(''); // Réinitialiser le message de succès
+  
+    // Vérification des erreurs avant l'envoi
+    if (Object.values(formErrors).some((error) => error !== '')) {
+      setError("Veuillez corriger les erreurs avant de soumettre le formulaire.");
       return;
     }
-
+  
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      console.log('Utilisateur inscrit avec succès');
-      navigate('/dashboard');
+      // Créer l'utilisateur avec Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
+      // Sauvegarder les informations supplémentaires dans Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        firstName,
+        lastName,
+        username,
+        email,
+        createdAt: new Date()
+      });
+  
+      // Afficher le message de succès
+      setSuccessMessage("Utilisateur inscrit avec succès ! Vous allez être redirigé vers la page de connexion.");
+  
+      // Redirection après 5 secondes
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000); // Redirige après 5 secondes
+  
     } catch (err) {
-      console.error(err);
+      console.error('Erreur lors de l\'inscription:', err);
       setError("Erreur lors de la création du compte. L'email est peut-être déjà utilisé.");
     }
   };
@@ -48,12 +152,12 @@ function Register() {
         </MDBCol>
 
         <MDBCol col='4' md='6'>
-        <div className="d-flex flex-row align-items-center justify-content-center">
-            <img src={logo} alt="ReserGo Logo" className="img-fluid" style={{ maxWidth: '200px' , maxHeight :'150px' ,marginTop:'-15%'}} />
+          <div className="d-flex flex-row align-items-center justify-content-center">
+            <img src={logo} alt="ReserGo Logo" className="img-fluid" style={{ maxWidth: '200px', maxHeight: '150px', marginTop: '-15%' }} />
           </div>
+
           <div className="d-flex flex-row align-items-center justify-content-center">
             <p className="lead fw-normal mb-0 me-3">S'inscrire avec</p>
-
             <MDBBtn floating size='md' tag='a' className='me-2'>
               <MDBIcon fab icon='facebook-f' />
             </MDBBtn>
@@ -69,7 +173,11 @@ function Register() {
             <p className="text-center fw-bold mx-3 mb-0">Ou</p>
           </div>
 
+          {/* Affichage des erreurs globales */}
           {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+
+          {/* Affichage du message de succès */}
+          {successMessage && <p style={{ color: 'green', textAlign: 'center' }}>{successMessage}</p>}
 
           {/* Prénom & Nom */}
           <MDBRow className="mb-4">
@@ -80,8 +188,9 @@ function Register() {
                 type='text'
                 size="lg"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={handleInputChange}
               />
+              {formErrors.firstName && <p style={{ color: 'red' }}>{formErrors.firstName}</p>}
             </MDBCol>
             <MDBCol md="6">
               <MDBInput
@@ -90,8 +199,9 @@ function Register() {
                 type='text'
                 size="lg"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={handleInputChange}
               />
+              {formErrors.lastName && <p style={{ color: 'red' }}>{formErrors.lastName}</p>}
             </MDBCol>
           </MDBRow>
 
@@ -103,8 +213,9 @@ function Register() {
             type='text'
             size="lg"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={handleInputChange}
           />
+          {formErrors.username && <p style={{ color: 'red' }}>{formErrors.username}</p>}
 
           {/* Email */}
           <MDBInput
@@ -114,8 +225,9 @@ function Register() {
             type='email'
             size="lg"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleInputChange}
           />
+          {formErrors.email && <p style={{ color: 'red' }}>{formErrors.email}</p>}
 
           {/* Mot de passe & Confirmation */}
           <MDBRow className="mb-4">
@@ -126,8 +238,9 @@ function Register() {
                 type='password'
                 size="lg"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handleInputChange}
               />
+              {formErrors.password && <p style={{ color: 'red' }}>{formErrors.password}</p>}
             </MDBCol>
             <MDBCol md="6">
               <MDBInput
@@ -136,15 +249,16 @@ function Register() {
                 type='password'
                 size="lg"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={handleInputChange}
               />
+              {formErrors.confirmPassword && <p style={{ color: 'red' }}>{formErrors.confirmPassword}</p>}
             </MDBCol>
           </MDBRow>
 
           <div className='text-center text-md-center mt-4 pt-2'>
             <MDBBtn className="mb-0 px-5" size='lg' onClick={handleRegister} style={{ textTransform: 'none' }}>S'inscrire</MDBBtn>
             <p className="small fw-bold mt-2 pt-1 mb-2">
-              Vous avez déjà un compte ? <a href="/" className="link-danger">Se connecter</a>
+              Vous avez déjà un compte ? <a href="/login" className="link-danger">Se connecter</a>
             </p>
           </div>
         </MDBCol>
@@ -154,21 +268,6 @@ function Register() {
         <div className="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
           <div className="text-white mb-3 mb-md-0">
             Copyright © 2025. Tous droits réservés.
-          </div>
-
-          <div>
-            <MDBBtn tag='a' color='none' className='mx-3' style={{ color: 'white' }}>
-              <MDBIcon fab icon='facebook-f' size="md" />
-            </MDBBtn>
-            <MDBBtn tag='a' color='none' className='mx-3' style={{ color: 'white' }}>
-              <MDBIcon fab icon='twitter' size="md" />
-            </MDBBtn>
-            <MDBBtn tag='a' color='none' className='mx-3' style={{ color: 'white' }}>
-              <MDBIcon fab icon='google' size="md" />
-            </MDBBtn>
-            <MDBBtn tag='a' color='none' className='mx-3' style={{ color: 'white' }}>
-              <MDBIcon fab icon='linkedin-in' size="md" />
-            </MDBBtn>
           </div>
         </div>
       </footer>
