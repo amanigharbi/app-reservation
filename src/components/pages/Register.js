@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBIcon, MDBInput } from 'mdb-react-ui-kit';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db, setDoc, doc } from '../../firebase'; // Importer Firestore pour ajouter les données
 import '../styles/Pages.css';
 import 'mdb-react-ui-kit/dist/css/mdb.min.css';
@@ -132,11 +132,40 @@ function Register() {
       // Redirection après 5 secondes
       setTimeout(() => {
         navigate('/login');
-      }, 3000); // Redirige après 5 secondes
+      }, 3000); // Redirige après 3 secondes
   
     } catch (err) {
       console.error('Erreur lors de l\'inscription:', err);
       setError("Erreur lors de la création du compte. L'email est peut-être déjà utilisé.");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Sauvegarder les informations de l'utilisateur dans Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        firstName: user.displayName.split(' ')[0],
+        lastName: user.displayName.split(' ')[1],
+        username: user.displayName,
+        email: user.email,
+        createdAt: new Date()
+      });
+
+      // Afficher le message de succès
+      setSuccessMessage("Connexion réussie avec Google ! Vous allez être redirigé vers la page d'accueil.");
+
+      // Redirection après 3 secondes
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 3000);
+
+    } catch (err) {
+      console.error("Erreur lors de l'inscription Google", err);
+      setError("Erreur lors de la connexion avec Google");
     }
   };
 
@@ -158,15 +187,15 @@ function Register() {
 
           <div className="d-flex flex-row align-items-center justify-content-center">
             <p className="lead fw-normal mb-0 me-3">S'inscrire avec</p>
-            <MDBBtn floating size='md' tag='a' className='me-2'>
-              <MDBIcon fab icon='facebook-f' />
+            <MDBBtn floating size='md' tag='a' className='me-2' onClick={handleGoogleLogin}>
+              <MDBIcon fab icon='google' />
             </MDBBtn>
-            <MDBBtn floating size='md' tag='a' className='me-2'>
-              <MDBIcon fab icon='twitter' />
-            </MDBBtn>
-            <MDBBtn floating size='md' tag='a' className='me-2'>
-              <MDBIcon fab icon='linkedin-in' />
-            </MDBBtn>
+             <MDBBtn floating size='md' tag='a' className='me-2'>
+                                   <MDBIcon fab icon='facebook-f' />
+                                 </MDBBtn>
+                                 <MDBBtn floating size='md' tag='a' className='me-2'>
+                                   <MDBIcon fab icon='twitter' />
+                                 </MDBBtn>
           </div>
 
           <div className="divider d-flex align-items-center my-4">

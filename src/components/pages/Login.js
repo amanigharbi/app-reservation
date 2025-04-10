@@ -43,16 +43,14 @@ function Login() {
           <p className="lead fw-normal mb-0 me-3">Se connecter avec</p>
  
           <MDBBtn floating size='md' tag='a' className='me-2'>
-            <MDBIcon fab icon='facebook-f' />
-          </MDBBtn>
- 
-          <MDBBtn floating size='md' tag='a' className='me-2'>
-            <MDBIcon fab icon='twitter' />
-          </MDBBtn>
- 
-          <MDBBtn floating size='md' tag='a' className='me-2'>
-            <MDBIcon fab icon='linkedin-in' />
-          </MDBBtn>
+                       <MDBIcon fab icon='google' />
+                     </MDBBtn>
+                     <MDBBtn floating size='md' tag='a' className='me-2'>
+                       <MDBIcon fab icon='facebook-f' />
+                     </MDBBtn>
+                     <MDBBtn floating size='md' tag='a' className='me-2'>
+                       <MDBIcon fab icon='twitter' />
+                     </MDBBtn>
         </div>
  
         <div className="divider d-flex align-items-center my-4">
