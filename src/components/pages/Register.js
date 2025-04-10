@@ -5,6 +5,7 @@ import { auth } from '../../firebase';
 import '../styles/LoginPage.css';
 import 'mdb-react-ui-kit/dist/css/mdb.min.css';
 import { useNavigate } from 'react-router-dom';
+import logo from '../../images/logo.png';
 
 function Register() {
   const [firstName, setFirstName] = useState('');
@@ -47,6 +48,9 @@ function Register() {
         </MDBCol>
 
         <MDBCol col='4' md='6'>
+        <div className="d-flex flex-row align-items-center justify-content-center">
+            <img src={logo} alt="ReserGo Logo" className="img-fluid" style={{ maxWidth: '200px' , maxHeight :'150px' ,marginTop:'-15%'}} />
+          </div>
           <div className="d-flex flex-row align-items-center justify-content-center">
             <p className="lead fw-normal mb-0 me-3">S'inscrire avec</p>
 
