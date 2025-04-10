@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBIcon, MDBInput, MDBCheckbox } from 'mdb-react-ui-kit';
 import { auth } from '../../firebase'; // Importer auth de firebase.js
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'; // Importer les fonctions nécessaires
@@ -12,7 +12,17 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);  // État pour gérer la case "Se souvenir de moi"
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Vérifier si l'utilisateur est déjà connecté (par exemple en vérifiant dans localStorage)
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      // Si un utilisateur est sauvegardé dans le localStorage, rediriger immédiatement
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,6 +33,14 @@ function Login() {
       await signInWithEmailAndPassword(auth, email, password);  // Connexion avec Firebase
       setSuccessMessage('Utilisateur connecté avec succès');
       console.log('Utilisateur connecté avec succès');
+
+      // Si "Se souvenir de moi" est coché, stocker l'état de l'utilisateur dans localStorage
+      if (rememberMe) {
+        localStorage.setItem('user', email);  // Tu peux stocker plus d'infos si nécessaire (par exemple un token ou UID)
+      } else {
+        localStorage.removeItem('user');
+      }
+
       // Redirection immédiate après succès
       navigate('/dashboard');  // Redirige vers une page après connexion
     } catch (err) {
@@ -37,6 +55,14 @@ function Login() {
       const user = result.user;
       setSuccessMessage('Connexion réussie avec Google !');
       console.log('Utilisateur connecté avec Google:', user);
+
+      // Si "Se souvenir de moi" est coché, stocker l'état de l'utilisateur dans localStorage
+      if (rememberMe) {
+        localStorage.setItem('user', user.email);  // Stocker l'email de l'utilisateur dans le localStorage
+      } else {
+        localStorage.removeItem('user');
+      }
+
       // Redirection immédiate après succès
       navigate('/dashboard');  // Redirige vers une page après connexion
     } catch (err) {
@@ -104,7 +130,14 @@ function Login() {
           />
 
           <div className="d-flex justify-content-between mb-4">
-            <MDBCheckbox name='flexCheck' value='' id='flexCheckDefault' label='Se souvenir de moi' />
+            <MDBCheckbox 
+              name='flexCheck' 
+              value='' 
+              id='flexCheckDefault' 
+              label='Se souvenir de moi' 
+              checked={rememberMe} 
+              onChange={() => setRememberMe(!rememberMe)}  // Gérer l'état de "Se souvenir de moi"
+            />
             <Link to="/reset-password">Mot de passe oublié ?</Link>
           </div>
 
