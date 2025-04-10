@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBIcon, MDBInput } from 'mdb-react-ui-kit';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase';
-import '../styles/LoginPage.css';
+import '../styles/Pages.css';
 import 'mdb-react-ui-kit/dist/css/mdb.min.css';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../images/logo.png';
@@ -141,8 +141,8 @@ function Register() {
             </MDBCol>
           </MDBRow>
 
-          <div className='text-center text-md-start mt-4 pt-2'>
-            <MDBBtn className="mb-0 px-5" size='lg' onClick={handleRegister}>S'inscrire</MDBBtn>
+          <div className='text-center text-md-center mt-4 pt-2'>
+            <MDBBtn className="mb-0 px-5" size='lg' onClick={handleRegister} style={{ textTransform: 'none' }}>S'inscrire</MDBBtn>
             <p className="small fw-bold mt-2 pt-1 mb-2">
               Vous avez déjà un compte ? <a href="/" className="link-danger">Se connecter</a>
             </p>

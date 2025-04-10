@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBIcon, MDBInput, MDBCheckbox } from 'mdb-react-ui-kit';
 import { auth } from '../../firebase'; // Importer auth de firebase.js
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Importer la fonction pour la connexion
-import '../styles/LoginPage.css';
+import '../styles/Pages.css';
 import 'mdb-react-ui-kit/dist/css/mdb.min.css'; // Importation du CSS de MDB React UI Kit
 import { Link } from 'react-router-dom';
 import logo from '../../images/logo.png';
@@ -83,12 +83,14 @@ function Login() {
  
         <div className="d-flex justify-content-between mb-4">
           <MDBCheckbox name='flexCheck' value='' id='flexCheckDefault' label='Se souvenir de moi' />
-          <a href="#!">Mot de passe oublié ?</a>
+          <Link to="/reset-password">Mot de passe oublié ?</Link>
+
         </div>
  
-        <div className='text-center text-md-start mt-4 pt-2'>
-          <MDBBtn className="mb-0 px-5" size='lg' onClick={handleSubmit}>Se connecter</MDBBtn>
-          <p className="small fw-bold mt-2 pt-1 mb-2">Vous n'avez pas de compte ? 
+        <div className='text-center text-md-center mt-4 pt-2'>
+        <MDBBtn className="mb-0 px-5" size="lg" onClick={handleSubmit} style={{ textTransform: 'none' }}>
+  Se connecter
+</MDBBtn>          <p className="small fw-bold mt-2 pt-1 mb-2">Vous n'avez pas de compte ? 
             <Link to="/register" className="link-danger">S'inscrire</Link>
           </p>
         </div>
