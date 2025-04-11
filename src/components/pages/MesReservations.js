@@ -151,7 +151,7 @@ function MesReservations() {
  <h5 className="text-muted text-center">Aucune réservation trouvée</h5>
  <p className="text-muted text-center">Vous n'avez pas encore effectué de réservation.</p>
  <Link to="/reserver">
-   <MDBBtn color="primary">Faire une réservation</MDBBtn>
+   <MDBBtn color="primary" style={{ textTransform: 'none' }}>Faire une réservation</MDBBtn>
  </Link>
  </MDBCol>            ) : (
               reservations.map((res) => {
