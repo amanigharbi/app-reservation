@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { MDBContainer, MDBRow, MDBCol, MDBInput, MDBBtn, MDBIcon, MDBCardText } from 'mdb-react-ui-kit';
+import {
+  MDBContainer, MDBRow, MDBCol, MDBInput, MDBBtn,
+  MDBIcon, MDBCardText
+} from 'mdb-react-ui-kit';
 import { addDoc, collection } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
-import { getAuth } from 'firebase/auth'; // Importer l'authentification Firebase
+import { getAuth } from 'firebase/auth';
 
 function ReservationForm({ space }) {
   const [etape, setEtape] = useState(1);
+  const [nouveauRappel, setNouveauRappel] = useState('');
   const [reservationDetails, setReservationDetails] = useState({
     service: '',
     lieu: '',
@@ -16,24 +20,25 @@ function ReservationForm({ space }) {
     description: '',
     commentaires: '',
     mode_paiement: '',
-    spaceId: space?.id,
-    spaceName: space?.name,
-    spaceLocation: space?.location,
+    heure_arrivee: '',
+    heure_depart: '',
+    rappels: [],
+    spaceId: space?.id || '',
+    spaceName: space?.name || '',
+    spaceLocation: space?.location || '',
   });
   const [errors, setErrors] = useState({});
-  const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
+  const navigate = useNavigate();
 
-  // Récupérer l'ID de l'utilisateur connecté
   useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (user) {
-      setUserId(user.uid); // Définir l'ID utilisateur
+      setUserId(user.uid);
     } else {
       console.error('Utilisateur non connecté');
-      // Vous pouvez rediriger vers la page de connexion si nécessaire
-      navigate('/login'); 
+      navigate('/login');
     }
   }, [navigate]);
 
@@ -59,26 +64,26 @@ function ReservationForm({ space }) {
 
   const handleSubmitReservation = async (e) => {
     e.preventDefault();
-
-    // Validation du formulaire
     const formErrors = validateForm();
+
     if (Object.keys(formErrors).length === 0) {
       try {
-        // Vérifiez si userId est défini
-        if (!userId) {
-          throw new Error('L\'ID de l\'utilisateur est requis');
-        }
+        if (!userId) throw new Error("L'ID de l'utilisateur est requis");
 
-        // Ajouter la réservation à Firestore avec userId au lieu de userEmail
+        const codeReservation = `RES-${Date.now()}`;
+        const currentDate = new Date();
+
         await addDoc(collection(db, 'reservations'), {
-          spaceId: space.id,
-          userId: userId, // Utilisation de userId
           ...reservationDetails,
-          date: new Date(),
+          utilisateurId: userId,
+          code_reservation: codeReservation,
+          statut: 'En attente',
+          createdAt: currentDate.toISOString(),
+          date: reservationDetails.date || currentDate.toISOString(),
         });
 
         alert('Réservation réussie !');
-        setEtape(1); // Réinitialiser l'étape pour revenir à la première étape après succès
+        setEtape(1);
         setReservationDetails({
           service: '',
           lieu: '',
@@ -88,8 +93,15 @@ function ReservationForm({ space }) {
           description: '',
           commentaires: '',
           mode_paiement: '',
+          heure_arrivee: '',
+          heure_depart: '',
+          rappels: [],
+          spaceId: space?.id || '',
+          spaceName: space?.name || '',
+          spaceLocation: space?.location || '',
         });
-        navigate('/mes-reservations'); // Naviguer vers la page des réservations de l'utilisateur
+        setNouveauRappel('');
+        navigate('/mes-reservations');
       } catch (error) {
         console.error('Erreur lors de la réservation:', error);
         alert('Erreur lors de la réservation, réessaye plus tard.');
@@ -102,7 +114,7 @@ function ReservationForm({ space }) {
   return (
     <MDBContainer className="py-5">
       {space && (
-        <div className="justify-content-center text-center">
+        <div className="text-center">
           <h4><b>Réservation pour l'espace :</b> {space.name}</h4>
           <MDBCardText><strong>Lieu :</strong> {space.location}</MDBCardText>
           <MDBCardText><strong>Disponible :</strong> {space.availableFrom} - {space.availableTo}</MDBCardText>
@@ -162,6 +174,24 @@ function ReservationForm({ space }) {
               feedback={errors.participants}
             />
           </MDBCol>
+          <MDBCol md="6" className="mb-4">
+            <MDBInput
+              label="Heure d'arrivée"
+              type="time"
+              name="heure_arrivee"
+              value={reservationDetails.heure_arrivee}
+              onChange={handleChange}
+            />
+          </MDBCol>
+          <MDBCol md="6" className="mb-4">
+            <MDBInput
+              label="Heure de départ"
+              type="time"
+              name="heure_depart"
+              value={reservationDetails.heure_depart}
+              onChange={handleChange}
+            />
+          </MDBCol>
           <MDBCol md="12" className="mb-4">
             <MDBInput
               label="Description"
@@ -177,6 +207,31 @@ function ReservationForm({ space }) {
               value={reservationDetails.commentaires}
               onChange={handleChange}
             />
+          </MDBCol>
+          <MDBCol md="12" className="mb-3">
+            <MDBInput
+              label="Ajouter un rappel (ex: 2025-04-20 10:00)"
+              name="nouveau_rappel"
+              type="datetime-local"
+              value={nouveauRappel}
+              onChange={(e) => setNouveauRappel(e.target.value)}
+            />
+            <MDBBtn size="sm" className="mt-2" onClick={() => {
+              if (nouveauRappel) {
+                setReservationDetails((prev) => ({
+                  ...prev,
+                  rappels: [...prev.rappels, nouveauRappel],
+                }));
+                setNouveauRappel('');
+              }
+            }}>
+              Ajouter un rappel
+            </MDBBtn>
+            <ul className="mt-2">
+              {reservationDetails.rappels.map((r, i) => (
+                <li key={i}>{r}</li>
+              ))}
+            </ul>
           </MDBCol>
         </MDBRow>
       )}
@@ -199,14 +254,23 @@ function ReservationForm({ space }) {
 
       {etape === 3 && (
         <MDBRow>
-          <MDBCol md="12" className="mb-4">
+          <MDBCol md="12">
             <MDBCardText><strong>Service :</strong> {reservationDetails.service}</MDBCardText>
             <MDBCardText><strong>Lieu :</strong> {reservationDetails.lieu}</MDBCardText>
             <MDBCardText><strong>Date :</strong> {reservationDetails.date}</MDBCardText>
             <MDBCardText><strong>Durée :</strong> {reservationDetails.duree} h</MDBCardText>
             <MDBCardText><strong>Participants :</strong> {reservationDetails.participants}</MDBCardText>
+            <MDBCardText><strong>Description :</strong> {reservationDetails.description}</MDBCardText>
             <MDBCardText><strong>Commentaires :</strong> {reservationDetails.commentaires}</MDBCardText>
+            <MDBCardText><strong>Heure d'arrivée :</strong> {reservationDetails.heure_arrivee}</MDBCardText>
+            <MDBCardText><strong>Heure de départ :</strong> {reservationDetails.heure_depart}</MDBCardText>
             <MDBCardText><strong>Mode de paiement :</strong> {reservationDetails.mode_paiement}</MDBCardText>
+            <MDBCardText><strong>Rappels :</strong></MDBCardText>
+            <ul>
+              {reservationDetails.rappels.map((r, i) => (
+                <li key={i}>{r}</li>
+              ))}
+            </ul>
           </MDBCol>
         </MDBRow>
       )}
@@ -214,10 +278,9 @@ function ReservationForm({ space }) {
       <div className="d-flex justify-content-between mt-4">
         {etape > 1 && (
           <MDBBtn color="secondary" onClick={() => setEtape(etape - 1)}>
-            <MDBIcon icon="arrow-left" className="me-2" style={{ textTransform: 'none' }} /> Précédent
+            <MDBIcon icon="arrow-left" className="me-2" /> Précédent
           </MDBBtn>
         )}
-
         {etape < 3 && (
           <MDBBtn onClick={() => {
             const formErrors = validateForm();
@@ -227,10 +290,9 @@ function ReservationForm({ space }) {
               setErrors(formErrors);
             }
           }}>
-            Suivant <MDBIcon icon="arrow-right" className="ms-2" style={{ textTransform: 'none' }} />
+            Suivant <MDBIcon icon="arrow-right" className="ms-2" />
           </MDBBtn>
         )}
-
         {etape === 3 && (
           <MDBBtn color="success" onClick={handleSubmitReservation}>
             Confirmer la réservation <MDBIcon icon="check" className="ms-2" />

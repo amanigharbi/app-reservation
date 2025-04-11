@@ -35,7 +35,7 @@ function Dashboard() {
         setUserEmail(currentUser.email);
 
         // Récupérer les réservations pour l'utilisateur actuel depuis Firestore
-        const q = query(collection(db, 'reservations'), where('email', '==', currentUser.email));
+        const q = query(collection(db, 'reservations'), where('utilisateurId', '==', currentUser.uid));
 
         const unsubscribeFirestore = onSnapshot(q, (snapshot) => {
           const reservationList = snapshot.docs.map(doc => ({

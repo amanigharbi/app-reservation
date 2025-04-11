@@ -32,7 +32,7 @@ function MesReservations() {
         setUserEmail(currentUser.email);
 
         // Récupérer les réservations pour l'utilisateur actuel depuis Firestore
-        const q = query(collection(db, 'reservations'), where('email', '==', currentUser.email));
+        const q = query(collection(db, 'reservations'), where('utilisateurId', '==', currentUser.uid));
 
         const unsubscribeFirestore = onSnapshot(q, (snapshot) => {
           const reservationList = snapshot.docs.map(doc => ({
@@ -139,109 +139,84 @@ function MesReservations() {
         <MDBContainer className="py-5 px-4">
           <h3 className="text-primary mb-4 text-center" style={{ fontWeight: 'bold' }}>Mes Réservations</h3>
 
-          {/* Tableau des réservations */}
-          <MDBRow className="d-flex flex-wrap justify-content-center ">
-            {reservations.length === 0 ? (
- <MDBCol md="12" className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '400px' }}>
- <img
-   src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
-   alt="Aucune réservation"
-   style={{ width: '180px', marginBottom: '20px', opacity: 0.7 }}
- />
- <h5 className="text-muted text-center">Aucune réservation trouvée</h5>
- <p className="text-muted text-center">Vous n'avez pas encore effectué de réservation.</p>
- <Link to="/reserver">
-   <MDBBtn color="primary" style={{ textTransform: 'none' }}>Faire une réservation</MDBBtn>
- </Link>
- </MDBCol>            ) : (
-              reservations.map((res) => {
-                const user = usersData[res.utilisateurId]; // Récupérer les données utilisateur à partir du map
-                return (
-                  <MDBCol md="4" lg="4" key={res.id} className="mb-4">
-                    <MDBCard className="h-100" border='dark' background='white'>
-                      <MDBCardBody>
-                      <div className="d-flex justify-content-end">
-                        {/* Mettre à jour */}
-  <MDBBtn
-    floating
-    tag="a"
-    color="warning"
-    size="sm"
-    onClick={() => handleUpdateReservation(res)}
-  >
-    <MDBIcon fas icon="pen" />
-  </MDBBtn>
+         {/* Tableau des réservations */}
+<MDBRow className="d-flex flex-wrap justify-content-center">
+  {reservations.length === 0 ? (
+    <MDBCol md="12" className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '400px' }}>
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+        alt="Aucune réservation"
+        style={{ width: '180px', marginBottom: '20px', opacity: 0.7 }}
+      />
+      <h5 className="text-muted text-center">Aucune réservation trouvée</h5>
+      <p className="text-muted text-center">Vous n'avez pas encore effectué de réservation.</p>
+      <Link to="/reserver">
+        <MDBBtn color="primary" style={{ textTransform: 'none' }}>Faire une réservation</MDBBtn>
+      </Link>
+    </MDBCol>
+  ) : (
+    reservations.map((res) => {
+      const user = usersData[res.utilisateurId]; // Récupérer les données utilisateur à partir du map
+      return (
+        <MDBCol md="4" lg="4" key={res.id} className="mb-4">
+          <MDBCard className="h-100" border='dark' background='white'>
+            <MDBCardBody>
+              <div className="d-flex justify-content-end">
+                {/* Mettre à jour */}
+                <MDBBtn floating tag="a" color="warning" size="sm" onClick={() => handleUpdateReservation(res)}>
+                  <MDBIcon fas icon="pen" />
+                </MDBBtn>
 
-  {/* Supprimer */}
-  <MDBBtn
-    floating
-    tag="a"
-    color="danger"
-    size="sm"
-    onClick={() => handleDeleteReservation(res.id)}
-    className="ms-2"
+                {/* Supprimer */}
+                <MDBBtn floating tag="a" color="danger" size="sm" onClick={() => handleDeleteReservation(res.id)} className="ms-2">
+                  <MDBIcon fas icon="trash-alt" />
+                </MDBBtn>
+              </div>
 
-  >
-    <MDBIcon fas icon="trash-alt" />
-  </MDBBtn>
+              <MDBCardTitle className="text-center" style={{ color: 'black' }}>
+                <b>Réservation N.</b> {res.code_reservation}
+              </MDBCardTitle>
+              <MDBCardText style={{ color: 'black' }}>
+                📍 {res.lieu}<br />
+                📅 {new Date(res.date).toLocaleString()}
+              </MDBCardText>
 
-  
-</div>
+              {/* Afficher l'utilisateur qui a créé la réservation */}
+              {user && (
+                <MDBCardText>
+                  <strong>Créée par:</strong> {user.firstName} {user.lastName}
+                </MDBCardText>
+              )}
+            </MDBCardBody>
 
-                        <MDBCardTitle className="text-center" style={{ color: 'black' }}><b>Réserversation N.</b> {res.code_reservation}</MDBCardTitle>
-                        <MDBCardText style={{ color: 'black' }}>
-                          📍 {res.lieu}<br />
-                          📅 {res.date}
-                        </MDBCardText>
-                        {/* Afficher l'utilisateur qui a créé la réservation */}
-                        {user && <MDBCardText><strong>Créée par:</strong> {user.firstName } {user.lastName}</MDBCardText>}
-                      </MDBCardBody>
+            <div className="reservation-details p-3" style={{ backgroundColor: '#f0f0f0' }}>
+              <MDBRow className="d-flex flex-column">
+                <MDBCol><p><strong>Service:</strong> {res.service}</p></MDBCol>
+                <MDBCol><p><strong>Nom de l'espace:</strong> {res.spaceName}</p></MDBCol>
+                <MDBCol><p><strong>Localisation de l'espace:</strong> {res.spaceLocation}</p></MDBCol>
+                <MDBCol><p><strong>Lieu:</strong> {res.lieu}</p></MDBCol>
+                <MDBCol><p><strong>Description:</strong> {res.description}</p></MDBCol>
+                <MDBCol><p><strong>Date:</strong> {new Date(res.date).toLocaleString()}</p></MDBCol>
+                <MDBCol><p><strong>Créé le:</strong> {new Date(res.createdAt).toLocaleString()}</p></MDBCol>
+                <MDBCol><p><strong>Durée:</strong> {res.duree} h</p></MDBCol>
+                <MDBCol><p><strong>Statut:</strong> {res.statut}</p></MDBCol>
+                <MDBCol><p><strong>Participants:</strong> {res.participants}</p></MDBCol>
+                <MDBCol><p><strong>Mode de Paiement:</strong> {res.mode_paiement}</p></MDBCol>
+                <MDBCol><p><strong>Commentaires:</strong> {res.commentaires}</p></MDBCol>
+                <MDBCol><p><strong>Heure d'arrivée:</strong> {res.heure_arrivee}</p></MDBCol>
+                <MDBCol><p><strong>Heure de départ:</strong> {res.heure_depart}</p></MDBCol>
+                <MDBCol>
+                  <p><strong>Rappels:</strong> {Array.isArray(res.rappels) ? res.rappels.map(r => new Date(r).toLocaleString()).join(', ') : 'Aucun rappel'}</p>
+                </MDBCol>
+              </MDBRow>
+            </div>
+          </MDBCard>
+        </MDBCol>
+      );
+    })
+  )}
+</MDBRow>
 
-                      {/* Section affichant les détails de manière permanente */}
-                      <div className="reservation-details p-3" style={{ backgroundColor: '#f0f0f0' }}>
-                        <MDBRow className="d-flex flex-column">
-                          <MDBCol>
-                            <p><strong>Service:</strong> {res.service}</p>
-                          </MDBCol>
-                          <MDBCol>
-                            <p><strong>Lieu:</strong> {res.lieu}</p>
-                          </MDBCol>
-                          <MDBCol>
-                            <p><strong>Date:</strong> {res.date}</p>
-                          </MDBCol>
-                          <MDBCol>
-                            <p><strong>Durée:</strong> {res.duree}</p>
-                          </MDBCol>
-                          <MDBCol>
-                            <p><strong>Statut:</strong> {res.statut}</p>
-                          </MDBCol>
-                          <MDBCol>
-                            <p><strong>Participants:</strong> {res.participants}</p>
-                          </MDBCol>
-                          <MDBCol>
-                            <p><strong>Mode de Paiement:</strong> {res.mode_paiement}</p>
-                          </MDBCol>
-                          <MDBCol>
-                            <p><strong>Commentaires:</strong> {res.commentaires}</p>
-                          </MDBCol>
-                          
-                          <MDBCol>
-                            <p><strong>Heure d'arrivée:</strong> {res.heure_arrivee}</p>
-                          </MDBCol>
-                          <MDBCol>
-                            <p><strong>Heure de départ:</strong> {res.heure_depart}</p>
-                          </MDBCol>
-                          <MDBCol>
-                            <p><strong>Rappels:</strong> {Array.isArray(res.rappels) ? res.rappels.join(', ') : 'Aucun rappel'}</p>
-                          </MDBCol>
-                        </MDBRow>
-                      </div>
-                    </MDBCard>
-                  </MDBCol>
-                );
-              })
-            )}
-          </MDBRow>
         </MDBContainer>
       </div>
 
