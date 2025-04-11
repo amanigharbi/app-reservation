@@ -151,9 +151,9 @@ function Dashboard() {
             ) : (
               reservations.map((res) => (
                 <MDBCol md="6" lg="4" key={res.id} className="mb-4">
-                  <MDBCard className="h-100">
+                  <MDBCard className="h-100"  border='dark' background='white'>
                     <MDBCardBody>
-                      <MDBCardTitle style={{ color: 'black' }}>{res.service}</MDBCardTitle>
+                      <MDBCardTitle className="text-center" style={{ color: 'black' }}><b>Réserversation N.</b> {res.code_reservation}</MDBCardTitle>
                       <MDBCardText style={{ color: 'black' }}>
                         📍 {res.lieu}<br />
                         📅 {res.date}
