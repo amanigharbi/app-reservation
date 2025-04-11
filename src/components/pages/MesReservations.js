@@ -16,7 +16,7 @@ import {
 } from 'mdb-react-ui-kit';
 import logo from '../../images/logo-3.png';
 import { db } from '../../firebase';
-import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc,deleteDoc } from 'firebase/firestore';
 import '../styles/Pages.css';
 
 function MesReservations() {
@@ -82,6 +82,17 @@ function MesReservations() {
     loadUsersData();
   }, [reservations]);
 
+
+  const handleUpdateReservation = (reservation) => {
+    navigate(`/update-reservation/${reservation.id}`, { state: { reservation } });
+  };
+  const handleDeleteReservation = async (reservationId) => {
+    try {
+      await deleteDoc(doc(db, 'reservations', reservationId));
+    } catch (error) {
+      console.error('Erreur lors de la suppression :', error);
+    }
+  };
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -131,14 +142,52 @@ function MesReservations() {
           {/* Tableau des réservations */}
           <MDBRow className="d-flex flex-wrap justify-content-center ">
             {reservations.length === 0 ? (
-              <p>Aucune réservation trouvée.</p>
-            ) : (
+ <MDBCol md="12" className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '400px' }}>
+ <img
+   src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+   alt="Aucune réservation"
+   style={{ width: '180px', marginBottom: '20px', opacity: 0.7 }}
+ />
+ <h5 className="text-muted text-center">Aucune réservation trouvée</h5>
+ <p className="text-muted text-center">Vous n'avez pas encore effectué de réservation.</p>
+ <Link to="/reserver">
+   <MDBBtn color="primary">Faire une réservation</MDBBtn>
+ </Link>
+ </MDBCol>            ) : (
               reservations.map((res) => {
                 const user = usersData[res.utilisateurId]; // Récupérer les données utilisateur à partir du map
                 return (
                   <MDBCol md="4" lg="4" key={res.id} className="mb-4">
                     <MDBCard className="h-100" border='dark' background='white'>
                       <MDBCardBody>
+                      <div className="d-flex justify-content-end">
+                        {/* Mettre à jour */}
+  <MDBBtn
+    floating
+    tag="a"
+    color="warning"
+    size="sm"
+    onClick={() => handleUpdateReservation(res)}
+  >
+    <MDBIcon fas icon="pen" />
+  </MDBBtn>
+
+  {/* Supprimer */}
+  <MDBBtn
+    floating
+    tag="a"
+    color="danger"
+    size="sm"
+    onClick={() => handleDeleteReservation(res.id)}
+    className="ms-2"
+
+  >
+    <MDBIcon fas icon="trash-alt" />
+  </MDBBtn>
+
+  
+</div>
+
                         <MDBCardTitle className="text-center" style={{ color: 'black' }}><b>Réserversation N.</b> {res.code_reservation}</MDBCardTitle>
                         <MDBCardText style={{ color: 'black' }}>
                           📍 {res.lieu}<br />

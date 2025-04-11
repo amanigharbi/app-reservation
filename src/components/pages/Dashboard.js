@@ -147,8 +147,18 @@ function Dashboard() {
           {/* Tableau des réservations */}
           <MDBRow>
             {reservations.length === 0 ? (
-              <p>Aucune réservation trouvée.</p>
-            ) : (
+<MDBCol md="12" className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '400px' }}>
+ <img
+   src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+   alt="Aucune réservation"
+   style={{ width: '180px', marginBottom: '20px', opacity: 0.7 }}
+ />
+ <h5 className="text-muted text-center">Aucune réservation trouvée</h5>
+ <p className="text-muted text-center">Vous n'avez pas encore effectué de réservation.</p>
+ <Link to="/reserver">
+   <MDBBtn color="primary">Faire une réservation</MDBBtn>
+ </Link>
+ </MDBCol>             ) : (
               reservations.map((res) => (
                 <MDBCol md="6" lg="4" key={res.id} className="mb-4">
                   <MDBCard className="h-100"  border='dark' background='white'>
