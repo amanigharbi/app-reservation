@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBInput } from 'mdb-react-ui-kit';
-import { auth } from '../../firebase'; // Importer auth de firebase.js
-import { sendPasswordResetEmail, fetchSignInMethodsForEmail } from 'firebase/auth'; // Importer la fonction fetchSignInMethodsForEmail
+import { auth, db } from '../../firebase'; // Assure-toi que db est bien exporté de firebase.js
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore'; // Pour Firestore
 import { Link } from 'react-router-dom';
 import '../styles/Pages.css';
-import 'mdb-react-ui-kit/dist/css/mdb.min.css'; // Importation du CSS de MDB React UI Kit
-import logo from '../../images/logo.png'; // Importer le logo
+import 'mdb-react-ui-kit/dist/css/mdb.min.css';
+import logo from '../../images/logo.png';
 
 function ResetPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false); // Indicateur de chargement
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,31 +24,25 @@ function ResetPassword() {
       return;
     }
 
-    // Simple validation pour vérifier si l'email est bien formé
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-      setError('L\'adresse email n\'est pas valide.');
-      return;
-    }
-
-    setLoading(true);  // Démarrer l'animation de chargement
-
+    setLoading(true);
     try {
-      // Vérification si l'email existe dans la base de données
-      const methods = await fetchSignInMethodsForEmail(auth, email);
-      if (methods.length === 0) {
-        setError('Aucun utilisateur trouvé avec cet email.');
-        setLoading(false);
+      // Vérifier si l'utilisateur existe dans Firestore
+      const usersRef = collection(db, 'users'); // Remplace 'users' si ta collection a un autre nom
+      const q = query(usersRef, where('email', '==', email.trim().toLowerCase()));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setError("Aucun utilisateur trouvé avec cet email.");
         return;
       }
 
-      // Si l'email existe, on envoie le lien de réinitialisation
-      await sendPasswordResetEmail(auth, email);
-      setMessage('Un lien de réinitialisation a été envoyé à votre adresse email.');
+      await sendPasswordResetEmail(auth, email.trim().toLowerCase());
+      setMessage("Un lien de réinitialisation a été envoyé à votre adresse email.");
     } catch (err) {
-      setError('Une erreur s\'est produite. Veuillez vérifier l\'adresse email.');
+      console.error(err);
+      setError("Une erreur s'est produite. Veuillez réessayer plus tard.");
     } finally {
-      setLoading(false);  // Arrêter l'animation de chargement
+      setLoading(false);
     }
   };
 
@@ -63,14 +58,12 @@ function ResetPassword() {
         </MDBCol>
       
         <MDBCol col='4' md='6'>
-          {/* Logo en haut de la page */}
           <div className="d-flex flex-row align-items-center justify-content-center">
             <img src={logo} alt="ReserGo Logo" className="img-fluid" style={{ maxWidth: '200px', maxHeight: '150px', marginTop: '-10%' }} />
           </div>
 
           <h3 className="text-center mb-4">Réinitialiser le mot de passe</h3>
 
-          {/* Affichage du message d'erreur ou de confirmation */}
           {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
           {message && <p style={{ color: 'green', textAlign: 'center' }}>{message}</p>}
 
@@ -81,16 +74,16 @@ function ResetPassword() {
             type='email'
             size="lg"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}  // Mettre à jour l'email
+            onChange={(e) => setEmail(e.target.value)}
           />
 
           <div className='text-center text-md-center mt-4 pt-2'>
-            <MDBBtn 
-              className="mb-0 px-5 " 
-              size='lg' 
-              onClick={handleSubmit} 
+            <MDBBtn
+              className="mb-0 px-5"
+              size='lg'
+              onClick={handleSubmit}
+              disabled={loading}
               style={{ textTransform: 'none' }}
-              disabled={loading}  // Désactiver le bouton pendant l'envoi
             >
               {loading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
             </MDBBtn>
@@ -102,7 +95,6 @@ function ResetPassword() {
         </MDBCol>
       </MDBRow>
 
-      {/* Copyright section at the bottom */}
       <footer className="footer">
         <div className="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
           <div className="text-white mb-3 mb-md-0">
