@@ -39,11 +39,21 @@ function MesReservations() {
   const [showModal, setShowModal] = useState(false); // Modal state
   const [reservationToDelete, setReservationToDelete] = useState(null); // Reservation to delete
   const [showToast, setShowToast] = useState({ type: "", visible: false });
-
+  const [rappels, setRappels] = useState([]); // Ajout de l'état pour les rappels
+  const filteredRappels = rappels.filter(
+    (rappel) =>
+      rappel.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      new Date(rappel.date)
+        .toLocaleString()
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+  );
   const navigate = useNavigate();
   useEffect(() => {
     console.log("showModal:", showModal); // Affichez la valeur de showModal
   }, [showModal]);
+
+  // Auth and Firestore setup
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -68,6 +78,17 @@ function MesReservations() {
 
     return () => unsubscribeAuth();
   }, [navigate]);
+  // Extraire les rappels de chaque réservation
+  useEffect(() => {
+    const extractedRappels = reservations.flatMap((reservation) => {
+      return reservation.rappels.map((rappel) => ({
+        reservationId: reservation.id,
+        date: rappel,
+        message: `Rappel pour la réservation ${reservation.code_reservation}`,
+      }));
+    });
+    setRappels(extractedRappels);
+  }, [reservations]);
 
   const handleUpdateReservation = (reservation) => {
     navigate(`/update-reservation/${reservation.id}`, {
@@ -89,12 +110,12 @@ function MesReservations() {
       await deleteDoc(doc(db, "reservations", id));
       setShowModal(false);
       setShowToast({ type: "success", visible: true });
-      setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
+      setTimeout(() => setShowToast({ type: "", visible: false }), 3000); // Hide toast after 3 seconds
     } catch (error) {
       console.error("Erreur lors de la suppression :", error);
       setShowModal(false);
       setShowToast({ type: "error", visible: true });
-      setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
+      setTimeout(() => setShowToast({ type: "", visible: false }), 3000); // Hide toast after 3 seconds
     }
   };
 
@@ -124,6 +145,9 @@ function MesReservations() {
     a.href = URL.createObjectURL(blob);
     a.download = "mes_reservations.csv";
     a.click();
+    // Show success toast for export
+    setShowToast({ type: "success", visible: true });
+    setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
 
   const handleExportPDF = () => {
@@ -137,6 +161,9 @@ function MesReservations() {
     };
 
     html2pdf().set(opt).from(element).save();
+    // Show success toast for export
+    setShowToast({ type: "success", visible: true });
+    setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
 
   const filteredReservations = reservations.filter(
@@ -195,6 +222,7 @@ function MesReservations() {
           </MDBBtn>
         </div>
       </div>
+
       {/* ✅ TOAST SUCCÈS & ERREUR */}
       {showToast.visible && (
         <div
@@ -242,6 +270,7 @@ function MesReservations() {
           </div>
         </div>
       )}
+
       {/* Main Content */}
       <MDBContainer className="py-5 px-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -346,10 +375,7 @@ function MesReservations() {
         )}
       </MDBContainer>
 
-      <footer className="footer text-center p-3 bg-primary text-white mt-auto">
-        © 2025 ReserGo. Tous droits réservés.
-      </footer>
-
+      {/* Modal */}
       <MDBModal open={showModal} onClose={setShowModal}>
         <MDBModalDialog>
           <MDBModalContent>
@@ -378,6 +404,64 @@ function MesReservations() {
           </MDBModalContent>
         </MDBModalDialog>
       </MDBModal>
+      {/* Section des rappels */}
+      <MDBContainer className="py-5 px-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h3 className="text-primary fw-bold">Mes Rappels</h3>
+          <div className="d-flex gap-2">
+            <MDBInput
+              label="Rechercher..."
+              size="sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {filteredRappels.length === 0 ? (
+          <div className="text-center py-5 justify-content-center align-items-center">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+              alt="Aucun rappel"
+              style={{
+                width: "180px",
+                marginBottom: "20px",
+                opacity: 0.7,
+                marginLeft: "42%",
+              }}
+            />
+            <h5 className="mt-3 text-muted">Aucun rappel trouvé</h5>
+          </div>
+        ) : (
+          <div
+            style={{ maxHeight: "600px", overflowY: "auto" }}
+            id="rappels-table"
+          >
+            <MDBTable striped hover responsive>
+              <MDBTableHead
+                className=" text-blue-800 text-center"
+                style={{ fontWeight: "bold", fontSize: "1.0rem" }}
+              >
+                <tr>
+                  <th>Date</th>
+                  <th>Message</th>
+                </tr>
+              </MDBTableHead>
+              <MDBTableBody className=" text-center">
+                {filteredRappels.map((rappel) => (
+                  <tr key={rappel.reservationId}>
+                    <td>{new Date(rappel.date).toLocaleString()}</td>
+                    <td>{rappel.message}</td>
+                  </tr>
+                ))}
+              </MDBTableBody>
+            </MDBTable>
+          </div>
+        )}
+      </MDBContainer>
+      <footer className="footer text-center p-3 bg-primary text-white mt-auto">
+        © 2025 ReserGo. Tous droits réservés.
+      </footer>
     </MDBContainer>
   );
 }
