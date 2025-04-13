@@ -7,6 +7,7 @@ import {
   MDBBtn,
   MDBIcon,
   MDBCardText,
+  MDBBadge,
 } from "mdb-react-ui-kit";
 import { addDoc, collection } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
@@ -383,36 +384,41 @@ function ReservationForm({ space }) {
             />
             <br />
           </MDBCol>
-          <MDBCol md="12" className="mb-3">
-            <MDBInput
-              label="Ajouter un rappel (ex: 2025-04-20 10:00)"
-              name="nouveau_rappel"
-              type="datetime-local"
-              value={nouveauRappel}
-              onChange={(e) => setNouveauRappel(e.target.value)}
-            />
-            <MDBBtn
-              size="sm"
-              className="mt-2"
-              style={{ textTransform: "none" }}
-              onClick={() => {
-                if (nouveauRappel) {
-                  setReservationDetails((prev) => ({
-                    ...prev,
-                    rappels: [...prev.rappels, nouveauRappel],
-                  }));
-                  setNouveauRappel("");
-                }
-              }}
-            >
-              Ajouter un rappel
-            </MDBBtn>
-            <ul className="mt-2">
-              {reservationDetails.rappels.map((r, i) => (
-                <li key={i}>{r}</li>
-              ))}
-            </ul>
-          </MDBCol>
+          <MDBCol md="12" className="mb-4">
+  <MDBInput
+    label="Ajouter un rappel (ex: 2025-04-20 10:00)"
+    name="nouveau_rappel"
+    type="datetime-local"
+    value={nouveauRappel}
+    onChange={(e) => setNouveauRappel(e.target.value)}
+  />
+  <MDBBtn
+    size="sm"
+    className="mt-2"
+    style={{ textTransform: "none" }}
+    onClick={() => {
+      if (nouveauRappel) {
+        setReservationDetails((prev) => ({
+          ...prev,
+          rappels: [...prev.rappels, nouveauRappel],
+        }));
+        setNouveauRappel(""); // Réinitialiser l'entrée du rappel
+      }
+    }}
+  >
+    Ajouter un rappel
+  </MDBBtn>
+  
+  {/* Affichage des rappels sous forme de badges */}
+  <div className="d-flex flex-wrap mt-3">
+    {reservationDetails.rappels.map((rappel, i) => (
+      <MDBBadge key={i} color="primary" className="me-2 mb-2">
+        {new Date(rappel).toLocaleString()}
+      </MDBBadge>
+    ))}
+  </div>
+</MDBCol>
+
         </MDBRow>
       )}
 
