@@ -73,12 +73,16 @@ function MesReservations() {
   };
 
   const handleDeleteReservation = async (id) => {
+    const confirmed = window.confirm("Êtes-vous sûr de vouloir supprimer cette réservation ?");
+    if (!confirmed) return;
+  
     try {
       await deleteDoc(doc(db, 'reservations', id));
     } catch (error) {
       console.error('Erreur lors de la suppression :', error);
     }
   };
+  
 
   const handleExportCSV = () => {
     const headers = ['Code', 'Date', 'Durée', 'Service', 'Espace', 'Montant', 'Participants'];
@@ -198,7 +202,7 @@ function MesReservations() {
                   <th>Actions</th>
                 </tr>
               </MDBTableHead>
-              <MDBTableBody>
+              <MDBTableBody className=" text-center">
                 {filteredReservations.map((res) => (
                   <tr key={res.id}>
                     <td><strong>{res.code_reservation}</strong></td>
