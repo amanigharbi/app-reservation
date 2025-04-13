@@ -50,6 +50,32 @@ function ReservationForm({ space }) {
       navigate("/login");
     }
   }, [navigate]);
+  useEffect(() => {
+    const { heure_arrivee, heure_depart } = reservationDetails;
+  
+    if (heure_arrivee && heure_depart) {
+      const [h1, m1] = heure_arrivee.split(":").map(Number);
+      const [h2, m2] = heure_depart.split(":").map(Number);
+  
+      const debut = h1 * 60 + m1;
+      const fin = h2 * 60 + m2;
+  
+      if (fin > debut) {
+        const dureeMinutes = fin - debut;
+        const dureeHeures = (dureeMinutes / 60).toFixed(2); // arrondi à 2 décimales
+        setReservationDetails((prev) => ({
+          ...prev,
+          duree: dureeHeures,
+        }));
+      } else {
+        // Cas où l'heure de départ est avant celle d'arrivée
+        setReservationDetails((prev) => ({
+          ...prev,
+          duree: "",
+        }));
+      }
+    }
+  }, [reservationDetails.heure_arrivee, reservationDetails.heure_depart]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,21 +95,44 @@ function ReservationForm({ space }) {
   }, [reservationDetails.duree, space]);
   
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (etape === 1) {
-      if (!reservationDetails.service)
-        newErrors.service = "Le service est requis";
-      if (!reservationDetails.date) newErrors.date = "La date est requise";
-      if (!reservationDetails.duree) newErrors.duree = "La durée est requise";
-      if (!reservationDetails.participants)
-        newErrors.participants = "Le nombre de participants est requis";
+ const validateForm = () => {
+  const newErrors = {};
+
+  if (etape === 1) {
+    if (!reservationDetails.service) newErrors.service = "Le service est requis";
+    if (!reservationDetails.date) newErrors.date = "La date est requise";
+    if (!reservationDetails.duree) newErrors.duree = "La durée est requise";
+    if (!reservationDetails.participants) newErrors.participants = "Le nombre de participants est requis";
+
+    // Vérification de la disponibilité horaire
+    const { heure_arrivee, heure_depart } = reservationDetails;
+    const { availableFrom, availableTo } = space || {};
+
+    const toMinutes = (time) => {
+      const [h, m] = time.split(":").map(Number);
+      return h * 60 + m;
+    };
+
+    if (heure_arrivee && heure_depart && availableFrom && availableTo) {
+      const arriveeMin = toMinutes(heure_arrivee);
+      const departMin = toMinutes(heure_depart);
+      const dispoMin = toMinutes(availableFrom);
+      const dispoMax = toMinutes(availableTo);
+
+      if (arriveeMin < dispoMin || departMin > dispoMax) {
+        newErrors.heure_arrivee = `L'heure doit être entre ${availableFrom} et ${availableTo}`;
+        newErrors.heure_depart = `L'heure doit être entre ${availableFrom} et ${availableTo}`;
+      }
     }
-    if (etape === 2 && !reservationDetails.mode_paiement) {
-      newErrors.mode_paiement = "Le mode de paiement est requis";
-    }
-    return newErrors;
-  };
+  }
+
+  if (etape === 2 && !reservationDetails.mode_paiement) {
+    newErrors.mode_paiement = "Le mode de paiement est requis";
+  }
+
+  return newErrors;
+};
+
 
   const handleSubmitReservation = async (e) => {
     e.preventDefault();
@@ -268,6 +317,7 @@ function ReservationForm({ space }) {
               name="duree"
               value={reservationDetails.duree}
               onChange={handleChange}
+              disabled
               invalid={!!errors.duree}
               feedback={errors.duree}
             />
@@ -288,7 +338,15 @@ function ReservationForm({ space }) {
               name="heure_arrivee"
               value={reservationDetails.heure_arrivee}
               onChange={handleChange}
+              invalid={!!errors.heure_arrivee}
+
+
             />
+            {errors.heure_arrivee && (
+  <div className="invalid-feedback d-block" style={{ fontSize: "0.875rem", marginTop: "0.15rem" }}>
+    {errors.heure_arrivee}
+  </div>
+)}
           </MDBCol>
           <MDBCol md="6" className="mb-4">
             <MDBInput
@@ -297,7 +355,14 @@ function ReservationForm({ space }) {
               name="heure_depart"
               value={reservationDetails.heure_depart}
               onChange={handleChange}
+              invalid={!!errors.heure_depart}
+
             />
+            {errors.heure_depart && (
+  <div className="invalid-feedback d-block" style={{ fontSize: "0.875rem", marginTop: "0.15rem" }}>
+    {errors.heure_depart}
+  </div>
+)}
             <br />
           </MDBCol>
           <MDBCol md="12" className="mb-4">
