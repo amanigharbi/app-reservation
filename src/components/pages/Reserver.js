@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth } from '../../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { MDBContainer, MDBRow, MDBCol, MDBCard, MDBCardBody, MDBCardTitle, MDBCardText, MDBBtn, MDBIcon, MDBInput } from 'mdb-react-ui-kit';
+import { MDBContainer, MDBRow, MDBCol, MDBCard, MDBCardBody, MDBCardTitle, MDBCardText, MDBBtn, MDBIcon } from 'mdb-react-ui-kit';
 import logo from '../../images/logo-3.png';
 import { db } from '../../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import ReservationForm from './ReservationForm';  // Importer ReservationForm ici
+import ReservationForm from './ReservationForm';  
 import '../styles/Pages.css';
 
 function Reserver() {
@@ -75,7 +75,7 @@ function Reserver() {
           </nav>
         </div>
         <div className="d-flex align-items-center gap-3">
-          <MDBInput label="Recherche" size="sm" className="search-input" style={{ maxWidth: '250px', backgroundColor: 'white' }} />
+          {/* <MDBInput label="Recherche" size="sm" className="search-input" style={{ maxWidth: '250px', backgroundColor: 'white' }} /> */}
           <div className="d-flex align-items-center gap-2">
             <img
               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userEmail?.split('@')[0] || 'Utilisateur')}&background=fff&color=3B71CA&size=40`}
@@ -85,7 +85,7 @@ function Reserver() {
             />
             <span className="text-white">{userEmail && userEmail.split('@')[0]}</span>
             <MDBBtn size="sm" color="white" onClick={handleLogout}>
-              <MDBIcon icon="sign-out-alt" className="me-4" />
+              <MDBIcon icon="sign-out-alt" className="me-0" />
             </MDBBtn>
           </div>
         </div>

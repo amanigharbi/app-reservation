@@ -12,7 +12,6 @@ import {
   MDBCardText,
   MDBBtn,
   MDBIcon,
-  MDBInput,
   MDBCarousel,
   MDBCarouselItem,
   MDBCarouselCaption,
@@ -86,7 +85,7 @@ function Dashboard() {
         </div>
         <div className="d-flex align-items-center gap-3">
           {/* Barre de recherche */}
-          <MDBInput label="Recherche" size="sm" className="search-input" style={{ maxWidth: '250px', backgroundColor: 'white' }} />
+          {/* <MDBInput label="Recherche" size="sm" className="search-input" style={{ maxWidth: '250px', backgroundColor: 'white' }} /> */}
           
           {/* Username + Logout Button */}
           <div className="d-flex align-items-center gap-2">
@@ -98,7 +97,7 @@ function Dashboard() {
             />
             <span className="text-white">{userEmail && userEmail.split('@')[0]}</span>
             <MDBBtn size="sm" color="white" onClick={handleLogout}>
-              <MDBIcon icon="sign-out-alt" className="me-4" />
+              <MDBIcon icon="sign-out-alt" className="me-0" />
             </MDBBtn>
           </div>
         </div>
@@ -156,7 +155,7 @@ function Dashboard() {
  <h5 className="text-muted text-center">Aucune réservation trouvée</h5>
  <p className="text-muted text-center">Vous n'avez pas encore effectué de réservation.</p>
  <Link to="/reserver">
-   <MDBBtn color="primary" >Faire une réservation</MDBBtn>
+   <MDBBtn color="primary" style={{ textTransform: 'none'}} >Faire une réservation</MDBBtn>
  </Link>
  </MDBCol>             ) : (
               reservations.map((res) => (
