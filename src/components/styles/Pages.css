@@ -15,7 +15,7 @@
   }
 }
 /* CSS pour s'assurer que le footer est toujours en bas */
-.footer {
+/* .footer {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -23,9 +23,10 @@
   color: white;
   text-align: center;
   z-index: 999;
-}
-.footer-dashboard {
+} */
+.footer {
   position: relative;
+  margin-top: auto;
   bottom: 0;
   left: 0;
   right: 0;

@@ -200,7 +200,7 @@ function Dashboard() {
       </div>
 
       {/* Footer */}
-      <footer className="footer-dashboard text-center p-3 bg-primary text-white">
+      <footer className="footer text-center p-3 bg-primary text-white">
         © 2025 ReserGo. Tous droits réservés.
       </footer>
     </MDBContainer>

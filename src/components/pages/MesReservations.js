@@ -178,7 +178,9 @@ function MesReservations() {
               </MDBCardTitle>
               <MDBCardText style={{ color: 'black' }}>
                 📍 {res.lieu}<br />
-                📅 {new Date(res.date).toLocaleString()}
+                📅 {new Date(res.date).toLocaleString()}<br></br>
+                💰 {res.spaceMontant ? `${res.spaceMontant} €` : 'Non spécifié'}
+
               </MDBCardText>
 
               {/* Afficher l'utilisateur qui a créé la réservation */}

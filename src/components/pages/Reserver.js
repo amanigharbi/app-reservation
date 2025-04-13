@@ -17,7 +17,7 @@ function Reserver() {
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
 
-  // useEffect pour écouter l'état de l'utilisateur et récupérer les espaces disponibles en temps réel
+  // useEffect pour écouter l'état de l'utilisateur et récupérer les es ces disponibles en temps réel
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -113,7 +113,9 @@ function Reserver() {
                       <MDBCardTitle className="text-center" style={{ color: 'black' }}><b>{space.name}</b></MDBCardTitle>
                       <MDBCardText style={{ color: 'black' }}>
                         📍 {space.location}<br />
-                        🕒 {space.availableFrom} - {space.availableTo}
+                        🕒 {space.availableFrom} - {space.availableTo}<br></br>
+                        💰 {space.montant ? `${space.montant} €` : 'Non spécifié'}
+
                       </MDBCardText>
                       <MDBBtn size="lg" color="deep-purple" style={{ textTransform: 'none', backgroundColor: '#3B71CA', color: 'white' }} onClick={() => handleReservation(space)}>
                         Réserver cet espace
