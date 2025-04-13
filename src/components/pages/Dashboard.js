@@ -183,9 +183,8 @@ function Dashboard() {
         <MDBContainer className="py-5 px-4">
         <h3 className="text-primary fw-bold mb-4">Tableau de bord</h3>
       <MDBRow>
-        {/* Nombre de Réservations */}
         <MDBCol md="4">
-          <MDBCard className="text-center shadow-sm bg-info text-white">
+          <MDBCard className="text-center shadow-sm bg-info text-white rounded-lg hover-effect">
             <MDBCardBody>
               <MDBCardTitle><MDBIcon fas icon="clipboard-list" /> Nombre de Réservations</MDBCardTitle>
               <MDBCardText>{reservationsCount}</MDBCardText>
@@ -193,9 +192,8 @@ function Dashboard() {
           </MDBCard>
         </MDBCol>
 
-        {/* Nombre d'Espaces */}
         <MDBCol md="4">
-          <MDBCard className="text-center shadow-sm bg-success text-white">
+          <MDBCard className="text-center shadow-sm bg-success text-white rounded-lg hover-effect">
             <MDBCardBody>
               <MDBCardTitle><MDBIcon fas icon="cogs" /> Nombre d'Espaces</MDBCardTitle>
               <MDBCardText>{spacesCount}</MDBCardText>
@@ -203,9 +201,8 @@ function Dashboard() {
           </MDBCard>
         </MDBCol>
 
-        {/* Nombre d'Utilisateurs */}
         <MDBCol md="4">
-          <MDBCard className="text-center shadow-sm bg-warning text-white">
+          <MDBCard className="text-center shadow-sm bg-warning text-white rounded-lg hover-effect">
             <MDBCardBody>
               <MDBCardTitle><MDBIcon fas icon="users" /> Nombre d'Utilisateurs</MDBCardTitle>
               <MDBCardText>{usersCount}</MDBCardText>
