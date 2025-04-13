@@ -30,7 +30,7 @@ function ReservationForm({ space }) {
     heure_arrivee: "",
     heure_depart: "",
     rappels: [],
-    montant: "",
+    montant: 0,
     spaceId: space?.id || "",
     spaceName: space?.name || "",
     spaceLocation: space?.location || "",
@@ -56,13 +56,18 @@ function ReservationForm({ space }) {
     setReservationDetails({ ...reservationDetails, [name]: value });
   };
   useEffect(() => {
-    if (space?.montant) {
+    const duree = parseFloat(reservationDetails.duree);
+    const montantParHeure = parseFloat(space?.montant || 0);
+  
+    if (!isNaN(duree) && !isNaN(montantParHeure)) {
+      const total = duree * montantParHeure;
       setReservationDetails((prev) => ({
         ...prev,
-        montant: space.montant,
+        montant: total.toFixed(2), // 2 décimales
       }));
     }
-  }, [space]);
+  }, [reservationDetails.duree, space]);
+  
 
   const validateForm = () => {
     const newErrors = {};
@@ -370,13 +375,11 @@ function ReservationForm({ space }) {
               Simulation de paiement - aucune transaction réelle
             </p>
             <MDBCardText className="mt-3">
-              <strong>Montant à payer :</strong>{" "}
-              {reservationDetails.montant
-                ? `${Number(reservationDetails.montant).toLocaleString(
-                    "fr-FR"
-                  )} €`
-                : "Non spécifié"}
-            </MDBCardText>
+  <strong>Montant à payer :</strong>{" "}
+  {reservationDetails.montant
+    ? `${Number(reservationDetails.montant).toLocaleString("fr-FR")} €`
+    : "Non spécifié"}
+</MDBCardText>
           </MDBCol>
         </MDBRow>
       )}

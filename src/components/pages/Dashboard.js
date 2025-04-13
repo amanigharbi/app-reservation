@@ -23,7 +23,13 @@ import {
 } from "mdb-react-ui-kit";
 import logo from "../../images/logo-3.png";
 import { db } from "../../firebase";
-import { collection, query, where, onSnapshot,getDocs } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  getDocs,
+} from "firebase/firestore";
 import "../styles/Pages.css";
 
 function Dashboard() {
@@ -34,7 +40,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const [reservationsCount, setReservationsCount] = useState(0);
   const [spacesCount, setSpacesCount] = useState(0);
-  const [usersCount, setUsersCount] = useState(0);
+  const [montantTotal, setMontantTotal] = useState(0);
   // useEffect pour écouter l'état de l'utilisateur et les réservations en temps réel depuis Firestore
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -75,16 +81,21 @@ function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       // Compter les réservations
-      const reservationsSnapshot = await getDocs(collection(db, "reservations"));
+      const reservationsSnapshot = await getDocs(
+        collection(db, "reservations")
+      );
       setReservationsCount(reservationsSnapshot.size);
 
       // Compter les espaces
       const spacesSnapshot = await getDocs(collection(db, "spaces"));
       setSpacesCount(spacesSnapshot.size);
 
-      // Compter les utilisateurs
-      const usersSnapshot = await getDocs(collection(db, "users"));
-      setUsersCount(usersSnapshot.size);
+      // 💰 Calculer le total des montants payés
+      const total = reservationsSnapshot.docs.reduce((acc, doc) => {
+        const data = doc.data();
+        return acc + (parseFloat(data.montant) || 0);
+      }, 0);
+      setMontantTotal(total);
     };
 
     fetchData();
@@ -181,36 +192,42 @@ function Dashboard() {
 
       <div className="main-content">
         <MDBContainer className="py-5 px-4">
-        <h3 className="text-primary fw-bold mb-4">Tableau de bord</h3>
-      <MDBRow>
-        <MDBCol md="4">
-          <MDBCard className="text-center shadow-sm bg-info text-white rounded-lg hover-effect">
-            <MDBCardBody>
-              <MDBCardTitle><MDBIcon fas icon="clipboard-list" /> Nombre de Réservations</MDBCardTitle>
-              <MDBCardText>{reservationsCount}</MDBCardText>
-            </MDBCardBody>
-          </MDBCard>
-        </MDBCol>
+          <h3 className="text-primary fw-bold mb-4">Tableau de bord</h3>
+          <MDBRow>
+            <MDBCol md="4">
+              <MDBCard className="text-center shadow-sm bg-info text-white rounded-lg hover-effect">
+                <MDBCardBody>
+                  <MDBCardTitle>
+                    <MDBIcon fas icon="clipboard-list" /> Nombre de Réservations
+                  </MDBCardTitle>
+                  <MDBCardText>{reservationsCount}</MDBCardText>
+                </MDBCardBody>
+              </MDBCard>
+            </MDBCol>
 
-        <MDBCol md="4">
-          <MDBCard className="text-center shadow-sm bg-success text-white rounded-lg hover-effect">
-            <MDBCardBody>
-              <MDBCardTitle><MDBIcon fas icon="cogs" /> Nombre d'Espaces</MDBCardTitle>
-              <MDBCardText>{spacesCount}</MDBCardText>
-            </MDBCardBody>
-          </MDBCard>
-        </MDBCol>
+            <MDBCol md="4">
+              <MDBCard className="text-center shadow-sm bg-success text-white rounded-lg hover-effect">
+                <MDBCardBody>
+                  <MDBCardTitle>
+                    <MDBIcon fas icon="cogs" /> Nombre d'Espaces
+                  </MDBCardTitle>
+                  <MDBCardText>{spacesCount}</MDBCardText>
+                </MDBCardBody>
+              </MDBCard>
+            </MDBCol>
 
-        <MDBCol md="4">
-          <MDBCard className="text-center shadow-sm bg-warning text-white rounded-lg hover-effect">
-            <MDBCardBody>
-              <MDBCardTitle><MDBIcon fas icon="users" /> Nombre d'Utilisateurs</MDBCardTitle>
-              <MDBCardText>{usersCount}</MDBCardText>
-            </MDBCardBody>
-          </MDBCard>
-        </MDBCol>
-      </MDBRow>
-      <br></br>
+            <MDBCol md="4">
+              <MDBCard className="text-center shadow-sm bg-warning text-white rounded-lg hover-effect">
+                <MDBCardBody>
+                  <MDBCardTitle>
+                    <MDBIcon fas icon="euro-sign" /> Montant Total Payé
+                  </MDBCardTitle>
+                  <MDBCardText>{montantTotal.toFixed(2)} €</MDBCardText>
+                </MDBCardBody>
+              </MDBCard>
+            </MDBCol>
+          </MDBRow>
+          <br></br>
           <h3
             className="text-primary fw-bold mb-4"
             style={{ fontWeight: "bold" }}
@@ -288,50 +305,86 @@ function Dashboard() {
 
       {/* Modal pour afficher les détails de la réservation */}
       <MDBModal open={modalOpen} onClose={setModalOpen} tabIndex="-1">
-  <MDBModalDialog size="lg" className="modal-content">
-    <MDBModalHeader>
-      <h5 className="modal-title text-primary">
-        Détails de la Réservation
-      </h5>
-      <MDBBtn
-        className="btn-close"
-        color="none"
-        onClick={handleCloseModal}
-      ></MDBBtn>
-    </MDBModalHeader>
-    <MDBModalBody>
-      {selectedReservation && (
-        <MDBRow>
-          {/* Colonne gauche */}
-          <MDBCol md="6">
-            <p><strong>Service:</strong> {selectedReservation.service}</p>
-            <p><strong>Lieu:</strong> {selectedReservation.lieu}</p>
-            <p><strong>Date:</strong> {selectedReservation.date}</p>
-            <p><strong>Durée:</strong> {selectedReservation.duree}</p>
-            <p><strong>Statut:</strong> {selectedReservation.statut}</p>
-            <p><strong>Participants:</strong> {selectedReservation.participants}</p>
-          </MDBCol>
+        <MDBModalDialog size="lg" className="modal-content">
+          <MDBModalHeader>
+            <h5 className="modal-title text-primary">
+              Détails de la Réservation
+            </h5>
+            <MDBBtn
+              className="btn-close"
+              color="none"
+              onClick={handleCloseModal}
+            ></MDBBtn>
+          </MDBModalHeader>
+          <MDBModalBody>
+            {selectedReservation && (
+              <MDBRow>
+                {/* Colonne gauche */}
+                <MDBCol md="6">
+                  <p>
+                    <strong>Service:</strong> {selectedReservation.service}
+                  </p>
+                  <p>
+                    <strong>Lieu:</strong> {selectedReservation.lieu}
+                  </p>
+                  <p>
+                    <strong>Date:</strong> {selectedReservation.date}
+                  </p>
+                  <p>
+                    <strong>Durée:</strong> {selectedReservation.duree}
+                  </p>
+                  <p>
+                    <strong>Statut:</strong> {selectedReservation.statut}
+                  </p>
+                  <p>
+                    <strong>Participants:</strong>{" "}
+                    {selectedReservation.participants}
+                  </p>
+                </MDBCol>
 
-          {/* Colonne droite */}
-          <MDBCol md="6">
-            <p><strong>Commentaires:</strong> {selectedReservation.commentaires}</p>
-            <p><strong>Code de Réservation:</strong> {selectedReservation.code_reservation}</p>
-            <p><strong>Heure d'arrivée:</strong> {selectedReservation.heure_arrivee}</p>
-            <p><strong>Heure de départ:</strong> {selectedReservation.heure_depart}</p>
-            <p><strong>Mode de Paiement:</strong> {selectedReservation.mode_paiement}</p>
-            <p><strong>Rappels:</strong> {Array.isArray(selectedReservation.rappels) ? selectedReservation.rappels.join(", ") : "Aucun rappel"}</p>
-          </MDBCol>
-        </MDBRow>
-      )}
-    </MDBModalBody>
-    <MDBModalFooter>
-      <MDBBtn color="secondary" onClick={handleCloseModal} style={{ textTransform: "none" }}>
-        Fermer
-      </MDBBtn>
-    </MDBModalFooter>
-  </MDBModalDialog>
-</MDBModal>
-
+                {/* Colonne droite */}
+                <MDBCol md="6">
+                  <p>
+                    <strong>Commentaires:</strong>{" "}
+                    {selectedReservation.commentaires}
+                  </p>
+                  <p>
+                    <strong>Code de Réservation:</strong>{" "}
+                    {selectedReservation.code_reservation}
+                  </p>
+                  <p>
+                    <strong>Heure d'arrivée:</strong>{" "}
+                    {selectedReservation.heure_arrivee}
+                  </p>
+                  <p>
+                    <strong>Heure de départ:</strong>{" "}
+                    {selectedReservation.heure_depart}
+                  </p>
+                  <p>
+                    <strong>Mode de Paiement:</strong>{" "}
+                    {selectedReservation.mode_paiement}
+                  </p>
+                  <p>
+                    <strong>Rappels:</strong>{" "}
+                    {Array.isArray(selectedReservation.rappels)
+                      ? selectedReservation.rappels.join(", ")
+                      : "Aucun rappel"}
+                  </p>
+                </MDBCol>
+              </MDBRow>
+            )}
+          </MDBModalBody>
+          <MDBModalFooter>
+            <MDBBtn
+              color="secondary"
+              onClick={handleCloseModal}
+              style={{ textTransform: "none" }}
+            >
+              Fermer
+            </MDBBtn>
+          </MDBModalFooter>
+        </MDBModalDialog>
+      </MDBModal>
 
       {/* Footer */}
       <footer className="footer text-center p-3 bg-primary text-white">

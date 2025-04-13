@@ -114,7 +114,7 @@ function Reserver() {
                       <MDBCardText style={{ color: 'black' }}>
                         📍 {space.location}<br />
                         🕒 {space.availableFrom} - {space.availableTo}<br></br>
-                        💰 {space.montant ? `${space.montant} €` : 'Non spécifié'}
+                        💰 {space.montant ? `${space.montant} € par heure` : 'Non spécifié'}
 
                       </MDBCardText>
                       <MDBBtn size="lg" color="deep-purple" style={{ textTransform: 'none', backgroundColor: '#3B71CA', color: 'white' }} onClick={() => handleReservation(space)}>
