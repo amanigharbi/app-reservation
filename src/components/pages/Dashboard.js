@@ -23,7 +23,7 @@ import {
 } from "mdb-react-ui-kit";
 import logo from "../../images/logo-3.png";
 import { db } from "../../firebase";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot,getDocs } from "firebase/firestore";
 import "../styles/Pages.css";
 
 function Dashboard() {
@@ -32,7 +32,9 @@ function Dashboard() {
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
-
+  const [reservationsCount, setReservationsCount] = useState(0);
+  const [spacesCount, setSpacesCount] = useState(0);
+  const [usersCount, setUsersCount] = useState(0);
   // useEffect pour écouter l'état de l'utilisateur et les réservations en temps réel depuis Firestore
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -70,7 +72,23 @@ function Dashboard() {
 
     return () => unsubscribeAuth(); // Unsubscribe de Firebase Auth lorsque le composant est démonté
   }, [navigate]);
+  useEffect(() => {
+    const fetchData = async () => {
+      // Compter les réservations
+      const reservationsSnapshot = await getDocs(collection(db, "reservations"));
+      setReservationsCount(reservationsSnapshot.size);
 
+      // Compter les espaces
+      const spacesSnapshot = await getDocs(collection(db, "spaces"));
+      setSpacesCount(spacesSnapshot.size);
+
+      // Compter les utilisateurs
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      setUsersCount(usersSnapshot.size);
+    };
+
+    fetchData();
+  }, []);
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -161,11 +179,43 @@ function Dashboard() {
         {/* Autres éléments du carousel */}
       </MDBCarousel>
 
-      {/* Contenu principal */}
       <div className="main-content">
         <MDBContainer className="py-5 px-4">
+        <h3 className="text-primary fw-bold mb-4">Tableau de bord</h3>
+      <MDBRow>
+        {/* Nombre de Réservations */}
+        <MDBCol md="4">
+          <MDBCard className="text-center shadow-sm bg-info text-white">
+            <MDBCardBody>
+              <MDBCardTitle><MDBIcon fas icon="clipboard-list" /> Nombre de Réservations</MDBCardTitle>
+              <MDBCardText>{reservationsCount}</MDBCardText>
+            </MDBCardBody>
+          </MDBCard>
+        </MDBCol>
+
+        {/* Nombre d'Espaces */}
+        <MDBCol md="4">
+          <MDBCard className="text-center shadow-sm bg-success text-white">
+            <MDBCardBody>
+              <MDBCardTitle><MDBIcon fas icon="cogs" /> Nombre d'Espaces</MDBCardTitle>
+              <MDBCardText>{spacesCount}</MDBCardText>
+            </MDBCardBody>
+          </MDBCard>
+        </MDBCol>
+
+        {/* Nombre d'Utilisateurs */}
+        <MDBCol md="4">
+          <MDBCard className="text-center shadow-sm bg-warning text-white">
+            <MDBCardBody>
+              <MDBCardTitle><MDBIcon fas icon="users" /> Nombre d'Utilisateurs</MDBCardTitle>
+              <MDBCardText>{usersCount}</MDBCardText>
+            </MDBCardBody>
+          </MDBCard>
+        </MDBCol>
+      </MDBRow>
+      <br></br>
           <h3
-            className="text-primary mb-4 text-center"
+            className="text-primary fw-bold mb-4"
             style={{ fontWeight: "bold" }}
           >
             Réservations récentes
