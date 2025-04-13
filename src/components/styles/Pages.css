@@ -88,7 +88,14 @@
   object-fit: cover;
   height: 400px;
 }
-.mdb-modal.show {
-  display: block !important; /* Assurez-vous que le modal est visible */
+.modal-content {
+  background-color: white !important; /* Fond blanc pour le contenu */
+  border-radius: 10px; /* Optionnel : arrondir les coins du modal */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Ajouter une légère ombre */
 }
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.4) !important; /* Assurer que l'arrière-plan est semi-transparent */
+}
+
 
