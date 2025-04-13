@@ -88,4 +88,7 @@
   object-fit: cover;
   height: 400px;
 }
+.mdb-modal.show {
+  display: block !important; /* Assurez-vous que le modal est visible */
+}
 
