@@ -8,6 +8,7 @@ import ResetPasswordForm from './components/pages/ResetPasswordForm';
 import Dashboard from "./components/pages/Dashboard"; 
 import MesReservations from "./components/pages/MesReservations"; 
 import Reserver from "./components/pages/Reserver";
+import UpdateReservation from "./components/pages/UpdateReservation";
 import 'mdb-react-ui-kit/dist/css/mdb.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -23,6 +24,8 @@ const App = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/mes-reservations" element={<MesReservations />} />
         <Route path="/reserver" element={<Reserver />} />
+        <Route path="/update-reservation/:id" element={<UpdateReservation />} />
+
 
       </Routes>
     </Router>
