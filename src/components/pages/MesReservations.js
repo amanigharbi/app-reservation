@@ -96,25 +96,21 @@ function MesReservations() {
     const totalMinutes = Math.round(parseFloat(heuresDecimales) * 60);
     const heures = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-  
-    if (isNaN(heures)) return '';
+
+    if (isNaN(heures)) return "";
     if (minutes === 0) return `${heures}h`;
     return `${heures}h ${minutes}min`;
-  };
-   const getTotalPaiement = (paiements) => {
-    if (!paiements || paiements.length === 0) return 0;
-    return paiements.reduce((sum, p) => sum + parseFloat(p.montant || 0), 0);
   };
 
   const getMethodePaiement = (paiements, res) => {
     // Si la liste des paiements est vide ou nulle, retourner res.mode_paiement
     if (!paiements || paiements.length === 0) {
-      return res.mode_paiement || "-";  // Si mode_paiement est défini, le retourner, sinon "-"
+      return res.mode_paiement || "-"; // Si mode_paiement est défini, le retourner, sinon "-"
     }
     // Sinon, retourner les méthodes de paiement séparées par des virgules
-    return paiements.map(p => p.methode).join(", ");
+    return paiements.map((p) => p.methode).join(", ");
   };
-  
+
   const handleUpdateReservation = (reservation) => {
     setSelectedReservationId(reservation.id);
     setShowUpdateModal(true);
@@ -150,16 +146,21 @@ function MesReservations() {
       "Durée",
       "Service",
       "Espace",
-      "Montant",
+      "Montant de l'espace",
+      "Montant payé",
+      "Mode de paiement", // Nouvelle colonne ajoutée
       "Participants",
     ];
+
     const rows = reservations.map((res) => [
       res.code_reservation,
       new Date(res.date).toLocaleString(),
-      res.duree,
+      formatDuree(res.duree),
       res.service,
       res.spaceName,
       res.spaceMontant,
+      res.montant, // Montant payé
+      getMethodePaiement(res.paiements, res), // Mode de paiement
       res.participants,
     ]);
 
@@ -169,23 +170,31 @@ function MesReservations() {
     a.href = URL.createObjectURL(blob);
     a.download = "mes_reservations.csv";
     a.click();
-    // Show success toast for export
+
+    // Afficher un message de réussite après l'exportation
     setShowToast({ type: "success", visible: true });
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
 
   const handleExportPDF = () => {
     const element = document.getElementById("reservations-table");
+
+    // Option d'exportation avec le mode de paiement et le montant payé
     const opt = {
       margin: 0.3,
       filename: "mes_reservations.pdf",
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+      jsPDF: {
+        unit: "in",
+        format: "letter",
+        orientation: "portrait",
+      },
     };
 
     html2pdf().set(opt).from(element).save();
-    // Show success toast for export
+
+    // Afficher un message de réussite après l'exportation
     setShowToast({ type: "success", visible: true });
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
@@ -343,58 +352,63 @@ function MesReservations() {
             style={{ maxHeight: "600px", overflowY: "auto" }}
             id="reservations-table"
           >
-          <MDBTable striped hover responsive>
-          <MDBTableHead
+            <MDBTable striped hover responsive>
+              <MDBTableHead
                 className=" text-blue-800 text-center"
                 style={{ fontWeight: "bold", fontSize: "1.0rem" }}
-              >          <tr>
-            <th>Code</th>
-            <th>Date</th>
-            <th>Durée</th>
-            <th>Service</th>
-            <th>Montant</th>
-            <th>Payé</th>
-            <th>Méthode</th>
-            <th>Participants</th>
-            <th>Statut</th>
-            <th>Espace</th>
-            <th>Actions</th>
-          </tr>
-        </MDBTableHead>
-        <MDBTableBody className="text-center">
-  {filteredReservations.map((res) => (
-    <tr key={res.id}>
-      <td><strong>{res.code_reservation}</strong></td>
-      <td>{new Date(res.date).toLocaleString()}</td>
-      <td>{formatDuree(res.duree)}</td>
-      <td>{res.service}</td>
-      <td>{res.spaceMontant} €</td>
-      <td>{getTotalPaiement(res.paiements)} €</td>
-      <td>{getMethodePaiement(res.paiements, res)}</td> {/* Modification ici */}
-      <td>{res.participants}</td>
-      <td>{res.statut}</td>
-      <td>{res.spaceName} ({res.spaceLocation})</td>
-      <td>
-        <MDBBtn
-          size="sm"
-          color="warning"
-          onClick={() => handleUpdateReservation(res)}
-        >
-          <MDBIcon fas icon="pen" />
-        </MDBBtn>{" "}
-        <MDBBtn
-          size="sm"
-          color="danger"
-          onClick={() => handleDeleteReservation(res.id)}
-        >
-          <MDBIcon fas icon="trash" />
-        </MDBBtn>
-      </td>
-    </tr>
-  ))}
-</MDBTableBody>
-
-      </MDBTable>
+              >
+                {" "}
+                <tr>
+                  <th>Code</th>
+                  <th>Date</th>
+                  <th>Durée</th>
+                  <th>Service</th>
+                  <th>Montant</th>
+                  <th>Payé</th>
+                  <th>Méthode</th>
+                  <th>Participants</th>
+                  <th>Statut</th>
+                  <th>Espace</th>
+                  <th>Actions</th>
+                </tr>
+              </MDBTableHead>
+              <MDBTableBody className="text-center">
+                {filteredReservations.map((res) => (
+                  <tr key={res.id}>
+                    <td>
+                      <strong>{res.code_reservation}</strong>
+                    </td>
+                    <td>{new Date(res.date).toLocaleString()}</td>
+                    <td>{formatDuree(res.duree)}</td>
+                    <td>{res.service}</td>
+                    <td>{res.spaceMontant} €</td>
+                    <td>{res.montant} €</td>
+                    <td>{getMethodePaiement(res.paiements, res)}</td>
+                    <td>{res.participants}</td>
+                    <td>{res.statut}</td>
+                    <td>
+                      {res.spaceName} ({res.spaceLocation})
+                    </td>
+                    <td>
+                      <MDBBtn
+                        size="sm"
+                        color="warning"
+                        onClick={() => handleUpdateReservation(res)}
+                      >
+                        <MDBIcon fas icon="pen" />
+                      </MDBBtn>{" "}
+                      <MDBBtn
+                        size="sm"
+                        color="danger"
+                        onClick={() => handleDeleteReservation(res.id)}
+                      >
+                        <MDBIcon fas icon="trash" />
+                      </MDBBtn>
+                    </td>
+                  </tr>
+                ))}
+              </MDBTableBody>
+            </MDBTable>
           </div>
         )}
       </MDBContainer>
