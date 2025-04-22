@@ -31,15 +31,18 @@ import {
 import html2pdf from "html2pdf.js";
 
 import "../styles/Pages.css";
+import UpdateReservation from "./UpdateReservation";
 
 function MesReservations() {
   const [userEmail, setUserEmail] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showModal, setShowModal] = useState(false); // Modal state
-  const [reservationToDelete, setReservationToDelete] = useState(null); // Reservation to delete
+  const [showModal, setShowModal] = useState(false);
+  const [reservationToDelete, setReservationToDelete] = useState(null);
   const [showToast, setShowToast] = useState({ type: "", visible: false });
-  const [rappels, setRappels] = useState([]); // Ajout de l'état pour les rappels
+  const [rappels, setRappels] = useState([]);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedReservationId, setSelectedReservationId] = useState(null);
   const filteredRappels = rappels.filter(
     (rappel) =>
       rappel.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -89,11 +92,19 @@ function MesReservations() {
     });
     setRappels(extractedRappels);
   }, [reservations]);
-
+  const formatDuree = (heuresDecimales) => {
+    const totalMinutes = Math.round(parseFloat(heuresDecimales) * 60);
+    const heures = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+  
+    if (isNaN(heures)) return '';
+    if (minutes === 0) return `${heures}h`;
+    return `${heures}h ${minutes}min`;
+  };
+  
   const handleUpdateReservation = (reservation) => {
-    navigate(`/update-reservation/${reservation.id}`, {
-      state: { reservation },
-    });
+    setSelectedReservationId(reservation.id);
+    setShowUpdateModal(true);
   };
 
   const handleDeleteReservation = (id) => {
@@ -343,7 +354,7 @@ function MesReservations() {
                       <strong>{res.code_reservation}</strong>
                     </td>
                     <td>{new Date(res.date).toLocaleString()}</td>
-                    <td>{res.duree} h</td>
+                    <td>{formatDuree(res.duree)}</td>
                     <td>{res.service}</td>
                     <td>{res.spaceMontant} €</td>
                     <td>{res.participants}</td>
@@ -459,6 +470,13 @@ function MesReservations() {
           </div>
         )}
       </MDBContainer>
+      {showUpdateModal && (
+        <UpdateReservation
+          reservationId={selectedReservationId}
+          onClose={() => setShowUpdateModal(false)}
+          showModal={showUpdateModal}
+        />
+      )}
       <footer className="footer text-center p-3 bg-primary text-white mt-auto">
         © 2025 ReserGo. Tous droits réservés.
       </footer>
