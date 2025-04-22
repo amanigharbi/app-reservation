@@ -40,13 +40,13 @@ function ReservationForm({ space }) {
   const [errors, setErrors] = useState({});
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState('carte');
+  const [paymentMethod, setPaymentMethod] = useState("carte");
   const [cardDetails, setCardDetails] = useState({
-    number: '',
-    expiry: '',
-    cvv: ''
+    number: "",
+    expiry: "",
+    cvv: "",
   });
-  
+
   useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -59,14 +59,14 @@ function ReservationForm({ space }) {
   }, [navigate]);
   useEffect(() => {
     const { heure_arrivee, heure_depart } = reservationDetails;
-  
+
     if (heure_arrivee && heure_depart) {
       const [h1, m1] = heure_arrivee.split(":").map(Number);
       const [h2, m2] = heure_depart.split(":").map(Number);
-  
+
       const debut = h1 * 60 + m1;
       const fin = h2 * 60 + m2;
-  
+
       if (fin > debut) {
         const dureeMinutes = fin - debut;
         const dureeHeures = (dureeMinutes / 60).toFixed(2); // arrondi à 2 décimales
@@ -91,7 +91,7 @@ function ReservationForm({ space }) {
   useEffect(() => {
     const duree = parseFloat(reservationDetails.duree);
     const montantParHeure = parseFloat(space?.montant || 0);
-  
+
     if (!isNaN(duree) && !isNaN(montantParHeure)) {
       const total = duree * montantParHeure;
       setReservationDetails((prev) => ({
@@ -100,46 +100,46 @@ function ReservationForm({ space }) {
       }));
     }
   }, [reservationDetails.duree, space]);
-  
 
- const validateForm = () => {
-  const newErrors = {};
+  const validateForm = () => {
+    const newErrors = {};
 
-  if (etape === 1) {
-    if (!reservationDetails.service) newErrors.service = "Le service est requis";
-    if (!reservationDetails.date) newErrors.date = "La date est requise";
-    if (!reservationDetails.duree) newErrors.duree = "La durée est requise";
-    if (!reservationDetails.participants) newErrors.participants = "Le nombre de participants est requis";
+    if (etape === 1) {
+      if (!reservationDetails.service)
+        newErrors.service = "Le service est requis";
+      if (!reservationDetails.date) newErrors.date = "La date est requise";
+      if (!reservationDetails.duree) newErrors.duree = "La durée est requise";
+      if (!reservationDetails.participants)
+        newErrors.participants = "Le nombre de participants est requis";
 
-    // Vérification de la disponibilité horaire
-    const { heure_arrivee, heure_depart } = reservationDetails;
-    const { availableFrom, availableTo } = space || {};
+      // Vérification de la disponibilité horaire
+      const { heure_arrivee, heure_depart } = reservationDetails;
+      const { availableFrom, availableTo } = space || {};
 
-    const toMinutes = (time) => {
-      const [h, m] = time.split(":").map(Number);
-      return h * 60 + m;
-    };
+      const toMinutes = (time) => {
+        const [h, m] = time.split(":").map(Number);
+        return h * 60 + m;
+      };
 
-    if (heure_arrivee && heure_depart && availableFrom && availableTo) {
-      const arriveeMin = toMinutes(heure_arrivee);
-      const departMin = toMinutes(heure_depart);
-      const dispoMin = toMinutes(availableFrom);
-      const dispoMax = toMinutes(availableTo);
+      if (heure_arrivee && heure_depart && availableFrom && availableTo) {
+        const arriveeMin = toMinutes(heure_arrivee);
+        const departMin = toMinutes(heure_depart);
+        const dispoMin = toMinutes(availableFrom);
+        const dispoMax = toMinutes(availableTo);
 
-      if (arriveeMin < dispoMin || departMin > dispoMax) {
-        newErrors.heure_arrivee = `L'heure doit être entre ${availableFrom} et ${availableTo}`;
-        newErrors.heure_depart = `L'heure doit être entre ${availableFrom} et ${availableTo}`;
+        if (arriveeMin < dispoMin || departMin > dispoMax) {
+          newErrors.heure_arrivee = `L'heure doit être entre ${availableFrom} et ${availableTo}`;
+          newErrors.heure_depart = `L'heure doit être entre ${availableFrom} et ${availableTo}`;
+        }
       }
     }
-  }
 
-  if (etape === 2 && !reservationDetails.mode_paiement) {
-    newErrors.mode_paiement = "Le mode de paiement est requis";
-  }
+    if (etape === 2 && !reservationDetails.mode_paiement) {
+      newErrors.mode_paiement = "Le mode de paiement est requis";
+    }
 
-  return newErrors;
-};
-
+    return newErrors;
+  };
 
   const handleSubmitReservation = async (e) => {
     e.preventDefault();
@@ -299,13 +299,13 @@ function ReservationForm({ space }) {
           </MDBCol>
           <MDBCol md="6" className="mb-4">
             <MDBInput
-              label="Date (YYYY-MM-DD HH:mm)"
+              label="Date (YYYY-MM-DD)"
               name="date"
               value={reservationDetails.date}
               onChange={handleChange}
               invalid={!!errors.date}
               feedback={errors.date}
-              type="datetime-local"
+              type="date"
             />
 
             {errors.date && (
@@ -346,14 +346,15 @@ function ReservationForm({ space }) {
               value={reservationDetails.heure_arrivee}
               onChange={handleChange}
               invalid={!!errors.heure_arrivee}
-
-
             />
             {errors.heure_arrivee && (
-  <div className="invalid-feedback d-block" style={{ fontSize: "0.875rem", marginTop: "0.15rem" }}>
-    {errors.heure_arrivee}
-  </div>
-)}
+              <div
+                className="invalid-feedback d-block"
+                style={{ fontSize: "0.875rem", marginTop: "0.15rem" }}
+              >
+                {errors.heure_arrivee}
+              </div>
+            )}
           </MDBCol>
           <MDBCol md="6" className="mb-4">
             <MDBInput
@@ -363,13 +364,15 @@ function ReservationForm({ space }) {
               value={reservationDetails.heure_depart}
               onChange={handleChange}
               invalid={!!errors.heure_depart}
-
             />
             {errors.heure_depart && (
-  <div className="invalid-feedback d-block" style={{ fontSize: "0.875rem", marginTop: "0.15rem" }}>
-    {errors.heure_depart}
-  </div>
-)}
+              <div
+                className="invalid-feedback d-block"
+                style={{ fontSize: "0.875rem", marginTop: "0.15rem" }}
+              >
+                {errors.heure_depart}
+              </div>
+            )}
             <br />
           </MDBCol>
           <MDBCol md="12" className="mb-4">
@@ -391,114 +394,128 @@ function ReservationForm({ space }) {
             <br />
           </MDBCol>
           <MDBCol md="12" className="mb-4">
-  <MDBInput
-    label="Ajouter un rappel (ex: 2025-04-20 10:00)"
-    name="nouveau_rappel"
-    type="datetime-local"
-    value={nouveauRappel}
-    onChange={(e) => setNouveauRappel(e.target.value)}
-  />
-  <MDBBtn
-    size="sm"
-    className="mt-2"
-    style={{ textTransform: "none" }}
-    onClick={() => {
-      if (nouveauRappel) {
-        setReservationDetails((prev) => ({
-          ...prev,
-          rappels: [...prev.rappels, nouveauRappel],
-        }));
-        setNouveauRappel(""); // Réinitialiser l'entrée du rappel
-      }
-    }}
-  >
-    Ajouter un rappel
-  </MDBBtn>
-  
-  {/* Affichage des rappels sous forme de badges */}
-  <div className="d-flex flex-wrap mt-3">
-    {reservationDetails.rappels.map((rappel, i) => (
-      <MDBBadge key={i} color="primary" className="me-2 mb-2">
-        {new Date(rappel).toLocaleString()}
-      </MDBBadge>
-    ))}
-  </div>
-</MDBCol>
+            <MDBInput
+              label="Ajouter un rappel (ex: 2025-04-20 10:00)"
+              name="nouveau_rappel"
+              type="datetime-local"
+              value={nouveauRappel}
+              onChange={(e) => setNouveauRappel(e.target.value)}
+            />
+            <MDBBtn
+              size="sm"
+              className="mt-2"
+              style={{ textTransform: "none" }}
+              onClick={() => {
+                if (nouveauRappel) {
+                  setReservationDetails((prev) => ({
+                    ...prev,
+                    rappels: [...prev.rappels, nouveauRappel],
+                  }));
+                  setNouveauRappel(""); // Réinitialiser l'entrée du rappel
+                }
+              }}
+            >
+              Ajouter un rappel
+            </MDBBtn>
 
+            {/* Affichage des rappels sous forme de badges */}
+            <div className="d-flex flex-wrap mt-3">
+              {reservationDetails.rappels.map((rappel, i) => (
+                <MDBBadge key={i} color="primary" className="me-2 mb-2">
+                  {new Date(rappel).toLocaleString()}
+                </MDBBadge>
+              ))}
+            </div>
+          </MDBCol>
         </MDBRow>
       )}
 
-{etape === 2 && (
-  <>
-    <MDBRow className="mb-4">
-      <MDBCol md="12">
-        <label className="form-label">Mode de paiement</label>
-        <select
-          className="form-select mb-3"
-          value={paymentMethod}
-          onChange={(e) => {
-            setPaymentMethod(e.target.value);
-            setReservationDetails(prev => ({ ...prev, mode_paiement: e.target.value }));
-          }}
-        >
-          <option value="carte">Carte de crédit</option>
-          <option value="paypal">PayPal</option>
-          <option value="virement">Virement bancaire</option>
-        </select>
+      {etape === 2 && (
+        <>
+          <MDBRow className="mb-4">
+            <MDBCol md="12">
+              <label className="form-label">Mode de paiement</label>
+              <select
+                className="form-select mb-3"
+                value={paymentMethod}
+                onChange={(e) => {
+                  setPaymentMethod(e.target.value);
+                  setReservationDetails((prev) => ({
+                    ...prev,
+                    mode_paiement: e.target.value,
+                  }));
+                }}
+              >
+                <option value="carte">Carte de crédit</option>
+                <option value="paypal">PayPal</option>
+                <option value="virement">Virement bancaire</option>
+              </select>
 
-        {paymentMethod === 'carte' && (
-          <>
-            <MDBInput
-              label="Numéro de carte"
-              value={cardDetails.number}
-              onChange={e => setCardDetails({ ...cardDetails, number: e.target.value })}
-              className="mb-2"
-            />
-            <div className="d-flex mb-3">
-              <MDBInput
-                label="Date expiration"
-                value={cardDetails.expiry}
-                onChange={e => setCardDetails({ ...cardDetails, expiry: e.target.value })}
-                className="me-2"
-              />
-              <MDBInput
-                label="CVV"
-                value={cardDetails.cvv}
-                onChange={e => setCardDetails({ ...cardDetails, cvv: e.target.value })}
-              />
-            </div>
-          </>
-        )}
+              {paymentMethod === "carte" && (
+                <>
+                  <MDBInput
+                    label="Numéro de carte"
+                    value={cardDetails.number}
+                    onChange={(e) =>
+                      setCardDetails({ ...cardDetails, number: e.target.value })
+                    }
+                    className="mb-2"
+                  />
+                  <div className="d-flex mb-3">
+                    <MDBInput
+                      label="Date expiration"
+                      value={cardDetails.expiry}
+                      onChange={(e) =>
+                        setCardDetails({
+                          ...cardDetails,
+                          expiry: e.target.value,
+                        })
+                      }
+                      className="me-2"
+                    />
+                    <MDBInput
+                      label="CVV"
+                      value={cardDetails.cvv}
+                      onChange={(e) =>
+                        setCardDetails({ ...cardDetails, cvv: e.target.value })
+                      }
+                    />
+                  </div>
+                </>
+              )}
 
-        <MDBCardText className="mt-3">
-          <strong>Montant à payer :</strong>{" "}
-          {reservationDetails.montant
-            ? `${Number(reservationDetails.montant).toLocaleString("fr-FR")} €`
-            : "Non spécifié"}
-        </MDBCardText>
+              <MDBCardText className="mt-3">
+                <strong>Montant à payer :</strong>{" "}
+                {reservationDetails.montant
+                  ? `${Number(reservationDetails.montant).toLocaleString(
+                      "fr-FR"
+                    )} €`
+                  : "Non spécifié"}
+              </MDBCardText>
 
-        <MDBBtn
-          onClick={() => {
-            const missingCardData =
-              paymentMethod === 'carte' &&
-              (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv);
+              <MDBBtn
+                onClick={() => {
+                  const missingCardData =
+                    paymentMethod === "carte" &&
+                    (!cardDetails.number ||
+                      !cardDetails.expiry ||
+                      !cardDetails.cvv);
 
-            if (missingCardData) {
-              alert('Veuillez remplir tous les champs de la carte.');
-            } else {
-              setEtape(3);
-            }
-          }}
-          color="primary"
-          style={{ textTransform: "none" }}
-        >
-          Suivant
-        </MDBBtn>
-      </MDBCol>
-    </MDBRow>
-  </>
-)}
-
+                  if (missingCardData) {
+                    alert("Veuillez remplir tous les champs de la carte.");
+                  } else {
+                    setEtape(3);
+                  }
+                }}
+                color="primary"
+                style={{ textTransform: "none" }}
+              >
+                Suivant
+              </MDBBtn>
+            </MDBCol>
+          </MDBRow>
+        </>
+      )}
 
       {etape === 3 && (
         <MDBRow>
@@ -507,7 +524,7 @@ function ReservationForm({ space }) {
               <strong>Service :</strong> {reservationDetails.service}
             </MDBCardText>
             <MDBCardText>
-              <strong>Lieu :</strong> {space.lieu}
+              <strong>Lieu :</strong> {space.location}
             </MDBCardText>
             <MDBCardText>
               <strong>Date :</strong> {reservationDetails.date}
@@ -519,10 +536,12 @@ function ReservationForm({ space }) {
               <strong>Participants :</strong> {reservationDetails.participants}
             </MDBCardText>
             <MDBCardText>
-              <strong>Description :</strong> {reservationDetails.description}
+              <strong>Description :</strong>{" "}
+              {reservationDetails.description || "Aucune"}
             </MDBCardText>
             <MDBCardText>
-              <strong>Commentaires :</strong> {reservationDetails.commentaires}
+              <strong>Commentaires :</strong>{" "}
+              {reservationDetails.commentaires || "Aucun"}
             </MDBCardText>
             <MDBCardText>
               <strong>Heure d'arrivée :</strong>{" "}
@@ -543,9 +562,8 @@ function ReservationForm({ space }) {
               <strong>Rappels :</strong>
             </MDBCardText>
             <ul>
-              {reservationDetails.rappels.map((r, i) => (
-                <li key={i}>{r}</li>
-              ))}
+              {reservationDetails.rappels.map((r, i) => <li key={i}>{r}</li>) ||
+                "Aucun"}
             </ul>
           </MDBCol>
         </MDBRow>
