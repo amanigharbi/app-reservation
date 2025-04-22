@@ -40,7 +40,13 @@ function ReservationForm({ space }) {
   const [errors, setErrors] = useState({});
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
-
+  const [paymentMethod, setPaymentMethod] = useState('carte');
+  const [cardDetails, setCardDetails] = useState({
+    number: '',
+    expiry: '',
+    cvv: ''
+  });
+  
   useEffect(() => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -422,38 +428,77 @@ function ReservationForm({ space }) {
         </MDBRow>
       )}
 
-      {etape === 2 && (
-        <MDBRow>
-          <MDBCol md="12" className="mb-4">
+{etape === 2 && (
+  <>
+    <MDBRow className="mb-4">
+      <MDBCol md="12">
+        <label className="form-label">Mode de paiement</label>
+        <select
+          className="form-select mb-3"
+          value={paymentMethod}
+          onChange={(e) => {
+            setPaymentMethod(e.target.value);
+            setReservationDetails(prev => ({ ...prev, mode_paiement: e.target.value }));
+          }}
+        >
+          <option value="carte">Carte de crédit</option>
+          <option value="paypal">PayPal</option>
+          <option value="virement">Virement bancaire</option>
+        </select>
+
+        {paymentMethod === 'carte' && (
+          <>
             <MDBInput
-              label="Mode de paiement (ex: Carte de crédit)"
-              name="mode_paiement"
-              value={reservationDetails.mode_paiement}
-              onChange={handleChange}
-              invalid={!!errors.mode_paiement}
-              feedback={errors.mode_paiement}
+              label="Numéro de carte"
+              value={cardDetails.number}
+              onChange={e => setCardDetails({ ...cardDetails, number: e.target.value })}
+              className="mb-2"
             />
-            {errors.mode_paiement && (
-              <div
-                className="invalid-feedback d-block"
-                style={{ fontSize: "0.875rem", marginTop: "0.15rem" }}
-              >
-                {errors.mode_paiement}
-              </div>
-            )}
-            <br />
-            <p className="text-muted">
-              Simulation de paiement - aucune transaction réelle
-            </p>
-            <MDBCardText className="mt-3">
-  <strong>Montant à payer :</strong>{" "}
-  {reservationDetails.montant
-    ? `${Number(reservationDetails.montant).toLocaleString("fr-FR")} €`
-    : "Non spécifié"}
-</MDBCardText>
-          </MDBCol>
-        </MDBRow>
-      )}
+            <div className="d-flex mb-3">
+              <MDBInput
+                label="Date expiration"
+                value={cardDetails.expiry}
+                onChange={e => setCardDetails({ ...cardDetails, expiry: e.target.value })}
+                className="me-2"
+              />
+              <MDBInput
+                label="CVV"
+                value={cardDetails.cvv}
+                onChange={e => setCardDetails({ ...cardDetails, cvv: e.target.value })}
+              />
+            </div>
+          </>
+        )}
+
+        <MDBCardText className="mt-3">
+          <strong>Montant à payer :</strong>{" "}
+          {reservationDetails.montant
+            ? `${Number(reservationDetails.montant).toLocaleString("fr-FR")} €`
+            : "Non spécifié"}
+        </MDBCardText>
+
+        <MDBBtn
+          onClick={() => {
+            const missingCardData =
+              paymentMethod === 'carte' &&
+              (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv);
+
+            if (missingCardData) {
+              alert('Veuillez remplir tous les champs de la carte.');
+            } else {
+              setEtape(3);
+            }
+          }}
+          color="primary"
+          style={{ textTransform: "none" }}
+        >
+          Suivant
+        </MDBBtn>
+      </MDBCol>
+    </MDBRow>
+  </>
+)}
+
 
       {etape === 3 && (
         <MDBRow>
