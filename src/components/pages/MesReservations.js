@@ -17,6 +17,7 @@ import {
   MDBModalTitle,
   MDBModalBody,
   MDBModalFooter,
+  MDBBadge,
 } from "mdb-react-ui-kit";
 import logo from "../../images/logo-3.png";
 import { db } from "../../firebase";
@@ -399,7 +400,34 @@ function MesReservations() {
                     <td>{res.montant} €</td>
                     <td>{getMethodePaiement(res.paiements, res)}</td>
                     <td>{res.participants}</td>
-                    <td>{res.statut}</td>
+                    <td>
+                      {" "}
+                      {res.statut === "annulation demandée" && (
+                        <MDBBadge color="warning" className="ms-2">
+                          A Annulée{" "}
+                        </MDBBadge>
+                      )}
+                      {res.statut === "annulée" && (
+                        <MDBBadge color="danger" className="ms-2">
+                          Annulée
+                        </MDBBadge>
+                      )}
+                      {res.statut === "En attente" && (
+                        <MDBBadge color="warning" className="ms-2">
+                          A confirmée
+                        </MDBBadge>
+                      )}
+                      {res.statut === "acceptée" && (
+                        <MDBBadge color="success" className="ms-2">
+                          Confirmée
+                        </MDBBadge>
+                      )}
+                      {res.statut === "refusée" && (
+                        <MDBBadge color="danger" className="ms-2">
+                          Refusée
+                        </MDBBadge>
+                      )}
+                    </td>
                     <td>
                       {res.spaceName} ({res.spaceLocation})
                     </td>
