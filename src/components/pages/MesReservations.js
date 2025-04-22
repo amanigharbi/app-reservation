@@ -39,7 +39,11 @@ function MesReservations() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [reservationToDelete, setReservationToDelete] = useState(null);
-  const [showToast, setShowToast] = useState({ type: "", visible: false });
+  const [showToast, setShowToast] = useState({
+    type: "",
+    visible: false,
+    message: "",
+  });
   const [rappels, setRappels] = useState([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedReservationId, setSelectedReservationId] = useState(null);
@@ -53,8 +57,9 @@ function MesReservations() {
   );
   const navigate = useNavigate();
   useEffect(() => {
-    console.log("showModal:", showModal); // Affichez la valeur de showModal
+    console.log("showModal:", showModal);
   }, [showModal]);
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   // Auth and Firestore setup
   useEffect(() => {
@@ -126,19 +131,23 @@ function MesReservations() {
   };
 
   const handleConfirmDelete = async (id) => {
+    setLoadingDelete(true);
     try {
       await deleteDoc(doc(db, "reservations", id));
       setShowModal(false);
-      setShowToast({ type: "success", visible: true });
-      setTimeout(() => setShowToast({ type: "", visible: false }), 3000); // Hide toast after 3 seconds
+      setShowToast({
+        type: "success",
+        visible: true,
+        message: "Réservation supprimée !",
+      });
     } catch (error) {
       console.error("Erreur lors de la suppression :", error);
-      setShowModal(false);
       setShowToast({ type: "error", visible: true });
-      setTimeout(() => setShowToast({ type: "", visible: false }), 3000); // Hide toast after 3 seconds
+    } finally {
+      setLoadingDelete(false);
+      setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
     }
   };
-
   const handleExportCSV = () => {
     const headers = [
       "Code",
@@ -172,7 +181,11 @@ function MesReservations() {
     a.click();
 
     // Afficher un message de réussite après l'exportation
-    setShowToast({ type: "success", visible: true });
+    setShowToast({
+      type: "success",
+      visible: true,
+      message: "Export CSV effectué !",
+    });
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
 
@@ -195,7 +208,11 @@ function MesReservations() {
     html2pdf().set(opt).from(element).save();
 
     // Afficher un message de réussite après l'exportation
-    setShowToast({ type: "success", visible: true });
+    setShowToast({
+      type: "success",
+      visible: true,
+      message: "Export PDF effectué !",
+    });
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
 
@@ -296,9 +313,7 @@ function MesReservations() {
               ></button>
             </div>
             <div className="toast-body">
-              {showToast.type === "success"
-                ? "Réservation supprimée !"
-                : "Une erreur est survenue. Veuillez réessayer."}
+              {showToast.message || "Une action a été effectuée."}
             </div>
           </div>
         </div>
@@ -357,7 +372,6 @@ function MesReservations() {
                 className=" text-blue-800 text-center"
                 style={{ fontWeight: "bold", fontSize: "1.0rem" }}
               >
-                {" "}
                 <tr>
                   <th>Code</th>
                   <th>Date</th>
@@ -390,20 +404,22 @@ function MesReservations() {
                       {res.spaceName} ({res.spaceLocation})
                     </td>
                     <td>
-                      <MDBBtn
-                        size="sm"
-                        color="warning"
-                        onClick={() => handleUpdateReservation(res)}
-                      >
-                        <MDBIcon fas icon="pen" />
-                      </MDBBtn>{" "}
-                      <MDBBtn
-                        size="sm"
-                        color="danger"
-                        onClick={() => handleDeleteReservation(res.id)}
-                      >
-                        <MDBIcon fas icon="trash" />
-                      </MDBBtn>
+                      <div className="d-flex justify-content-center gap-2">
+                        <MDBBtn
+                          size="sm"
+                          color="warning"
+                          onClick={() => handleUpdateReservation(res)}
+                        >
+                          <MDBIcon fas icon="pen" />
+                        </MDBBtn>
+                        <MDBBtn
+                          size="sm"
+                          color="danger"
+                          onClick={() => handleDeleteReservation(res.id)}
+                        >
+                          <MDBIcon fas icon="trash" />
+                        </MDBBtn>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -429,14 +445,30 @@ function MesReservations() {
               Êtes-vous sûr de vouloir supprimer cette réservation ?
             </MDBModalBody>
             <MDBModalFooter>
-              <MDBBtn color="secondary" onClick={() => setShowModal(false)}>
+              <MDBBtn
+                color="secondary"
+                style={{ textTransform: "none" }}
+                onClick={() => setShowModal(false)}
+              >
                 Annuler
               </MDBBtn>
               <MDBBtn
                 color="danger"
                 onClick={() => handleConfirmDelete(reservationToDelete)}
+                style={{ textTransform: "none" }}
+                disabled={loadingDelete}
               >
-                Supprimer
+                {loadingDelete ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    />
+                    Suppression...
+                  </>
+                ) : (
+                  "Supprimer"
+                )}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>
