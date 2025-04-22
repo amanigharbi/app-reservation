@@ -1,57 +1,48 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-const nodemailer = require("nodemailer");
-
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+const nodemailer = require('nodemailer');
 admin.initializeApp();
 
+// Configurer le transporteur de Nodemailer (exemple avec un SMTP)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: 'gmail', // ou ton propre service
   auth: {
-    user: "votre-email@gmail.com",
-    pass: "votre-mot-de-passe",
-  },
+    user: 'your-email@gmail.com',
+    pass: 'your-email-password' // Ne pas laisser en clair en prod
+  }
 });
 
-const sendEmail = (email, subject, text) => {
-  const mailOptions = {
-    from: "votre-email@gmail.com",
-    to: email,
-    subject: subject,
-    text: text,
-  };
+// Fonction de rappel pour envoyer les emails
+exports.envoyerRappels = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+  const db = admin.firestore();
+  const now = new Date();
+  
+  // Rechercher toutes les réservations avec un rappel pour aujourd'hui
+  const snapshot = await db.collection('reservations').get();
 
-  return transporter.sendMail(mailOptions);
-};
+  snapshot.forEach(async (doc) => {
+    const reservation = doc.data();
+    const rappels = reservation.rappels || [];
+    
+    rappels.forEach(async (rappel) => {
+      const rappelDate = new Date(rappel.date);
+      
+      // Si le rappel est pour aujourd'hui, envoyer l'email
+      if (rappelDate.toDateString() === now.toDateString()) {
+        const mailOptions = {
+          from: 'your-email@gmail.com',
+          to: reservation.email, // Assurez-vous que l'email est stocké dans la réservation
+          subject: 'Rappel de réservation',
+          text: rappel.message
+        };
 
-exports.sendRappels = functions.pubsub
-    .schedule("every 24 hours")
-    .onRun(async (context) => {
-      console.log("Vérification des rappels...");
-
-      const reservationsRef = admin.firestore().collection("reservations");
-      const snapshot = await reservationsRef.get();
-
-      snapshot.forEach(async (doc) => {
-        const reservation = doc.data();
-        const userEmail = reservation.utilisateurEmail;
-        const userRappels = reservation.rappels;
-
-        userRappels.forEach((rappel) => {
-          const rappelDate = new Date(rappel);
-          const currentDate = new Date();
-
-          if (rappelDate.toDateString() === currentDate.toDateString()) {
-            const subject = "Rappel de réservation";
-            const text = `Bonjour, ceci est un rappel pour votre réservation ${reservation.code_reservation} prévue le ${reservation.date}.`;
-
-            sendEmail(userEmail, subject, text)
-                .then(() => {
-                  console.log(`Rappel envoyé à ${userEmail}`);
-                })
-                .catch((error) => {
-                  console.error("Erreur envoi email:", error);
-                });
-          }
-        });
-      });
+        try {
+          await transporter.sendMail(mailOptions);
+          console.log(`Rappel envoyé à ${reservation.email}`);
+        } catch (error) {
+          console.error("Erreur lors de l'envoi du rappel :", error);
+        }
+      }
     });
+  });
+});

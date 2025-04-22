@@ -506,14 +506,7 @@ function MesReservations() {
       <MDBContainer className="py-5 px-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h3 className="text-primary fw-bold">Mes Rappels</h3>
-          <div className="d-flex gap-2">
-            <MDBInput
-              label="Rechercher..."
-              size="sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+       
         </div>
 
         {filteredRappels.length === 0 ? (
