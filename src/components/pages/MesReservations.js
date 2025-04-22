@@ -404,7 +404,7 @@ function MesReservations() {
                       {" "}
                       {res.statut === "annulation demandée" && (
                         <MDBBadge color="warning" className="ms-2">
-                          A Annulée{" "}
+                          A annulée{" "}
                         </MDBBadge>
                       )}
                       {res.statut === "annulée" && (
