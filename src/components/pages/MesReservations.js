@@ -101,6 +101,19 @@ function MesReservations() {
     if (minutes === 0) return `${heures}h`;
     return `${heures}h ${minutes}min`;
   };
+   const getTotalPaiement = (paiements) => {
+    if (!paiements || paiements.length === 0) return 0;
+    return paiements.reduce((sum, p) => sum + parseFloat(p.montant || 0), 0);
+  };
+
+  const getMethodePaiement = (paiements, res) => {
+    // Si la liste des paiements est vide ou nulle, retourner res.mode_paiement
+    if (!paiements || paiements.length === 0) {
+      return res.mode_paiement || "-";  // Si mode_paiement est défini, le retourner, sinon "-"
+    }
+    // Sinon, retourner les méthodes de paiement séparées par des virgules
+    return paiements.map(p => p.methode).join(", ");
+  };
   
   const handleUpdateReservation = (reservation) => {
     setSelectedReservationId(reservation.id);
@@ -330,58 +343,58 @@ function MesReservations() {
             style={{ maxHeight: "600px", overflowY: "auto" }}
             id="reservations-table"
           >
-            <MDBTable striped hover responsive>
-              <MDBTableHead
+          <MDBTable striped hover responsive>
+          <MDBTableHead
                 className=" text-blue-800 text-center"
                 style={{ fontWeight: "bold", fontSize: "1.0rem" }}
-              >
-                <tr>
-                  <th>Code</th>
-                  <th>Date</th>
-                  <th>Durée</th>
-                  <th>Service</th>
-                  <th>Montant</th>
-                  <th>Participants</th>
-                  <th>Statut</th>
-                  <th>Espace</th>
-                  <th>Actions</th>
-                </tr>
-              </MDBTableHead>
-              <MDBTableBody className=" text-center">
-                {filteredReservations.map((res) => (
-                  <tr key={res.id}>
-                    <td>
-                      <strong>{res.code_reservation}</strong>
-                    </td>
-                    <td>{new Date(res.date).toLocaleString()}</td>
-                    <td>{formatDuree(res.duree)}</td>
-                    <td>{res.service}</td>
-                    <td>{res.spaceMontant} €</td>
-                    <td>{res.participants}</td>
-                    <td>{res.statut}</td>
-                    <td>
-                      {res.spaceName} ({res.spaceLocation})
-                    </td>
-                    <td>
-                      <MDBBtn
-                        size="sm"
-                        color="warning"
-                        onClick={() => handleUpdateReservation(res)}
-                      >
-                        <MDBIcon fas icon="pen" />
-                      </MDBBtn>{" "}
-                      <MDBBtn
-                        size="sm"
-                        color="danger"
-                        onClick={() => handleDeleteReservation(res.id)}
-                      >
-                        <MDBIcon fas icon="trash" />
-                      </MDBBtn>
-                    </td>
-                  </tr>
-                ))}
-              </MDBTableBody>
-            </MDBTable>
+              >          <tr>
+            <th>Code</th>
+            <th>Date</th>
+            <th>Durée</th>
+            <th>Service</th>
+            <th>Montant</th>
+            <th>Payé</th>
+            <th>Méthode</th>
+            <th>Participants</th>
+            <th>Statut</th>
+            <th>Espace</th>
+            <th>Actions</th>
+          </tr>
+        </MDBTableHead>
+        <MDBTableBody className="text-center">
+  {filteredReservations.map((res) => (
+    <tr key={res.id}>
+      <td><strong>{res.code_reservation}</strong></td>
+      <td>{new Date(res.date).toLocaleString()}</td>
+      <td>{formatDuree(res.duree)}</td>
+      <td>{res.service}</td>
+      <td>{res.spaceMontant} €</td>
+      <td>{getTotalPaiement(res.paiements)} €</td>
+      <td>{getMethodePaiement(res.paiements, res)}</td> {/* Modification ici */}
+      <td>{res.participants}</td>
+      <td>{res.statut}</td>
+      <td>{res.spaceName} ({res.spaceLocation})</td>
+      <td>
+        <MDBBtn
+          size="sm"
+          color="warning"
+          onClick={() => handleUpdateReservation(res)}
+        >
+          <MDBIcon fas icon="pen" />
+        </MDBBtn>{" "}
+        <MDBBtn
+          size="sm"
+          color="danger"
+          onClick={() => handleDeleteReservation(res.id)}
+        >
+          <MDBIcon fas icon="trash" />
+        </MDBBtn>
+      </td>
+    </tr>
+  ))}
+</MDBTableBody>
+
+      </MDBTable>
           </div>
         )}
       </MDBContainer>
