@@ -166,9 +166,12 @@ function Navbar() {
             className="rounded-circle shadow-sm"
             style={{ width: "40px", height: "40px", border: "2px solid white" }}
           />
+                    <Link to="/profil">
+
           <span className="text-white">
             {user?.username || user?.email?.split("@")[0] || "Utilisateur"}
           </span>
+          </Link>
           <button
             className="btn btn-white btn-sm"
             onClick={handleLogout}
