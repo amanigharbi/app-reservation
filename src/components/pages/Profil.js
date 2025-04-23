@@ -166,36 +166,103 @@ function Profil() {
       <MDBContainer className="py-5 px-4">
         <h3 className="text-primary fw-bold mb-4">Mon Profil</h3>
         <MDBRow>
-          <MDBCol md="4">
-            <MDBCard className="shadow-lg border-0 bg-light">
-              <MDBCardBody className="text-center">
-                <img
-                  src={
-                    user?.photoURL ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      user?.username || "Utilisateur"
-                    )}&background=3B71CA&color=fff&size=150`
-                  }
-                  alt="Avatar"
-                  className="rounded-circle mb-3 shadow-lg"
-                  style={{
-                    width: "120px",
-                    height: "120px",
-                    objectFit: "cover",
-                  }}
-                />
-                <h5>{user?.username}</h5>
-                <p className="text-muted">{user?.email}</p>
-                <p className="text-muted">{user?.position || "Poste non défini"}</p>
-                <p className="text-muted">{user?.location || "Localisation inconnue"}</p>
-                {user?.website && <p><MDBIcon fab icon="globe" className="me-2" /> {user.website}</p>}
-                {user?.github && <p><MDBIcon fab icon="github" className="me-2" /> {user.github}</p>}
-                {user?.twitter && <p><MDBIcon fab icon="twitter" className="me-2" /> {user.twitter}</p>}
-                {user?.instagram && <p><MDBIcon fab icon="instagram" className="me-2" /> {user.instagram}</p>}
-                {user?.facebook && <p><MDBIcon fab icon="facebook" className="me-2" /> {user.facebook}</p>}
-              </MDBCardBody>
-            </MDBCard>
-          </MDBCol>
+        <MDBCol md="4">
+  <MDBCard className="shadow  bg-light border-0 rounded-3">
+    <MDBCardBody className="text-center p-4">
+    <div className="d-flex justify-content-center align-items-center mb-3">
+
+      <img
+        src={
+          user?.photoURL ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            user?.username || "Utilisateur"
+          )}&background=3B71CA&color=fff&size=150`
+        }
+        alt="Avatar"
+        className="rounded-circle mb-3 shadow-sm"
+        style={{
+          width: "120px",
+          height: "120px",
+          objectFit: "cover",
+          border: "3px solid #f8f9fa",
+        }}
+      />
+      </div>
+      <h4 className="mb-1">
+        {user?.firstName && user?.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : user?.username || "Utilisateur"}
+      </h4>
+      <p className="text-muted mb-2">{user?.email || "Email"}</p>
+
+      <p className="text-muted mb-2">{user?.position || "Poste non défini"}</p>
+      <p className="text-muted mb-4">{user?.location || "Localisation inconnue"}</p>
+
+      <div className="d-flex justify-content-center gap-2 mb-4">
+        <MDBBtn size="sm" color="primary" outline className="px-3">
+          Suivre
+        </MDBBtn>
+        <MDBBtn size="sm" color="primary" className="px-3">
+          Message
+        </MDBBtn>
+      </div>
+</MDBCardBody></MDBCard>
+
+<br></br>
+<br></br>
+
+<MDBCard className="shadow  bg-light border-0 rounded-3">
+
+<MDBCardBody className="text-center p-4">
+<h6 className="text-primary fw-bold mb-4 ">Réseaux Sociaux</h6>
+
+      <div className="text-start">
+        <ul className="list-unstyled mb-0">
+          {user?.website && (
+            <li className="mb-2">
+              <MDBIcon icon="globe" className="me-2 text-primary" />
+              <a href={user.website} className="text-decoration-none text-black" target="_blank" rel="noopener noreferrer">
+                {user.website}
+              </a>
+            </li>
+          )}
+          {user?.github && (
+            <li className="mb-2">
+              <MDBIcon fab icon="github" className="me-2 text-dark" />
+              <a href={`https://github.com/${user.github}`} className="text-decoration-none  text-black" target="_blank" rel="noopener noreferrer">
+                {user.github}
+              </a>
+            </li>
+          )}
+          {user?.twitter && (
+            <li className="mb-2">
+              <MDBIcon fab icon="twitter" className="me-2 text-info" />
+              <a href={`https://twitter.com/${user.twitter}`} className="text-decoration-none  text-black" target="_blank" rel="noopener noreferrer">
+                @{user.twitter}
+              </a>
+            </li>
+          )}
+          {user?.instagram && (
+            <li className="mb-2">
+              <MDBIcon fab icon="instagram" className="me-2 text-danger" />
+              <a href={`https://instagram.com/${user.instagram}`} className="text-decoration-none  text-black" target="_blank" rel="noopener noreferrer">
+                {user.instagram}
+              </a>
+            </li>
+          )}
+          {user?.facebook && (
+            <li className="mb-2">
+              <MDBIcon fab icon="facebook" className="me-2 text-primary" />
+              <a href={`https://facebook.com/${user.facebook}`} className="text-decoration-none  text-black" target="_blank" rel="noopener noreferrer">
+                {user.facebook}
+              </a>
+            </li>
+          )}
+        </ul>
+      </div>
+    </MDBCardBody>
+  </MDBCard>
+</MDBCol>
 
           <MDBCol md="8">
             <MDBCard className="shadow border-0 bg-light">

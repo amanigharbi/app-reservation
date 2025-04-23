@@ -105,6 +105,19 @@
   transform: translateY(-5px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
+.profile-card {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.profile-social-links a {
+  color: #495057;
+  transition: color 0.3s;
+}
+
+.profile-social-links a:hover {
+  color: black;
+}
 
 
 
