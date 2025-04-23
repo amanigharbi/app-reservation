@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth, db, storage } from "../../firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut, updateProfile } from "firebase/auth";
 import {
   doc,
   getDoc,
@@ -97,21 +97,21 @@ function Profil() {
 
   const handleUpdate = async () => {
     try {
-      let photoURL = user?.photoURL;
-      if (selectedFile) {
-        const storageRef = ref(storage, `avatars/${user?.uid}`);
-        await uploadBytes(storageRef, selectedFile);
-        photoURL = await getDownloadURL(storageRef);
-      }
+        const photoURL = editData.photoURL || user?.photoURL;
 
-      const updatedUser = { ...editData, photoURL };
+  
+        const updatedUser = { ...editData, photoURL };
+  
       await updateDoc(doc(db, "users", user?.uid), updatedUser);
       setUser(updatedUser);
+      alert("Profil mis à jour avec succès!");
     } catch (error) {
       console.error("Erreur de mise à jour:", error);
+      alert("Erreur lors de la mise à jour du profil.");
     }
   };
-
+  
+  
   if (loading) {
     return (
       <MDBContainer className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
@@ -202,10 +202,8 @@ function Profil() {
               <MDBCardBody>
                 <MDBCardTitle className="text-primary">Modifier mes informations</MDBCardTitle>
                 <MDBInput label="Username" name="username" value={editData.username || ""} onChange={handleChange} className="mb-3" />
-
                 <MDBInput label="Prénom" name="firstName" value={editData.firstName || ""} onChange={handleChange} className="mb-3" />
                 <MDBInput label="Nom" name="lastName" value={editData.lastName || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="Email" name="email" value={editData.email || ""} onChange={handleChange} className="mb-3" />
                 <MDBInput label="Poste" name="position" value={editData.position || ""} onChange={handleChange} className="mb-3" />
                 <MDBInput label="Localisation" name="location" value={editData.location || ""} onChange={handleChange} className="mb-3" />
                 <MDBInput label="Site Web" name="website" value={editData.website || ""} onChange={handleChange} className="mb-3" />
@@ -213,7 +211,13 @@ function Profil() {
                 <MDBInput label="Twitter" name="twitter" value={editData.twitter || ""} onChange={handleChange} className="mb-3" />
                 <MDBInput label="Instagram" name="instagram" value={editData.instagram || ""} onChange={handleChange} className="mb-3" />
                 <MDBInput label="Facebook" name="facebook" value={editData.facebook || ""} onChange={handleChange} className="mb-3" />
-                <input type="file" onChange={handleImageUpload} />
+                <MDBInput
+  label="Lien de l'image (CDN)"
+  name="photoURL"
+  value={editData.photoURL || ""}
+  onChange={handleChange}
+  className="mb-3"
+/>
                 <MDBBtn onClick={handleUpdate} color="primary" className="mt-3">Mettre à jour</MDBBtn>
               </MDBCardBody>
             </MDBCard>
