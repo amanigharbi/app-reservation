@@ -29,6 +29,7 @@ import {
   where,
   onSnapshot,
   getDocs,
+  doc,getDoc
 } from "firebase/firestore";
 import "../styles/Pages.css";
 
@@ -41,12 +42,31 @@ function Dashboard() {
   const [reservationsCount, setReservationsCount] = useState(0);
   const [spacesCount, setSpacesCount] = useState(0);
   const [montantTotal, setMontantTotal] = useState(0);
+    const [user, setUser] = useState(null);
+  
   // useEffect pour écouter l'état de l'utilisateur et les réservations en temps réel depuis Firestore
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUserEmail(currentUser.email);
+ const userRef = doc(db, "users", currentUser.uid);
+          const userDoc = await getDoc(userRef);
 
+          if (userDoc.exists()) {
+            setUser({
+              uid: currentUser.uid,
+              email: currentUser.email,
+              ...userDoc.data()
+            });
+          } else {
+            setUser({
+              uid: currentUser.uid,
+              email: currentUser.email,
+              firstName: currentUser.displayName?.split(' ')[0] || '',
+              lastName: currentUser.displayName?.split(' ')[1] || '',
+              username: currentUser.displayName || currentUser.email.split('@')[0]
+            });
+          }
         // Récupérer les réservations pour l'utilisateur actuel depuis Firestore
         const q = query(
           collection(db, "reservations"),
@@ -150,22 +170,17 @@ function Dashboard() {
           </nav>
         </div>
         <div className="d-flex align-items-center gap-3">
-          <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2">
             <img
               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                userEmail?.split("@")[0] || "Utilisateur"
+                user?.username || user?.email?.split('@')[0] || "Utilisateur"
               )}&background=fff&color=3B71CA&size=40`}
               alt="Avatar"
-              className="rounded-circle"
-              style={{
-                width: "40px",
-                height: "40px",
-                border: "2px solid white",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-              }}
+              className="rounded-circle shadow-sm"
+              style={{ width: "40px", height: "40px", border: "2px solid white" }}
             />
             <span className="text-white">
-              {userEmail && userEmail.split("@")[0]}
+              {user?.username || user?.email?.split('@')[0] || "Utilisateur"}
             </span>
             <MDBBtn size="sm" color="white" onClick={handleLogout}>
               <MDBIcon icon="sign-out-alt" className="me-0" />
