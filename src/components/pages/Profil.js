@@ -25,12 +25,19 @@ import {
 } from "mdb-react-ui-kit";
 import logo from "../../images/logo-3.png";
 import "../styles/Pages.css";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 function Profil() {
   const [user, setUser] = useState(null);
   const [editData, setEditData] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showToast, setShowToast] = useState({
+    type: "",
+    visible: false,
+    message: "",
+  });
   const navigate = useNavigate();
 
   // Récupérer un utilisateur dans Firestore par email
@@ -55,7 +62,6 @@ function Profil() {
           if (userFromDB) {
             setUser(userFromDB);
             setEditData(userFromDB);
-            
           } else {
             console.warn("Utilisateur introuvable dans Firestore");
             setUser({
@@ -66,7 +72,10 @@ function Profil() {
             });
           }
         } catch (error) {
-          console.error("Erreur lors de la récupération de l'utilisateur:", error);
+          console.error(
+            "Erreur lors de la récupération de l'utilisateur:",
+            error
+          );
         } finally {
           setLoading(false);
         }
@@ -98,24 +107,29 @@ function Profil() {
 
   const handleUpdate = async () => {
     try {
-        const photoURL = editData.photoURL || user?.photoURL;
+      const photoURL = editData.photoURL || user?.photoURL;
 
-  
-        const updatedUser = { ...editData, photoURL };
-  
+      const updatedUser = { ...editData, photoURL };
+
       await updateDoc(doc(db, "users", user?.uid), updatedUser);
       setUser(updatedUser);
-      alert("Profil mis à jour avec succès!");
+      setShowToast({
+        type: "success",
+        visible: true,
+        message: "Profil mis à jour avec succès!",
+      });
     } catch (error) {
       console.error("Erreur de mise à jour:", error);
-      alert("Erreur lors de la mise à jour du profil.");
+      setShowToast({ type: "error", visible: true });
     }
   };
-  
-  
+
   if (loading) {
     return (
-      <MDBContainer className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+      <MDBContainer
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100vh" }}
+      >
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Chargement...</span>
         </div>
@@ -127,175 +141,286 @@ function Profil() {
 
   return (
     <MDBContainer fluid className="dashboard-bg px-0">
-      <div className="dashboard-navbar d-flex align-items-center justify-content-between px-4 py-3 shadow bg-primary">
-        <div className="d-flex align-items-center gap-4">
-          <img src={logo} alt="Logo" style={{ width: "100px" }} />
-          <nav className="dashboard-menu d-none d-md-flex gap-4">
-            <Link to="/dashboard">
-              <MDBIcon icon="tachometer-alt" className="me-2" /> Tableau de bord
-            </Link>
-            <Link to="/mes-reservations">
-              <MDBIcon icon="clipboard-list" className="me-2" /> Mes Réservations
-            </Link>
-            <Link to="/reserver">
-              <MDBIcon icon="calendar-check" className="me-2" /> Réserver
-            </Link>
-            <Link to="/profil">
-              <MDBIcon icon="user-circle" className="me-2" /> Profil
-            </Link>
-          </nav>
+     <Navbar />
+   {/* ✅ TOAST SUCCÈS & ERREUR */}
+   {showToast.visible && (
+        <div
+          className="position-fixed top-0 end-0 p-3"
+          style={{ zIndex: 9999 }}
+        >
+          <div
+            className={`toast show fade text-white ${
+              showToast.type === "success" ? "bg-success" : "bg-danger"
+            }`}
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+          >
+            <div
+              className={`toast-header ${
+                showToast.type === "success" ? "bg-success" : "bg-danger"
+              } text-white`}
+            >
+              <i
+                className={`fas ${
+                  showToast.type === "success" ? "fa-check" : "fa-times"
+                } fa-lg me-2`}
+              ></i>
+              <strong className="me-auto">
+                {showToast.type === "success" ? "Succès" : "Erreur"}
+              </strong>
+              <small>
+                {new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </small>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                onClick={() => setShowToast({ type: "", visible: false })}
+              ></button>
+            </div>
+            <div className="toast-body">
+              {showToast.message || "Une action a été effectuée."}
+            </div>
+          </div>
         </div>
-        <div className="d-flex align-items-center gap-3">
-          <img
-            src={
-              user?.photoURL ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                user?.username || "Utilisateur"
-              )}&background=fff&color=3B71CA&size=40`
-            }
-            alt="Avatar"
-            className="rounded-circle shadow-sm"
-            style={{ width: "40px", height: "40px", border: "2px solid white" }}
-          />
-          <span className="text-white">{user?.username || "Utilisateur"}</span>
-          <MDBBtn size="sm" color="white" onClick={handleLogout}>
-            <MDBIcon icon="sign-out-alt" />
-          </MDBBtn>
-        </div>
-      </div>
-
+      )}
       <MDBContainer className="py-5 px-4">
         <h3 className="text-primary fw-bold mb-4">Mon Profil</h3>
         <MDBRow>
-        <MDBCol md="4">
-  <MDBCard className="shadow  bg-light border-0 rounded-3">
-    <MDBCardBody className="text-center p-4">
-    <div className="d-flex justify-content-center align-items-center mb-3">
+          <MDBCol md="4">
+            <MDBCard className="shadow  bg-light border-0 rounded-3">
+              <MDBCardBody className="text-center p-4">
+                <div className="d-flex justify-content-center align-items-center mb-3">
+                  <img
+                    src={
+                      user?.photoURL ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user?.username || "Utilisateur"
+                      )}&background=3B71CA&color=fff&size=150`
+                    }
+                    alt="Avatar"
+                    className="rounded-circle mb-3 shadow-sm"
+                    style={{
+                      width: "120px",
+                      height: "120px",
+                      objectFit: "cover",
+                      border: "3px solid #f8f9fa",
+                    }}
+                  />
+                </div>
+                <h4 className="mb-1">
+                  {user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.username || "Utilisateur"}
+                </h4>
+                <p className="text-muted mb-2">{user?.email || "Email"}</p>
 
-      <img
-        src={
-          user?.photoURL ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            user?.username || "Utilisateur"
-          )}&background=3B71CA&color=fff&size=150`
-        }
-        alt="Avatar"
-        className="rounded-circle mb-3 shadow-sm"
-        style={{
-          width: "120px",
-          height: "120px",
-          objectFit: "cover",
-          border: "3px solid #f8f9fa",
-        }}
-      />
-      </div>
-      <h4 className="mb-1">
-        {user?.firstName && user?.lastName
-          ? `${user.firstName} ${user.lastName}`
-          : user?.username || "Utilisateur"}
-      </h4>
-      <p className="text-muted mb-2">{user?.email || "Email"}</p>
+                <p className="text-muted mb-2">
+                  {user?.position || "Poste non défini"}
+                </p>
+                <p className="text-muted mb-4">
+                  {user?.location || "Localisation inconnue"}
+                </p>
 
-      <p className="text-muted mb-2">{user?.position || "Poste non défini"}</p>
-      <p className="text-muted mb-4">{user?.location || "Localisation inconnue"}</p>
+                <div className="d-flex justify-content-center gap-2 mb-4">
+                  <MDBBtn size="sm" color="primary" outline className="px-3">
+                    Suivre
+                  </MDBBtn>
+                  <MDBBtn size="sm" color="primary" className="px-3">
+                    Message
+                  </MDBBtn>
+                </div>
+              </MDBCardBody>
+            </MDBCard>
 
-      <div className="d-flex justify-content-center gap-2 mb-4">
-        <MDBBtn size="sm" color="primary" outline className="px-3">
-          Suivre
-        </MDBBtn>
-        <MDBBtn size="sm" color="primary" className="px-3">
-          Message
-        </MDBBtn>
-      </div>
-</MDBCardBody></MDBCard>
+            <br></br>
+            <br></br>
 
-<br></br>
-<br></br>
+            <MDBCard className="shadow  bg-light border-0 rounded-3">
+              <MDBCardBody className="text-center p-4">
+                <h6 className="text-primary fw-bold mb-4 ">Réseaux Sociaux</h6>
 
-<MDBCard className="shadow  bg-light border-0 rounded-3">
-
-<MDBCardBody className="text-center p-4">
-<h6 className="text-primary fw-bold mb-4 ">Réseaux Sociaux</h6>
-
-      <div className="text-start">
-        <ul className="list-unstyled mb-0">
-          {user?.website && (
-            <li className="mb-2">
-              <MDBIcon icon="globe" className="me-2 text-primary" />
-              <a href={user.website} className="text-decoration-none text-black" target="_blank" rel="noopener noreferrer">
-                {user.website}
-              </a>
-            </li>
-          )}
-          {user?.github && (
-            <li className="mb-2">
-              <MDBIcon fab icon="github" className="me-2 text-dark" />
-              <a href={`https://github.com/${user.github}`} className="text-decoration-none  text-black" target="_blank" rel="noopener noreferrer">
-                {user.github}
-              </a>
-            </li>
-          )}
-          {user?.twitter && (
-            <li className="mb-2">
-              <MDBIcon fab icon="twitter" className="me-2 text-info" />
-              <a href={`https://twitter.com/${user.twitter}`} className="text-decoration-none  text-black" target="_blank" rel="noopener noreferrer">
-                @{user.twitter}
-              </a>
-            </li>
-          )}
-          {user?.instagram && (
-            <li className="mb-2">
-              <MDBIcon fab icon="instagram" className="me-2 text-danger" />
-              <a href={`https://instagram.com/${user.instagram}`} className="text-decoration-none  text-black" target="_blank" rel="noopener noreferrer">
-                {user.instagram}
-              </a>
-            </li>
-          )}
-          {user?.facebook && (
-            <li className="mb-2">
-              <MDBIcon fab icon="facebook" className="me-2 text-primary" />
-              <a href={`https://facebook.com/${user.facebook}`} className="text-decoration-none  text-black" target="_blank" rel="noopener noreferrer">
-                {user.facebook}
-              </a>
-            </li>
-          )}
-        </ul>
-      </div>
-    </MDBCardBody>
-  </MDBCard>
-</MDBCol>
+                <div className="text-start">
+                  <ul className="list-unstyled mb-0">
+                    {user?.website && (
+                      <li className="mb-2">
+                        <MDBIcon icon="globe" className="me-2 text-primary" />
+                        <a
+                          href={user.website}
+                          className="text-decoration-none text-black"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {user.website}
+                        </a>
+                      </li>
+                    )}
+                    {user?.github && (
+                      <li className="mb-2">
+                        <MDBIcon fab icon="github" className="me-2 text-dark" />
+                        <a
+                          href={`https://github.com/${user.github}`}
+                          className="text-decoration-none  text-black"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {user.github}
+                        </a>
+                      </li>
+                    )}
+                    {user?.twitter && (
+                      <li className="mb-2">
+                        <MDBIcon
+                          fab
+                          icon="twitter"
+                          className="me-2 text-info"
+                        />
+                        <a
+                          href={`https://twitter.com/${user.twitter}`}
+                          className="text-decoration-none  text-black"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          @{user.twitter}
+                        </a>
+                      </li>
+                    )}
+                    {user?.instagram && (
+                      <li className="mb-2">
+                        <MDBIcon
+                          fab
+                          icon="instagram"
+                          className="me-2 text-danger"
+                        />
+                        <a
+                          href={`https://instagram.com/${user.instagram}`}
+                          className="text-decoration-none  text-black"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {user.instagram}
+                        </a>
+                      </li>
+                    )}
+                    {user?.facebook && (
+                      <li className="mb-2">
+                        <MDBIcon
+                          fab
+                          icon="facebook"
+                          className="me-2 text-primary"
+                        />
+                        <a
+                          href={`https://facebook.com/${user.facebook}`}
+                          className="text-decoration-none  text-black"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {user.facebook}
+                        </a>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </MDBCardBody>
+            </MDBCard>
+          </MDBCol>
 
           <MDBCol md="8">
             <MDBCard className="shadow border-0 bg-light">
               <MDBCardBody>
-                <MDBCardTitle className="text-primary">Modifier mes informations</MDBCardTitle>
-                <MDBInput label="Username" name="username" value={editData.username || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="Prénom" name="firstName" value={editData.firstName || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="Nom" name="lastName" value={editData.lastName || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="Poste" name="position" value={editData.position || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="Localisation" name="location" value={editData.location || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="Site Web" name="website" value={editData.website || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="GitHub" name="github" value={editData.github || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="Twitter" name="twitter" value={editData.twitter || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="Instagram" name="instagram" value={editData.instagram || ""} onChange={handleChange} className="mb-3" />
-                <MDBInput label="Facebook" name="facebook" value={editData.facebook || ""} onChange={handleChange} className="mb-3" />
+                <MDBCardTitle className="text-primary">
+                  Modifier mes informations
+                </MDBCardTitle>
                 <MDBInput
-  label="Lien de l'image (CDN)"
-  name="photoURL"
-  value={editData.photoURL || ""}
-  onChange={handleChange}
-  className="mb-3"
-/>
-                <MDBBtn onClick={handleUpdate} color="primary" className="mt-3">Mettre à jour</MDBBtn>
+                  label="Username"
+                  name="username"
+                  value={editData.username || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="Prénom"
+                  name="firstName"
+                  value={editData.firstName || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="Nom"
+                  name="lastName"
+                  value={editData.lastName || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="Poste"
+                  name="position"
+                  value={editData.position || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="Localisation"
+                  name="location"
+                  value={editData.location || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="Site Web"
+                  name="website"
+                  value={editData.website || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="GitHub"
+                  name="github"
+                  value={editData.github || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="Twitter"
+                  name="twitter"
+                  value={editData.twitter || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="Instagram"
+                  name="instagram"
+                  value={editData.instagram || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="Facebook"
+                  name="facebook"
+                  value={editData.facebook || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBInput
+                  label="Lien de l'image (CDN)"
+                  name="photoURL"
+                  value={editData.photoURL || ""}
+                  onChange={handleChange}
+                  className="mb-3"
+                />
+                <MDBBtn onClick={handleUpdate} color="primary" className="mt-3">
+                  Mettre à jour
+                </MDBBtn>
               </MDBCardBody>
             </MDBCard>
           </MDBCol>
         </MDBRow>
       </MDBContainer>
 
-      <footer className="footer text-center p-3 bg-primary text-white">
-        © 2025 ReserGo. Tous droits réservés.
-      </footer>
+    $<Footer />
     </MDBContainer>
   );
 }
