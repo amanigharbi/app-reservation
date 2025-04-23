@@ -237,7 +237,6 @@ function Profil() {
             </MDBCard>
 
             <br></br>
-            <br></br>
 
             <MDBCard className="shadow  bg-light border-0 rounded-3">
               <MDBCardBody className="text-center p-4">
