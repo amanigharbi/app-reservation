@@ -8,6 +8,8 @@ import { db } from '../../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import ReservationForm from './ReservationForm';  
 import '../styles/Pages.css';
+import Navbar from './Navbar';
+import Footer from './Footer';
 
 function Reserver() {
   const [userEmail, setUserEmail] = useState(null);
@@ -64,32 +66,7 @@ function Reserver() {
   return (
     <MDBContainer fluid className="dashboard-bg px-0">
       {/* Navbar */}
-      <div className="dashboard-navbar d-flex align-items-center justify-content-between px-4 py-3 shadow bg-primary">
-        <div className="d-flex align-items-center gap-4">
-          <img src={logo} alt="Logo" style={{ width: '100px', backgroundColor: 'transparent' }} />
-          <nav className="dashboard-menu d-none d-md-flex gap-4">
-            <Link to="/dashboard"><MDBIcon icon="tachometer-alt" className="me-2" /> Tableau de bord</Link>
-            <Link to="/mes-reservations"><MDBIcon icon="clipboard-list" className="me-2" /> Mes Réservations</Link>
-            <Link to="/reserver"><MDBIcon icon="calendar-check" className="me-2" /> Réserver</Link>
-            <Link to="/profil"><MDBIcon icon="user-circle" className="me-2" /> Profil</Link>
-          </nav>
-        </div>
-        <div className="d-flex align-items-center gap-3">
-          {/* <MDBInput label="Recherche" size="sm" className="search-input" style={{ maxWidth: '250px', backgroundColor: 'white' }} /> */}
-          <div className="d-flex align-items-center gap-2">
-            <img
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userEmail?.split('@')[0] || 'Utilisateur')}&background=fff&color=3B71CA&size=40`}
-              alt="Avatar"
-              className="rounded-circle"
-              style={{ width: '40px', height: '40px', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-            />
-            <span className="text-white">{userEmail && userEmail.split('@')[0]}</span>
-            <MDBBtn size="sm" color="white" onClick={handleLogout}>
-              <MDBIcon icon="sign-out-alt" className="me-0" />
-            </MDBBtn>
-          </div>
-        </div>
-      </div>
+     <Navbar />
 
       {/* Étape 1: Affichage des espaces disponibles */}
       {step === 1 && (
@@ -133,9 +110,7 @@ function Reserver() {
       {step === 2 && <ReservationForm space={selectedSpace} />}
       
       {/* Footer */}
-      <footer className="footer text-center p-3 bg-primary text-white">
-        © 2025 ReserGo. Tous droits réservés.
-      </footer>
+     <Footer />
     </MDBContainer>
   );
 }

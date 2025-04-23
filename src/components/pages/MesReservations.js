@@ -33,6 +33,8 @@ import html2pdf from "html2pdf.js";
 
 import "../styles/Pages.css";
 import UpdateReservation from "./UpdateReservation";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 function MesReservations() {
   const [userEmail, setUserEmail] = useState(null);
@@ -237,42 +239,7 @@ function MesReservations() {
   return (
     <MDBContainer fluid className="dashboard-bg px-0">
       {/* Navbar */}
-      <div className="dashboard-navbar d-flex align-items-center justify-content-between px-4 py-3 shadow bg-primary">
-        <div className="d-flex align-items-center gap-4">
-          <img src={logo} alt="Logo" style={{ width: "100px" }} />
-          <nav className="dashboard-menu d-none d-md-flex gap-4">
-            <Link to="/dashboard">
-              <MDBIcon icon="tachometer-alt" className="me-2" /> Tableau de bord
-            </Link>
-            <Link to="/mes-reservations">
-              <MDBIcon icon="clipboard-list" className="me-2" /> Mes
-              Réservations
-            </Link>
-            <Link to="/reserver">
-              <MDBIcon icon="calendar-check" className="me-2" /> Réserver
-            </Link>
-            <Link to="/profil">
-              <MDBIcon icon="user-circle" className="me-2" /> Profil
-            </Link>
-          </nav>
-        </div>
-        <div className="d-flex align-items-center gap-2">
-          <img
-            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-              userEmail?.split("@")[0] || "Utilisateur"
-            )}&background=fff&color=3B71CA&size=40`}
-            alt="Avatar"
-            className="rounded-circle"
-            style={{ width: "40px", height: "40px", border: "2px solid white" }}
-          />
-          <span className="text-white">
-            {userEmail && userEmail.split("@")[0]}
-          </span>
-          <MDBBtn size="sm" color="white" onClick={signOut}>
-            <MDBIcon icon="sign-out-alt" />
-          </MDBBtn>
-        </div>
-      </div>
+    <Navbar />
 
       {/* ✅ TOAST SUCCÈS & ERREUR */}
       {showToast.visible && (
@@ -557,9 +524,7 @@ function MesReservations() {
           showModal={showUpdateModal}
         />
       )}
-      <footer className="footer text-center p-3 bg-primary text-white mt-auto">
-        © 2025 ReserGo. Tous droits réservés.
-      </footer>
+      <Footer />
     </MDBContainer>
   );
 }

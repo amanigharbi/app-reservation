@@ -55,6 +55,7 @@ function Profil() {
           if (userFromDB) {
             setUser(userFromDB);
             setEditData(userFromDB);
+            
           } else {
             console.warn("Utilisateur introuvable dans Firestore");
             setUser({
