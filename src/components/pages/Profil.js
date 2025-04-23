@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { auth, db, storage } from "../../firebase";
-import { onAuthStateChanged, signOut, updateProfile } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { auth, db } from "../../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   doc,
-  getDoc,
   updateDoc,
   collection,
   query,
   where,
   getDocs,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   MDBContainer,
   MDBRow,
@@ -23,7 +21,6 @@ import {
   MDBIcon,
   MDBInput,
 } from "mdb-react-ui-kit";
-import logo from "../../images/logo-3.png";
 import "../styles/Pages.css";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -31,7 +28,6 @@ import Footer from "./Footer";
 function Profil() {
   const [user, setUser] = useState(null);
   const [editData, setEditData] = useState({});
-  const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState({
     type: "",
@@ -87,24 +83,14 @@ function Profil() {
     return () => unsubscribe();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    localStorage.removeItem("user");
-    sessionStorage.clear();
-    navigate("/login");
-  };
+ 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = (e) => {
-    if (e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
+ 
   const handleUpdate = async () => {
     try {
       const photoURL = editData.photoURL || user?.photoURL;

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { MDBContainer, MDBRow, MDBCol, MDBCard, MDBCardBody, MDBCardTitle, MDBCardText, MDBBtn, MDBIcon } from 'mdb-react-ui-kit';
-import logo from '../../images/logo-3.png';
+import { onAuthStateChanged } from 'firebase/auth';
+import { MDBContainer, MDBRow, MDBCol, MDBCard, MDBCardBody, MDBCardTitle, MDBCardText, MDBBtn } from 'mdb-react-ui-kit';
 import { db } from '../../firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import ReservationForm from './ReservationForm';  
@@ -45,16 +44,7 @@ function Reserver() {
     return () => unsubscribeAuth(); // Unsubscribe de Firebase Auth lorsque le composant est démonté
   }, [navigate]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      localStorage.removeItem('user');
-      sessionStorage.clear();
-      navigate('/login');
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion :', error);
-    }
-  };
+
 
   const handleReservation = (space) => {
     setSelectedSpace(space);

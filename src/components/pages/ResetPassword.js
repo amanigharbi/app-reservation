@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBInput } from 'mdb-react-ui-kit';
+import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBInput,MDBIcon } from 'mdb-react-ui-kit';
 import { auth, db } from '../../firebase'; // Assure-toi que db est bien exporté de firebase.js
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore'; // Pour Firestore
@@ -95,10 +95,28 @@ function ResetPassword() {
         </MDBCol>
       </MDBRow>
 
-      <footer className="footer">
+      <footer className="footer-log">
         <div className="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
           <div className="text-white mb-3 mb-md-0">
           © 2025 ReserGo. Tous droits réservés.
+          </div>
+
+          <div>
+            <MDBBtn tag='a' color='none' className='mx-3' style={{ color: 'white' }}>
+              <MDBIcon fab icon='facebook-f' size="md" />
+            </MDBBtn>
+
+            <MDBBtn tag='a' color='none' className='mx-3' style={{ color: 'white' }}>
+              <MDBIcon fab icon='twitter' size="md" />
+            </MDBBtn>
+
+            <MDBBtn tag='a' color='none' className='mx-3' style={{ color: 'white' }}>
+              <MDBIcon fab icon='google' size="md" />
+            </MDBBtn>
+
+            <MDBBtn tag='a' color='none' className='mx-3' style={{ color: 'white' }}>
+              <MDBIcon fab icon='linkedin-in' size="md" />
+            </MDBBtn>
           </div>
         </div>
       </footer>

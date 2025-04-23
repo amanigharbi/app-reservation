@@ -19,7 +19,6 @@ import {
   MDBModalFooter,
   MDBBadge,
 } from "mdb-react-ui-kit";
-import logo from "../../images/logo-3.png";
 import { db } from "../../firebase";
 import {
   collection,
