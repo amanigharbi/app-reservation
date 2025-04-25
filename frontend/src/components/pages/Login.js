@@ -32,12 +32,21 @@ function Login() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
+// Ajout d'une vérification de token au chargement
+useEffect(() => {
+  const verifyStoredToken = async () => {
     const savedUser = JSON.parse(localStorage.getItem("user"));
-    if (savedUser && savedUser.token) {
-      navigate("/dashboard");
+    if (savedUser?.token) {
+      try {
+        await verifyToken(savedUser.token);
+        navigate('/dashboard');
+      } catch {
+        localStorage.removeItem("user");
+      }
     }
-  }, [navigate]);
+  };
+  verifyStoredToken();
+}, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
