@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBInput,MDBIcon } from 'mdb-react-ui-kit';
-import { auth, db } from '../../firebase'; // Assure-toi que db est bien exporté de firebase.js
+import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBInput, MDBIcon, MDBSpinner } from 'mdb-react-ui-kit';
+import { auth, db } from '../../firebase';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { collection, query, where, getDocs } from 'firebase/firestore'; // Pour Firestore
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import '../styles/Pages.css';
 import 'mdb-react-ui-kit/dist/css/mdb.min.css';
@@ -27,7 +27,7 @@ function ResetPassword() {
     setLoading(true);
     try {
       // Vérifier si l'utilisateur existe dans Firestore
-      const usersRef = collection(db, 'users'); // Remplace 'users' si ta collection a un autre nom
+      const usersRef = collection(db, 'users'); 
       const q = query(usersRef, where('email', '==', email.trim().toLowerCase()));
       const querySnapshot = await getDocs(q);
 
@@ -85,7 +85,14 @@ function ResetPassword() {
               disabled={loading}
               style={{ textTransform: 'none' }}
             >
-              {loading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
+              {loading ? (
+                <>
+                  <MDBSpinner role="status" size="sm" className="me-2" />
+                  Envoi en cours...
+                </>
+              ) : (
+                'Envoyer le lien de réinitialisation'
+              )}
             </MDBBtn>
           </div>
 
