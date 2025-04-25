@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBIcon, MDBInput } from 'mdb-react-ui-kit';
+import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBIcon, MDBInput, MDBSpinner } from 'mdb-react-ui-kit';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db, setDoc, doc } from '../../firebase'; // Importer Firestore pour ajouter les données
 import '../styles/Pages.css';
@@ -14,6 +14,9 @@ function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false); // Ajout de l'état pour la visibilité du mot de passe de confirmation
+  const [loading, setLoading] = useState(false); 
   const [error, setError] = useState('');
   const [formErrors, setFormErrors] = useState({
     firstName: '',
@@ -23,20 +26,17 @@ function Register() {
     password: '',
     confirmPassword: '',
   });
-  const [successMessage, setSuccessMessage] = useState(''); // Message de succès
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
-  // Fonction de validation du mot de passe
   const validatePassword = (password) => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return regex.test(password);
   };
 
-  // Fonction pour gérer la vérification en temps réel
   const handleInputChange = (e) => {
     const { id, value } = e.target;
 
-    // Mettre à jour la valeur du champ
     switch (id) {
       case 'firstName':
         setFirstName(value);
@@ -60,9 +60,7 @@ function Register() {
         break;
     }
 
-    // Validation en temps réel des champs
     let errors = { ...formErrors };
-
     switch (id) {
       case 'firstName':
         errors.firstName = value ? '' : "Le prénom est requis.";
@@ -104,20 +102,19 @@ function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccessMessage(''); 
-  
-    // Vérification des erreurs avant l'envoi
+    setSuccessMessage('');
+    setLoading(true);
+
     if (Object.values(formErrors).some((error) => error !== '')) {
       setError("Veuillez corriger les erreurs avant de soumettre le formulaire.");
+      setLoading(false);
       return;
     }
-  
+
     try {
-      // Créer l'utilisateur avec Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-  
-      // Sauvegarder les informations supplémentaires dans Firestore
+
       await setDoc(doc(db, "users", user.uid), {
         firstName,
         lastName,
@@ -125,18 +122,17 @@ function Register() {
         email,
         createdAt: new Date()
       });
-  
-      // Afficher le message de succès
+
       setSuccessMessage("Utilisateur inscrit avec succès ! Vous allez être redirigé vers la page de connexion.");
-  
-      // Redirection après 5 secondes
       setTimeout(() => {
         navigate('/login');
-      }, 3000); // Redirige après 3 secondes
-  
+      }, 3000);
+
     } catch (err) {
       console.error('Erreur lors de l\'inscription:', err);
       setError("Erreur lors de la création du compte. L'email est peut-être déjà utilisé.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,7 +142,6 @@ function Register() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Sauvegarder les informations de l'utilisateur dans Firestore
       await setDoc(doc(db, "users", user.uid), {
         firstName: user.displayName.split(' ')[0],
         lastName: user.displayName.split(' ')[1],
@@ -155,10 +150,7 @@ function Register() {
         createdAt: new Date()
       });
 
-      // Afficher le message de succès
       setSuccessMessage("Connexion réussie avec Google ! Vous allez être redirigé vers la page d'accueil.");
-
-      // Redirection après 3 secondes
       setTimeout(() => {
         navigate('/dashboard');
       }, 3000);
@@ -202,13 +194,9 @@ function Register() {
             <p className="text-center fw-bold mx-3 mb-0">Ou</p>
           </div>
 
-          {/* Affichage des erreurs globales */}
           {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-
-          {/* Affichage du message de succès */}
           {successMessage && <p style={{ color: 'green', textAlign: 'center' }}>{successMessage}</p>}
 
-          {/* Prénom & Nom */}
           <MDBRow className="mb-4">
             <MDBCol md="6">
               <MDBInput
@@ -234,7 +222,6 @@ function Register() {
             </MDBCol>
           </MDBRow>
 
-          {/* Nom d'utilisateur */}
           <MDBInput
             wrapperClass='mb-4'
             label="Nom d'utilisateur"
@@ -246,7 +233,6 @@ function Register() {
           />
           {formErrors.username && <p style={{ color: 'red' }}>{formErrors.username}</p>}
 
-          {/* Email */}
           <MDBInput
             wrapperClass='mb-4'
             label='Adresse e-mail'
@@ -258,34 +244,80 @@ function Register() {
           />
           {formErrors.email && <p style={{ color: 'red' }}>{formErrors.email}</p>}
 
-          {/* Mot de passe & Confirmation */}
           <MDBRow className="mb-4">
             <MDBCol md="6">
-              <MDBInput
-                label='Mot de passe'
-                id='password'
-                type='password'
-                size="lg"
-                value={password}
-                onChange={handleInputChange}
-              />
+              <div className="position-relative">
+                <MDBInput
+                  label='Mot de passe'
+                  id='password'
+                  type={passwordVisible ? 'text' : 'password'}
+                  size="lg"
+                  value={password}
+                  onChange={handleInputChange}
+                />
+               
+                 <MDBIcon
+              icon={passwordVisible ? "eye-slash" : "eye"}
+              onClick={() => setPasswordVisible(!passwordVisible)}
+              style={{
+                position: "absolute",
+                right: "15px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+              }}
+            />
+              </div>
               {formErrors.password && <p style={{ color: 'red' }}>{formErrors.password}</p>}
             </MDBCol>
+
             <MDBCol md="6">
-              <MDBInput
-                label='Confirmer le mot de passe'
-                id='confirmPassword'
-                type='password'
-                size="lg"
-                value={confirmPassword}
-                onChange={handleInputChange}
-              />
+              <div className="position-relative">
+                <MDBInput
+                  label='Confirmer le mot de passe'
+                  id='confirmPassword'
+                  type={confirmPasswordVisible ? 'text' : 'password'}
+                  size="lg"
+                  value={confirmPassword}
+                  onChange={handleInputChange}
+                />
+                 <MDBIcon
+                              icon={confirmPasswordVisible ? "eye-slash" : "eye"}
+                              onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                              style={{
+                                position: "absolute",
+                                right: "15px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                cursor: "pointer",
+                              }}
+                            />
+              
+              </div>
               {formErrors.confirmPassword && <p style={{ color: 'red' }}>{formErrors.confirmPassword}</p>}
             </MDBCol>
           </MDBRow>
 
+          <MDBBtn
+            className="mb-0 px-5"
+            color='primary'
+            size='lg'
+            block
+            onClick={handleRegister}
+            disabled={loading}
+            style={{ textTransform: 'none' }}
+          >
+            {loading ? (
+              <>
+                <MDBSpinner role="status" size="sm" className="me-2" />
+                Chargement...
+              </>
+            ) : (
+              'S\'inscrire'
+            )}
+          </MDBBtn>
+
           <div className='text-center text-md-center mt-4 pt-2'>
-            <MDBBtn className="mb-0 px-5" size='lg' onClick={handleRegister} style={{ textTransform: 'none' }}>S'inscrire</MDBBtn>
             <p className="small fw-bold mt-2 pt-1 mb-2">
               Vous avez déjà un compte ? <a href="/login" className="link-danger">Se connecter</a>
             </p>

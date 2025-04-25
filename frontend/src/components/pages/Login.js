@@ -6,7 +6,7 @@ import {
   MDBBtn,
   MDBIcon,
   MDBInput,
-  MDBCheckbox,
+  MDBCheckbox,MDBSpinner
 } from "mdb-react-ui-kit";
 import {
   signInWithEmailAndPassword,
@@ -175,20 +175,30 @@ function Login() {
             <Link to="/reset-password">Mot de passe oublié ?</Link>
           </div>
 
-          {loading ? (
-            <div className="text-center">
-              <MDBIcon icon="spinner" spin size="6x" />
-            </div>
-          ) : (
-            <div className="text-center text-md-center mt-4 pt-2">
-              <MDBBtn className="mb-0 px-5" size="lg" onClick={handleSubmit} style={{ textTransform: "none" }}>
-                Se connecter
-              </MDBBtn>
-            </div>
-          )}
+         <MDBBtn
+                   className="mb-0 px-5"
+                   color='primary'
+                   size='lg'
+                   block
+                   onClick={handleSubmit}
+                   disabled={loading}
+                   style={{ textTransform: 'none' }}
+                 >
+                   {loading ? (
+                     <>
+                       <MDBSpinner role="status" size="sm" className="me-2" />
+                       Chargement...
+                     </>
+                   ) : (
+                     'Se connecter'
+                   )}
+                 </MDBBtn>
+                <div className='text-center text-md-center mt-4 pt-2'>
+
             <p className="small fw-bold mt-2 pt-1 mb-2">Vous n'avez pas de compte ? 
               <Link to="/register" className="link-danger">S'inscrire</Link>
             </p>
+            </div>
         </MDBCol>
       </MDBRow>
 
