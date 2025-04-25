@@ -26,6 +26,10 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false); 
+  const [loading, setLoading] = useState(false);
+
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,6 +43,7 @@ function Login() {
     e.preventDefault();
     setError("");
     setSuccessMessage("");
+    setLoading(true);
 
     try {
       const userCredential = await signInWithEmailAndPassword(
@@ -53,6 +58,7 @@ function Login() {
       await verifyToken(token);
 
       if (rememberMe) {
+        // On peut ajuster la durée de validité du localStorage si nécessaire
         localStorage.setItem(
           "user",
           JSON.stringify({ email: user.email, token })
@@ -62,8 +68,7 @@ function Login() {
       setSuccessMessage("Connexion réussie.");
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
-      console.error("Erreur Firebase:", err.code, err.message); // 👈 ajoute ça
+      console.error("Erreur Firebase:", err.code, err.message);
       setError("Email ou mot de passe incorrect");
     }
   };
@@ -83,7 +88,7 @@ function Login() {
       setSuccessMessage("Connexion avec Google réussie.");
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
+      console.error("Erreur Google:", err);
       setError("Erreur lors de la connexion avec Google.");
     }
   };
@@ -100,7 +105,6 @@ function Login() {
         </MDBCol>
 
         <MDBCol col='4' md='6'>
-          {/* Logo en haut de la section "Se connecter" */}
           <div className="d-flex flex-row align-items-center justify-content-center">
             <img src={logo} alt="ReserGo Logo" className="img-fluid" style={{ maxWidth: '200px', maxHeight: '150px', marginTop: '-10%' }} />
           </div>
@@ -136,16 +140,29 @@ function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}  // Mettre à jour l'email
           />
-          <MDBInput
-            wrapperClass='mb-4'
-            label='Mot de passe'
-            id='formControlLg'
-            type='password'
-            size="lg"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}  // Mettre à jour le mot de passe
-          />
-
+   {/* Input avec icône pour afficher/masquer le mot de passe */}
+   <div className="position-relative">
+            <MDBInput
+              wrapperClass="mb-4"
+              label="Mot de passe"
+              id="formControlLg"
+              type={passwordVisible ? "text" : "password"}
+              size="lg"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <MDBIcon
+              icon={passwordVisible ? "eye-slash" : "eye"}
+              onClick={() => setPasswordVisible(!passwordVisible)}
+              style={{
+                position: "absolute",
+                right: "15px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                cursor: "pointer",
+              }}
+            />
+          </div>
           <div className="d-flex justify-content-between mb-4">
             <MDBCheckbox 
               name='flexCheck' 
@@ -158,18 +175,23 @@ function Login() {
             <Link to="/reset-password">Mot de passe oublié ?</Link>
           </div>
 
-          <div className='text-center text-md-center mt-4 pt-2'>
-            <MDBBtn className="mb-0 px-5" size="lg" onClick={handleSubmit} style={{ textTransform: 'none' }}>
-              Se connecter
-            </MDBBtn>
+          {loading ? (
+            <div className="text-center">
+              <MDBIcon icon="spinner" spin size="6x" />
+            </div>
+          ) : (
+            <div className="text-center text-md-center mt-4 pt-2">
+              <MDBBtn className="mb-0 px-5" size="lg" onClick={handleSubmit} style={{ textTransform: "none" }}>
+                Se connecter
+              </MDBBtn>
+            </div>
+          )}
             <p className="small fw-bold mt-2 pt-1 mb-2">Vous n'avez pas de compte ? 
               <Link to="/register" className="link-danger">S'inscrire</Link>
             </p>
-          </div>
         </MDBCol>
       </MDBRow>
 
-      {/* Copyright section at the bottom */}
       <footer className="footer-log">
         <div className="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
           <div className="text-white mb-3 mb-md-0">
