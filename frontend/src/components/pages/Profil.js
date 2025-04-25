@@ -1,15 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../../firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import {
-  doc,
-  updateDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
+import axios from "axios";
+
 import {
   MDBContainer,
   MDBRow,
@@ -35,80 +27,70 @@ function Profil() {
     message: "",
   });
   const navigate = useNavigate();
+  const getToken = () => localStorage.getItem("token");
 
-  // Récupérer un utilisateur dans Firestore par email
-  const fetchUserByEmail = async (email) => {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("email", "==", email));
-    const snapshot = await getDocs(q);
-
-    if (!snapshot.empty) {
-      const docSnap = snapshot.docs[0];
-      return { uid: docSnap.id, ...docSnap.data() };
-    } else {
-      return null;
+  // Récupérer les données de l'utilisateur depuis l'API backend
+  const fetchUserData = async () => {
+    const token = getToken();
+  
+    
+    try {
+      const response = await axios.get("http://localhost:5000/api/protected/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Données utilisateur récupérées:", response.data);
+      setUser(response.data.user);
+      setEditData(response.data.user);
+    } catch (error) {
+      console.error("Erreur de récupération des données utilisateur", error);
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Impossible de récupérer les données utilisateur.",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        try {
-          const userFromDB = await fetchUserByEmail(currentUser.email);
-          if (userFromDB) {
-            setUser(userFromDB);
-            setEditData(userFromDB);
-          } else {
-            console.warn("Utilisateur introuvable dans Firestore");
-            setUser({
-              uid: currentUser.uid,
-              email: currentUser.email,
-              username:
-                currentUser.displayName || currentUser.email.split("@")[0],
-            });
-          }
-        } catch (error) {
-          console.error(
-            "Erreur lors de la récupération de l'utilisateur:",
-            error
-          );
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        navigate("/login");
-      }
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
-
- 
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditData((prev) => ({ ...prev, [name]: value }));
-  };
-
- 
+  // Mettre à jour le profil
   const handleUpdate = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
-      const photoURL = editData.photoURL || user?.photoURL;
-
-      const updatedUser = { ...editData, photoURL };
-
-      await updateDoc(doc(db, "users", user?.uid), updatedUser);
-      setUser(updatedUser);
+      const response = await axios.put("http://localhost:5000/api/protected/profile", editData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(response.data); // Mettre à jour les informations de l'utilisateur
       setShowToast({
         type: "success",
         visible: true,
         message: "Profil mis à jour avec succès!",
       });
+      setTimeout(() => {
+        setShowToast({ type: "", visible: false, message: "" }); // Cache le toast après quelques secondes
+      }, 3000);
     } catch (error) {
-      console.error("Erreur de mise à jour:", error);
-      setShowToast({ type: "error", visible: true });
+      console.error("Erreur de mise à jour du profil", error);
+      setShowToast({ type: "error", visible: true, message: "Erreur lors de la mise à jour." });
     }
   };
+
+  // Charger les données de l'utilisateur au début
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  
+
 
   if (loading) {
     return (
@@ -323,77 +305,77 @@ function Profil() {
                   label="Username"
                   name="username"
                   value={editData.username || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, username: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="Prénom"
                   name="firstName"
                   value={editData.firstName || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, firstName: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="Nom"
                   name="lastName"
                   value={editData.lastName || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, lastName: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="Poste"
                   name="position"
                   value={editData.position || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, position: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="Localisation"
                   name="location"
                   value={editData.location || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, location: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="Site Web"
                   name="website"
                   value={editData.website || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, website: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="GitHub"
                   name="github"
                   value={editData.github || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, github: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="Twitter"
                   name="twitter"
                   value={editData.twitter || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, twitter: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="Instagram"
                   name="instagram"
                   value={editData.instagram || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, instagram: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="Facebook"
                   name="facebook"
                   value={editData.facebook || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, facebook: e.target.value })}
                   className="mb-3"
                 />
                 <MDBInput
                   label="Lien de l'image (CDN)"
                   name="photoURL"
                   value={editData.photoURL || ""}
-                  onChange={handleChange}
+                  onChange={(e) => setEditData({ ...editData, photoURL: e.target.value })}
                   className="mb-3"
                 />
                 <MDBBtn onClick={handleUpdate} color="primary" className="mt-3">

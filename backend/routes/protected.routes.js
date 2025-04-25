@@ -18,7 +18,6 @@ router.get("/dashboard", authenticate, async (req, res) => {
     const userId = req.user.uid;
     const userEmail = req.user.email; // L'email de l'utilisateur authentifié
 
-    console.log("Utilisateur trouvé : ", userEmail); // Vérification que l'utilisateur est trouvé
 
     // Récupérer les données utilisateur à partir de la collection 'users' en utilisant l'email
     const userSnapshot = await db
@@ -35,7 +34,6 @@ router.get("/dashboard", authenticate, async (req, res) => {
 
     // Récupérer les données de l'utilisateur
     const userData = userSnapshot.docs[0].data(); // Supposons qu'il y a un seul utilisateur correspondant à l'email
-    console.log("Données utilisateur récupérées : ", userData); // Vérification
 
     // Récupérer les réservations de l'utilisateur
     const reservationsSnapshot = await db
@@ -82,7 +80,6 @@ router.get("/dashboard", authenticate, async (req, res) => {
 router.get("/navbar", authenticate, async (req, res) => {
   try {
     const userEmail = req.user.email; // L'email de l'utilisateur authentifié
-    console.log("Utilisateur trouvé2: ", userEmail); // Vérification que l'utilisateur est trouvé
     // Récupérer les données utilisateur de la collection 'users' via l'email
     const userSnapshot = await db
       .collection("users")
@@ -108,4 +105,50 @@ router.get("/navbar", authenticate, async (req, res) => {
   }
 });
 
+// Route pour obtenir les informations de l'utilisateur par token
+router.get('/profile', authenticate, async (req, res) => {
+    try {
+      const userEmail = req.user.email; // Récupérer l'email de l'utilisateur à partir du token
+  
+      const userSnapshot = await db
+      .collection("users")
+      .where("email", "==", userEmail) // Recherche par email
+      .get();
+
+    // Vérifier si un utilisateur a été trouvé
+    if (userSnapshot.empty) {
+      return res
+        .status(404)
+        .json({ error: "Utilisateur non trouvé dans la base de données." });
+    }
+
+    const user = userSnapshot.docs[0].data(); // Récupérer les données de l'utilisateur
+    console.log(user); // Afficher les données utilisateur dans la console
+    res.json({ user }); // Retourner les informations utilisateur (nom, photo, etc.)
+    } catch (error) {
+      res.status(500).json({ message: 'Erreur interne du serveur' });
+    }
+  });
+
+  // Route pour mettre à jour les informations du profil
+router.put('/profile', authenticate, async (req, res) => {
+    try {
+      const userEmail = req.user.email; // Email de l'utilisateur via le token
+      const updateData = req.body; // Les données envoyées pour la mise à jour
+  
+      // Mettre à jour les informations de l'utilisateur
+      const updatedUser = await db.collection('users').updateOne(
+        { email: userEmail },
+        { $set: updateData }
+      );
+  
+      if (updatedUser.modifiedCount === 0) {
+        return res.status(400).json({ message: 'Aucune modification effectuée' });
+      }
+  
+      res.json({ message: 'Profil mis à jour avec succès' });
+    } catch (error) {
+      res.status(500).json({ message: 'Erreur lors de la mise à jour du profil' });
+    }
+  });
 module.exports = router;

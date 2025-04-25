@@ -20,6 +20,7 @@ function Navbar() {
       if (currentUser) {
         setUserEmail(currentUser.email);
         const token = await getIdToken(currentUser);
+        localStorage.setItem("token", token);
 
         try {
           // Appel backend sécurisé
@@ -33,7 +34,6 @@ function Navbar() {
           );
 
           const data = response.data;
-          console.log("Données récupérées:", data.user); // Debugging
 
           setUser(data.user || currentUser);
         } catch (error) {
