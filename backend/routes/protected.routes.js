@@ -130,25 +130,32 @@ router.get('/profile', authenticate, async (req, res) => {
     }
   });
 
-  // Route pour mettre à jour les informations du profil
+// Route pour mettre à jour les informations du profil
 router.put('/profile', authenticate, async (req, res) => {
     try {
-      const userEmail = req.user.email; // Email de l'utilisateur via le token
-      const updateData = req.body; // Les données envoyées pour la mise à jour
+      const userEmail = req.user.email;
+      const updateData = req.body;
   
-      // Mettre à jour les informations de l'utilisateur
-      const updatedUser = await db.collection('users').updateOne(
-        { email: userEmail },
-        { $set: updateData }
-      );
+      // Récupérer l'utilisateur par email
+      const userSnapshot = await db
+        .collection("users")
+        .where("email", "==", userEmail)
+        .get();
   
-      if (updatedUser.modifiedCount === 0) {
-        return res.status(400).json({ message: 'Aucune modification effectuée' });
+      if (userSnapshot.empty) {
+        return res.status(404).json({ message: "Utilisateur non trouvé." });
       }
   
-      res.json({ message: 'Profil mis à jour avec succès' });
+      const userDoc = userSnapshot.docs[0];
+      await db.collection("users").doc(userDoc.id).update(updateData);
+  
+      const updatedUser = (await userDoc.ref.get()).data();
+  
+      res.json(updatedUser); // Renvoie les nouvelles données
     } catch (error) {
-      res.status(500).json({ message: 'Erreur lors de la mise à jour du profil' });
+      console.error("Erreur backend:", error);
+      res.status(500).json({ message: "Erreur lors de la mise à jour du profil" });
     }
   });
+  
 module.exports = router;
