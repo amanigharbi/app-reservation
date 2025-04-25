@@ -1,51 +1,70 @@
-import React, { useState, useEffect } from 'react';
-import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBIcon, MDBInput, MDBCheckbox } from 'mdb-react-ui-kit';
-import { auth } from '../../firebase'; // Importer auth de firebase.js
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'; // Importer les fonctions nécessaires
-import '../styles/Pages.css';
-import 'mdb-react-ui-kit/dist/css/mdb.min.css'; // Importation du CSS de MDB React UI Kit
-import { Link, useNavigate } from 'react-router-dom';
-import logo from '../../images/logo.png';
+import React, { useState, useEffect } from "react";
+import {
+  MDBContainer,
+  MDBRow,
+  MDBCol,
+  MDBBtn,
+  MDBIcon,
+  MDBInput,
+  MDBCheckbox,
+} from "mdb-react-ui-kit";
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+import { auth } from "../../firebase";
+import { useNavigate, Link } from "react-router-dom";
+import { verifyToken } from "../../api/auth.api"; // <-- appel backend
+import logo from "../../images/logo.png";
+import "../styles/Pages.css";
+import "mdb-react-ui-kit/dist/css/mdb.min.css";
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);  // État pour gérer la case "Se souvenir de moi"
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà connecté (par exemple en vérifiant dans localStorage)
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      // Si un utilisateur est sauvegardé dans le localStorage, rediriger immédiatement
-      navigate('/dashboard');
+    const savedUser = JSON.parse(localStorage.getItem("user"));
+    if (savedUser && savedUser.token) {
+      navigate("/dashboard");
     }
   }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccessMessage('');
-  
+    setError("");
+    setSuccessMessage("");
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);  // Connexion avec Firebase
-      setSuccessMessage('Utilisateur connecté avec succès');
-      console.log('Utilisateur connecté avec succès' + rememberMe);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+      const token = await user.getIdToken();
 
-      // Si "Se souvenir de moi" est coché, stocker l'état de l'utilisateur dans localStorage
+      // Vérification côté backend
+      await verifyToken(token);
+
       if (rememberMe) {
-        localStorage.setItem('user', email);  // Redirection immédiate après succès
-      } else {
-        localStorage.setItem('user', false);
-         // Redirection immédiate après succès
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ email: user.email, token })
+        );
       }
-      navigate('/dashboard');  
 
-   
+      setSuccessMessage("Connexion réussie.");
+      navigate("/dashboard");
     } catch (err) {
-      setError('Email ou mot de passe incorrect');
+      console.error(err);
+      console.error("Erreur Firebase:", err.code, err.message); // 👈 ajoute ça
+      setError("Email ou mot de passe incorrect");
     }
   };
 
@@ -53,25 +72,19 @@ function Login() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      setSuccessMessage('Connexion réussie avec Google !');
-      console.log('Utilisateur connecté avec Google:', user);
+      const token = await result.user.getIdToken();
 
-      // Si "Se souvenir de moi" est coché, stocker l'état de l'utilisateur dans localStorage
-      if (rememberMe) {
-        localStorage.setItem('user', user.email);  // Stocker l'email de l'utilisateur dans le localStorage
-         // Redirection immédiate après succès
-      navigate('/dashboard');  
-      } else {
-        localStorage.setItem('user', false);
-         // Redirection immédiate après succès
-      navigate('/dashboard');  
-      }
+      await verifyToken(token);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ email: result.user.email, token })
+      );
 
-     // Redirige vers une page après connexion
+      setSuccessMessage("Connexion avec Google réussie.");
+      navigate("/dashboard");
     } catch (err) {
-      setError('Erreur lors de la connexion avec Google');
-      console.error('Erreur de connexion Google:', err);
+      console.error(err);
+      setError("Erreur lors de la connexion avec Google.");
     }
   };
 
@@ -187,4 +200,3 @@ function Login() {
 }
 
 export default Login;
-  
