@@ -181,5 +181,155 @@ router.post("/upload", authenticate, upload.single("image"), (req, res) => {
   res.json({ imageUrl });
 });
 
+// partie pour la gestion des réservations
+
+// Récupérer toutes les réservations de l'utilisateur connecté
+router.get("/reservations", authenticate, async (req, res) => {
+  try {
+    const userId = req.user.uid;
+
+    const reservationsSnapshot = await db
+      .collection("reservations")
+      .where("utilisateurId", "==", userId)
+      .get();
+
+    const reservations = reservationsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json({ reservations });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des réservations :", error);
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors du chargement des réservations." });
+  }
+});
+
+// Obtenir une seule réservation par son ID
+router.get("/reservations/:id", authenticate, async (req, res) => {
+  try {
+    const reservationId = req.params.id;
+    const userId = req.user.uid;
+
+    const reservationRef = db.collection("reservations").doc(reservationId);
+    const reservationSnap = await reservationRef.get();
+
+    if (!reservationSnap.exists) {
+      return res.status(404).json({ message: "Réservation introuvable." });
+    }
+
+    const reservationData = reservationSnap.data();
+
+    if (reservationData.utilisateurId !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Accès non autorisé à cette réservation." });
+    }
+
+    res.json(reservationData);
+  } catch (error) {
+    console.error("Erreur récupération réservation:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors de la récupération." });
+  }
+});
+
+// Supprimer une réservation spécifique
+router.delete("/reservations/:id", authenticate, async (req, res) => {
+  try {
+    const reservationId = req.params.id;
+    const userId = req.user.uid;
+
+    const reservationRef = db.collection("reservations").doc(reservationId);
+    const reservationSnapshot = await reservationRef.get();
+
+    if (!reservationSnapshot.exists) {
+      return res.status(404).json({ message: "Réservation introuvable." });
+    }
+
+    const reservationData = reservationSnapshot.data();
+
+    // Vérifie que la réservation appartient bien à l'utilisateur connecté
+    if (reservationData.utilisateurId !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Non autorisé à supprimer cette réservation." });
+    }
+
+    await reservationRef.delete();
+    res.json({ message: "Réservation supprimée avec succès." });
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la réservation :", error);
+    res.status(500).json({ message: "Erreur serveur lors de la suppression." });
+  }
+});
+
+// Mettre à jour une réservation spécifique
+router.put("/reservations/:id", authenticate, async (req, res) => {
+  try {
+    const reservationId = req.params.id;
+    const userId = req.user.uid;
+
+    const {
+      date,
+      numGuests,
+      status,
+      heure_arrivee,
+      heure_depart,
+      duree,
+      spaceMontant,
+      montant,
+      rappels,
+      modifications,
+      paiements,
+      remboursements,
+      annulations,
+    } = req.body;
+
+    if (!date || !numGuests || !status) {
+      return res.status(400).json({ message: "Informations incomplètes." });
+    }
+
+    const reservationRef = db.collection("reservations").doc(reservationId);
+    const reservationSnapshot = await reservationRef.get();
+
+    if (!reservationSnapshot.exists) {
+      return res.status(404).json({ message: "Réservation introuvable." });
+    }
+
+    const reservationData = reservationSnapshot.data();
+
+    if (reservationData.utilisateurId !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Non autorisé à modifier cette réservation." });
+    }
+
+    await reservationRef.update({
+      date,
+      numGuests,
+      status,
+      heure_arrivee,
+      heure_depart,
+      duree,
+      spaceMontant,
+      montant,
+      rappels,
+      modifications,
+      paiements,
+      remboursements,
+      annulations,
+      updatedAt: new Date(),
+    });
+
+    res.json({ message: "Réservation mise à jour avec succès." });
+  } catch (error) {
+    console.error("Erreur maj réservation:", error);
+    res.status(500).json({ message: "Erreur serveur mise à jour." });
+  }
+});
 
 module.exports = router;

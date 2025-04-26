@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   MDBModal,
   MDBModalDialog,
@@ -16,88 +17,63 @@ import {
   MDBCol,
 } from "mdb-react-ui-kit";
 
-import { doc, updateDoc, getDoc, arrayUnion } from "firebase/firestore";
-import { db } from "../../firebase";
 import PaymentModal from "./PaymentModal";
 import RefundModal from "./RefundModal";
 
 function UpdateReservation({ reservationId, onClose, showModal }) {
-  const [reservation, setReservation] = useState({
-    date: "",
-    heure_arrivee: "",
-    heure_depart: "",
-    dureeInitiale: 0,
-    dureeModifiee: 0,
-    rappels: [],
-    modifications: [], // Historique des modifications
-    paiements: [], // Historique des paiements
-    remboursements: [], // Historique des remboursements
-    annulations: [], // Historique des annulations
-    montantTotal: 0,
-    montantDejaPaye: 0,
-    montantSupplementaire: 0,
-    montantRemboursable: 0,
-    spaceMontant: 0,
-    statut: "confirmée",
-  });
-
+  const [reservation, setReservation] = useState(null);
   const [nouveauRappel, setNouveauRappel] = useState("");
-  const [disponible, setDisponible] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
-  const [actionType, setActionType] = useState("update");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showModificationHistory, setShowModificationHistory] = useState(false); // Etat pour l'historique
   const [showToast, setShowToast] = useState({
     type: "",
     visible: false,
     message: "",
   });
-  const formatDuree = (heuresDecimales) => {
-    const totalMinutes = Math.round(parseFloat(heuresDecimales) * 60);
-    const heures = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    if (isNaN(heures)) return "";
-    if (minutes === 0) return `${heures}h`;
-    return `${heures}h ${minutes}min`;
-  };
+  const [error, setError] = useState("");
+  const [showModificationHistory, setShowModificationHistory] = useState(false); // Etat pour l'historique
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [reservationToCancel, setReservationToCancel] = useState(null);
+  const [setShowModal] = useState(false);
 
   useEffect(() => {
-    const loadData = async () => {
+    const fetchReservation = async () => {
       try {
-        const docRef = doc(db, "reservations", reservationId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setReservation({
-            ...data,
-            dureeInitiale: data.duree || 0,
-            dureeModifiee: data.duree || 0,
-            montantDejaPaye: data.montant || 0,
-            montantSupplementaire: 0,
-            montantRemboursable: 0,
-            montantTotal: data.montant || 0,
-          });
-        }
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `http://localhost:5000/api/protected/reservations/${reservationId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const data = res.data;
+
+        setReservation({
+          ...data,
+          dureeInitiale: data.duree || 0,
+          dureeModifiee: data.duree || 0,
+          montantDejaPaye: data.montant || 0,
+          montantSupplementaire: 0,
+          montantRemboursable: 0,
+          montantTotal: Number(data.montant) || 0,
+        });
       } catch (err) {
+        console.error("Erreur chargement réservation:", err);
         setError("Erreur lors du chargement de la réservation");
-        console.error(err);
       }
     };
 
-    if (reservationId) loadData();
+    if (reservationId) fetchReservation();
   }, [reservationId]);
 
   useEffect(() => {
-    if (reservation.heure_arrivee && reservation.heure_depart) {
+    if (reservation && reservation.heure_arrivee && reservation.heure_depart) {
       const [h1, m1] = reservation.heure_arrivee.split(":").map(Number);
       const [h2, m2] = reservation.heure_depart.split(":").map(Number);
 
       if (h2 * 60 + m2 <= h1 * 60 + m1) {
         setError("L'heure de départ doit être après l'heure d'arrivée");
-        setDisponible(false);
         return;
       }
 
@@ -122,128 +98,90 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       }));
 
       setError("");
-      setDisponible(true);
     }
-  }, [reservation.heure_arrivee, reservation.heure_depart]);
+  }, [reservation?.heure_arrivee, reservation?.heure_depart]);
 
-  const handleSubmit = async () => {
-    if (reservation.montantSupplementaire > 0) {
-      setActionType("update");
-      setShowPaymentModal(true);
-    } else if (reservation.montantRemboursable > 0) {
-      setActionType("partial_cancel");
-      setShowRefundModal(true);
-    } else {
-      await saveReservation();
-    }
+  const formatDuree = (heuresDecimales) => {
+    const totalMinutes = Math.round(parseFloat(heuresDecimales) * 60);
+    const heures = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return isNaN(heures)
+      ? ""
+      : minutes === 0
+      ? `${heures}h`
+      : `${heures}h ${minutes}min`;
   };
 
   const saveReservation = async (transaction = null) => {
     setLoading(true);
     try {
-      const now = new Date().toISOString();
-      let modificationData = {
-        date: now,
-        type: actionType,
-        ancienneDuree: reservation.dureeInitiale,
-        nouvelleDuree: reservation.dureeModifiee,
-        montantAjoute: reservation.montantSupplementaire,
-        montantRembourse: reservation.montantRemboursable,
-      };
+      const token = localStorage.getItem("token");
+      const modifications = [...(reservation.modifications || [])];
 
       if (transaction) {
-        modificationData.transaction = {
+        modifications.push({
+          date: new Date().toISOString(),
           type: transaction.type,
-          methode: transaction.methode,
-          montant:
+          ancienneDuree: reservation.dureeInitiale,
+          nouvelleDuree: reservation.dureeModifiee,
+          montantAjoute:
             transaction.type === "paiement"
               ? reservation.montantSupplementaire
-              : reservation.montantRemboursable,
-          transactionId: transaction.transactionId,
-        };
-      }
-
-      const updateData = {
-        date: reservation.date,
-        heure_arrivee: reservation.heure_arrivee,
-        heure_depart: reservation.heure_depart,
-        duree: parseFloat(reservation.dureeModifiee),
-        montant: parseFloat(reservation.montantTotal),
-        rappels: [...reservation.rappels],
-        modifications: arrayUnion(modificationData),
-      };
-
-      if (transaction?.type === "paiement") {
-        updateData.paiements = arrayUnion({
-          montant: reservation.montantSupplementaire,
-          date: now,
-          methode: transaction.methode,
-          transactionId: transaction.transactionId,
-        });
-      } else if (transaction?.type === "remboursement") {
-        updateData.remboursements = arrayUnion({
-          montant: reservation.montantRemboursable,
-          date: now,
-          methode: transaction.methode,
-          transactionId: transaction.transactionId,
+              : 0,
+          montantRembourse:
+            transaction.type === "remboursement"
+              ? reservation.montantRemboursable
+              : 0,
         });
       }
+
+      await axios.put(
+        `http://localhost:5000/api/protected/reservations/${reservationId}`,
+        {
+          date: reservation.date,
+          numGuests: reservation.participants,
+          status: reservation.status,
+          heure_arrivee: reservation.heure_arrivee,
+          heure_depart: reservation.heure_depart,
+          duree: reservation.dureeModifiee,
+          spaceMontant: reservation.spaceMontant,
+          montant: reservation.montantTotal,
+          rappels: reservation.rappels || [],
+          modifications,
+          paiements: reservation.paiements || [],
+          remboursements: reservation.remboursements || [],
+          annulations: reservation.annulations || [],
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       setShowToast({
         type: "success",
         visible: true,
-        message: "Réservation mise à jour avec succès  !",
+        message: "Réservation mise à jour avec succès !",
       });
-      await updateDoc(doc(db, "reservations", reservationId), updateData);
-
-      setTimeout(() => {
-        onClose(true);
-      }, 2000);    } catch (error) {
-      setShowToast({ type: "error", visible: true });
-
-      setError("Erreur lors de la mise à jour");
-      console.error(error);
+      setTimeout(() => onClose(true), 2000);
+    } catch (error) {
+      console.error("Erreur mise à jour réservation:", error);
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Erreur lors de la mise à jour.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const annulerReservation = async () => {
-    const confirm = window.confirm("Souhaitez-vous demander l'annulation ?");
-    if (!confirm) return;
-
-    setLoading(true);
-    try {
-      const now = new Date().toISOString();
-
-      const modificationData = {
-        date: now,
-        type: "annulation",
-        ancienneDuree: reservation.dureeInitiale,
-        nouvelleDuree: 0,
-        montantAjoute: 0,
-        montantRembourse: reservation.montantDejaPaye,
-      };
-
-      await updateDoc(doc(db, "reservations", reservationId), {
-        statut: "annulation demandée",
-        modifications: arrayUnion(modificationData),
-        duree: 0,
-        heure_depart: reservation.heure_arrivee,
-      });
-      setShowToast({
-        type: "success",
-        visible: true,
-        message: "Annulation effectuée avec succès  !",
-      });
-      setTimeout(() => {
-        onClose(true);
-      }, 2000);    } catch (err) {
-      setShowToast({ type: "error", visible: true });
-
-      setError("Erreur lors de la demande d'annulation");
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const handleSubmit = () => {
+    if (reservation.montantSupplementaire > 0) {
+      setShowPaymentModal(true);
+    } else if (reservation.montantRemboursable > 0) {
+      setShowRefundModal(true);
+    } else {
+      saveReservation();
     }
   };
 
@@ -256,6 +194,91 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
     setShowRefundModal(false);
     saveReservation({ ...refundResult, type: "remboursement" });
   };
+  const handleCancelReservation = (reservation) => {
+    setReservationToCancel(reservation);
+    setShowCancelModal(true);
+  };
+  const handleConfirmCancel = async () => {
+    setShowCancelModal(false);
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!reservationId) {
+        console.error("Pas d'ID de réservation, impossible d'envoyer le PUT !");
+        return;
+      }
+      console.log("Reservation envoyée au PUT:", reservation);
+
+      await axios.put(
+        `http://localhost:5000/api/protected/reservations/${reservationId}`,
+        {
+          date: reservation.date,
+          numGuests: reservation.participants,
+          status: "annulation demandée",
+          heure_arrivee: reservation.heure_arrivee,
+          heure_depart: reservation.heure_depart,
+          duree: reservation.dureeModifiee,
+          spaceMontant: reservation.spaceMontant,
+          montant: reservation.montantTotal,
+          rappels: reservation.rappels || [],
+          modifications: reservation.modifications || [],
+          paiements: reservation.paiements || [],
+          remboursements: reservation.remboursements || [],
+          annulations: [
+            ...(reservation.annulations || []),
+            {
+              date: new Date().toISOString(),
+              motif: "Demande d'annulation par utilisateur",
+            },
+          ],
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setShowToast({
+        type: "success",
+        visible: true,
+        message: "Demande d'annulation de réservation avec succès.",
+      });
+
+      setTimeout(() => onClose(true), 2000);
+    } catch (error) {
+      console.error("Erreur annulation:", error);
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Erreur lors de la demande de l'annulation.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!reservation && loading) {
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "80vh" }}
+      >
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Chargement...</span>
+        </div>
+      </div>
+    );
+  }
+  if (!reservation) {
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "80vh" }}
+      >
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Chargement...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -263,42 +286,12 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
         <MDBModalDialog size="lg">
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>
-                Modifier Réservation
-                {reservation.statut === "annulation demandée" && (
-                  <MDBBadge color="warning" className="ms-2">
-                    Annulation en attente
-                  </MDBBadge>
-                )}
-                {reservation.statut === "annulée" && (
-                  <MDBBadge color="danger" className="ms-2">
-                    Annulée
-                  </MDBBadge>
-                )}
-                {reservation.statut === "En attente" && (
-                  <MDBBadge color="warning" className="ms-2">
-                    En attente de confirmation
-                  </MDBBadge>
-                )}
-                {reservation.statut === "acceptée" && (
-                  <MDBBadge color="success" className="ms-2">
-                    Confirmée
-                  </MDBBadge>
-                )}
-                {reservation.statut === "refusée" && (
-                  <MDBBadge color="danger" className="ms-2">
-                    Refusée
-                  </MDBBadge>
-                )}
-              </MDBModalTitle>
+              <MDBModalTitle>Modifier Réservation</MDBModalTitle>
             </MDBModalHeader>
-
             <MDBModalBody>
               {error && <div className="alert alert-danger">{error}</div>}
-
-              {/* Section Formulaire de modification */}
-              <MDBRow>
-                <MDBCol md={6}>
+              <MDBRow className="mb-3">
+                <MDBCol md="6">
                   <MDBInput
                     label="Date"
                     type="date"
@@ -308,7 +301,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                     }
                   />
                 </MDBCol>
-                <MDBCol md={3}>
+                <MDBCol md="3">
                   <MDBInput
                     label="Heure arrivée"
                     type="time"
@@ -319,13 +312,9 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                         heure_arrivee: e.target.value,
                       })
                     }
-                    disabled={
-                      reservation.statut === "annulation demandée" ||
-                      reservation.statut === "annulée"
-                    }
                   />
                 </MDBCol>
-                <MDBCol md={3}>
+                <MDBCol md="3">
                   <MDBInput
                     label="Heure départ"
                     type="time"
@@ -336,47 +325,31 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                         heure_depart: e.target.value,
                       })
                     }
-                    disabled={
-                      reservation.statut === "annulation demandée" ||
-                      reservation.statut === "annulée"
-                    }
                   />
                 </MDBCol>
               </MDBRow>
 
-              <div className="mt-4 p-3 bg-light rounded">
-                <MDBCardText>
-                  <strong>Durée initiale:</strong>{" "}
-                  {formatDuree(reservation.dureeInitiale)}
-                </MDBCardText>
-                <MDBCardText>
-                  <strong>Nouvelle durée:</strong>{" "}
-                  {formatDuree(reservation.dureeModifiee)}
-                </MDBCardText>
-                <MDBCardText>
-                  <strong>Tarif horaire:</strong> {reservation.spaceMontant}€/h
-                </MDBCardText>
-                <MDBCardText>
-                  <strong>Déjà payé:</strong>{" "}
-                  {reservation.montantDejaPaye.toFixed(2)}€
-                </MDBCardText>
-                {reservation.montantSupplementaire > 0 && (
-                  <MDBCardText className="text-warning">
-                    <strong>Supplément à payer:</strong>{" "}
-                    {reservation.montantSupplementaire.toFixed(2)}€
-                  </MDBCardText>
-                )}
-                {reservation.montantRemboursable > 0 && (
-                  <MDBCardText className="text-success">
-                    <strong>Remboursement:</strong>{" "}
-                    {reservation.montantRemboursable.toFixed(2)}€
-                  </MDBCardText>
-                )}
-                <MDBCardText className="fw-bold">
-                  <strong>Total final:</strong>{" "}
-                  {reservation.montantTotal.toFixed(2)}€
-                </MDBCardText>
-              </div>
+              {/* Montant */}
+              <MDBCardText>
+                <strong>Durée initiale:</strong>{" "}
+                {formatDuree(reservation.dureeInitiale)}
+              </MDBCardText>
+              <MDBCardText>
+                <strong>Nouvelle durée:</strong>{" "}
+                {formatDuree(reservation.dureeModifiee)}
+              </MDBCardText>
+              <MDBCardText>
+                <strong>Supplément:</strong>{" "}
+                {reservation.montantSupplementaire.toFixed(2)} €
+              </MDBCardText>
+              <MDBCardText>
+                <strong>Remboursement:</strong>{" "}
+                {reservation.montantRemboursable.toFixed(2)} €
+              </MDBCardText>
+              <MDBCardText>
+                <strong>Total final:</strong>{" "}
+                {Number(reservation.montantTotal).toFixed(2)} €
+              </MDBCardText>
 
               {/* Section Historique des modifications */}
               <div className="mt-4">
@@ -501,52 +474,14 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                   </div>
                 )}
               </div>
-
-              {/* Section Ajouter un rappel */}
-              <div className="mt-4">
-                <h6>Ajouter un rappel</h6>
-                <div className="d-flex align-items-center">
-                  <MDBInput
-                    value={nouveauRappel}
-                    onChange={(e) => setNouveauRappel(e.target.value)}
-                    placeholder="Date et heure du rappel"
-                    type="datetime-local"
-                  />
-                  <MDBBtn
-                    color="primary"
-                    size="sm"
-                    className="ms-2"
-                    onClick={() => {
-                      if (nouveauRappel) {
-                        setReservation({
-                          ...reservation,
-                          rappels: [...reservation.rappels, nouveauRappel],
-                        });
-                        setNouveauRappel("");
-                      }
-                    }}
-                  >
-                    <MDBIcon icon="plus" />
-                  </MDBBtn>
-                </div>
-                <div className="mt-2">
-                  {reservation.rappels.map((rappel, index) => (
-                    <MDBBadge key={index} color="info" className="me-2 mb-2">
-                      {new Date(rappel).toLocaleString()}
-                    </MDBBadge>
-                  ))}
-                </div>
-              </div>
             </MDBModalBody>
-
-            {/* Section Modale Actions */}
             <MDBModalFooter>
               <MDBBtn
                 color="danger"
-                onClick={annulerReservation}
+                onClick={handleCancelReservation}
                 style={{ textTransform: "none" }}
               >
-                Demander une annulation
+                Annuler la réservation
               </MDBBtn>
               <MDBBtn
                 color="secondary"
@@ -558,23 +493,83 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
               <MDBBtn
                 color="primary"
                 onClick={handleSubmit}
+                disabled={loading}
                 style={{ textTransform: "none" }}
-                disabled={!disponible || loading}
+              >
+                {loading ? "Enregistrement..." : "Enregistrer"}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+      {/* Modal */}
+      <MDBModal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+      >
+        <MDBModalDialog>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Confirmer l'annulation</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={() => setShowModal(false)}
+              />
+            </MDBModalHeader>
+            <MDBModalBody>
+              Êtes-vous sûr de vouloir annuler cette réservation ?
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn
+                color="secondary"
+                style={{ textTransform: "none" }}
+                onClick={() => setShowModal(false)}
+              >
+                Annuler
+              </MDBBtn>
+              <MDBBtn
+                color="danger"
+                onClick={handleConfirmCancel}
+                style={{ textTransform: "none" }}
+                disabled={loading}
               >
                 {loading ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-2"></span>
-                    Enregistrement...
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    />
+                    Annulation...
                   </>
                 ) : (
-                  "Enregistrer"
+                  "Annuler la réservation"
                 )}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>
         </MDBModalDialog>
       </MDBModal>
-      {/* ✅ TOAST SUCCÈS & ERREUR */}
+
+      {/* Modals */}
+      {showPaymentModal && (
+        <PaymentModal
+          show={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          amount={reservation.montantSupplementaire}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
+      {showRefundModal && (
+        <RefundModal
+          show={showRefundModal}
+          onClose={() => setShowRefundModal(false)}
+          amount={reservation.montantRemboursable}
+          onSuccess={handleRefundSuccess}
+        />
+      )}
+
+      {/* Toast */}
       {showToast.visible && (
         <div
           className="position-fixed top-0 end-0 p-3"
@@ -587,54 +582,21 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
             role="alert"
             aria-live="assertive"
             aria-atomic="true"
+            style={{ transition: "opacity 0.3s ease-in-out" }}
           >
-            <div
-              className={`toast-header ${
-                showToast.type === "success" ? "bg-success" : "bg-danger"
-              } text-white`}
-            >
-              <i
-                className={`fas ${
-                  showToast.type === "success" ? "fa-check" : "fa-times"
-                } fa-lg me-2`}
-              ></i>
+            <div className="toast-header text-white">
               <strong className="me-auto">
                 {showToast.type === "success" ? "Succès" : "Erreur"}
               </strong>
-              <small>
-                {new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </small>
               <button
                 type="button"
                 className="btn-close btn-close-white"
-                onClick={() => setShowToast({ type: "", visible: false })}
+                onClick={() => setShowToast({ visible: false })}
               ></button>
             </div>
-            <div className="toast-body">
-              {showToast.message || "Une action a été effectuée."}
-            </div>
+            <div className="toast-body">{showToast.message}</div>
           </div>
         </div>
-      )}
-      {showPaymentModal && (
-        <PaymentModal
-          show={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          amount={reservation.montantSupplementaire}
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
-
-      {showRefundModal && (
-        <RefundModal
-          show={showRefundModal}
-          onClose={() => setShowRefundModal(false)}
-          amount={reservation.montantRemboursable}
-          onSuccess={handleRefundSuccess}
-        />
       )}
     </>
   );

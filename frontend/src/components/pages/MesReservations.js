@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth } from "../../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import axios from "axios";
+
 import {
   MDBContainer,
   MDBBtn,
@@ -46,6 +48,8 @@ function MesReservations() {
     visible: false,
     message: "",
   });
+  const [loading, setLoading] = useState(true);
+
   const [rappels, setRappels] = useState([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedReservationId, setSelectedReservationId] = useState(null);
@@ -63,31 +67,67 @@ function MesReservations() {
   }, [showModal]);
   const [loadingDelete, setLoadingDelete] = useState(false);
 
-  // Auth and Firestore setup
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUserEmail(currentUser.email);
-        const q = query(
-          collection(db, "reservations"),
-          where("utilisateurId", "==", currentUser.uid)
-        );
-        const unsubscribeFirestore = onSnapshot(q, (snapshot) => {
-          const reservationList = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setReservations(reservationList);
-        });
-        return () => unsubscribeFirestore();
-      } else {
-        setUserEmail(null);
+  // Récupérer les réservations
+  const fetchReservations = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/protected/reservations",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setReservations(response.data.reservations);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des réservations :", error);
+      if (error.response && error.response.status === 401) {
         navigate("/login");
       }
-    });
+    }
+  };
 
-    return () => unsubscribeAuth();
-  }, [navigate]);
+  useEffect(() => {
+    fetchReservations();
+  }, []);
+
+  // Supprimer une réservation
+  const handleConfirmDelete = async (id) => {
+    setLoadingDelete(true);
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(
+        `http://localhost:5000/api/protected/reservations/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setShowModal(false);
+      setShowToast({
+        type: "success",
+        visible: true,
+        message: "Réservation supprimée !",
+      });
+      fetchReservations(); 
+    } catch (error) {
+      console.error("Erreur suppression:", error);
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Erreur lors de la suppression.",
+      });
+    } finally {
+      setLoadingDelete(false);
+      setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
+    }
+  };
+
   // Extraire les rappels de chaque réservation
   useEffect(() => {
     const extractedRappels = reservations.flatMap((reservation) => {
@@ -118,38 +158,6 @@ function MesReservations() {
     return paiements.map((p) => p.methode).join(", ");
   };
 
-  const handleUpdateReservation = (reservation) => {
-    setSelectedReservationId(reservation.id);
-    setShowUpdateModal(true);
-  };
-
-  const handleDeleteReservation = (id) => {
-    console.log(
-      "Ouverture du modal pour la suppression de la réservation:",
-      id
-    );
-    setReservationToDelete(id); // Set the reservation to delete
-    setShowModal(true); // Show the modal
-  };
-
-  const handleConfirmDelete = async (id) => {
-    setLoadingDelete(true);
-    try {
-      await deleteDoc(doc(db, "reservations", id));
-      setShowModal(false);
-      setShowToast({
-        type: "success",
-        visible: true,
-        message: "Réservation supprimée !",
-      });
-    } catch (error) {
-      console.error("Erreur lors de la suppression :", error);
-      setShowToast({ type: "error", visible: true });
-    } finally {
-      setLoadingDelete(false);
-      setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
-    }
-  };
   const handleExportCSV = () => {
     const headers = [
       "Code",
@@ -228,7 +236,7 @@ function MesReservations() {
       res.spaceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       res.spaceLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
       res.participants.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      res.statut.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      res.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
       res.spaceMontant
         .toString()
         .toLowerCase()
@@ -238,7 +246,7 @@ function MesReservations() {
   return (
     <MDBContainer fluid className="dashboard-bg px-0">
       {/* Navbar */}
-    <Navbar />
+      <Navbar />
 
       {/* ✅ TOAST SUCCÈS & ERREUR */}
       {showToast.visible && (
@@ -348,7 +356,7 @@ function MesReservations() {
                   <th>Payé</th>
                   <th>Méthode</th>
                   <th>Participants</th>
-                  <th>Statut</th>
+                  <th>status</th>
                   <th>Espace</th>
                   <th>Actions</th>
                 </tr>
@@ -359,7 +367,7 @@ function MesReservations() {
                     <td>
                       <strong>{res.code_reservation}</strong>
                     </td>
-                    <td>{new Date(res.date).toLocaleString()}</td>
+                    <td>{new Date(res.date).toLocaleDateString("fr-FR")}</td>
                     <td>{formatDuree(res.duree)}</td>
                     <td>{res.service}</td>
                     <td>{res.spaceMontant} €</td>
@@ -368,27 +376,27 @@ function MesReservations() {
                     <td>{res.participants}</td>
                     <td>
                       {" "}
-                      {res.statut === "annulation demandée" && (
+                      {res.status === "annulation demandée" && (
                         <MDBBadge color="warning" className="ms-2">
                           A annulée{" "}
                         </MDBBadge>
                       )}
-                      {res.statut === "annulée" && (
+                      {res.status === "annulée" && (
                         <MDBBadge color="danger" className="ms-2">
                           Annulée
                         </MDBBadge>
                       )}
-                      {res.statut === "En attente" && (
+                      {res.status === "En attente" && (
                         <MDBBadge color="warning" className="ms-2">
                           A confirmée
                         </MDBBadge>
                       )}
-                      {res.statut === "acceptée" && (
+                      {res.status === "acceptée" && (
                         <MDBBadge color="success" className="ms-2">
                           Confirmée
                         </MDBBadge>
                       )}
-                      {res.statut === "refusée" && (
+                      {res.status === "refusée" && (
                         <MDBBadge color="danger" className="ms-2">
                           Refusée
                         </MDBBadge>
@@ -401,15 +409,22 @@ function MesReservations() {
                       <div className="d-flex justify-content-center gap-2">
                         <MDBBtn
                           size="sm"
-                          color="warning"
-                          onClick={() => handleUpdateReservation(res)}
+                          color="secondary"
+                          onClick={() => {
+                            setSelectedReservationId(res.id);
+                            setShowUpdateModal(true);
+                          }}
                         >
                           <MDBIcon fas icon="pen" />
                         </MDBBtn>
+
                         <MDBBtn
                           size="sm"
                           color="danger"
-                          onClick={() => handleDeleteReservation(res.id)}
+                          onClick={() => {
+                            setReservationToDelete(res.id);
+                            setShowModal(true);
+                          }}
                         >
                           <MDBIcon fas icon="trash" />
                         </MDBBtn>
@@ -472,7 +487,6 @@ function MesReservations() {
       <MDBContainer className="py-5 px-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h3 className="text-primary fw-bold">Mes Rappels</h3>
-       
         </div>
 
         {filteredRappels.length === 0 ? (
@@ -516,13 +530,18 @@ function MesReservations() {
           </div>
         )}
       </MDBContainer>
-      {showUpdateModal && (
+      {showUpdateModal && selectedReservationId && (
         <UpdateReservation
           reservationId={selectedReservationId}
-          onClose={() => setShowUpdateModal(false)}
+          onClose={(refresh = false) => {
+            setShowUpdateModal(false);
+            setSelectedReservationId(null);
+            if (refresh) fetchReservations(); 
+          }}
           showModal={showUpdateModal}
         />
       )}
+
       <Footer />
     </MDBContainer>
   );

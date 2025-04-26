@@ -48,8 +48,8 @@ function RefundModal({ show, onClose, amount, onSuccess }) {
           </MDBModalBody>
 
           <MDBModalFooter>
-            <MDBBtn color='secondary' onClick={onClose}>Annuler</MDBBtn>
-            <MDBBtn color='success' onClick={handleRefund} disabled={processing}>
+            <MDBBtn color='secondary' onClick={onClose} style={{textTransform : "none"}}>Annuler</MDBBtn>
+            <MDBBtn color='success' onClick={handleRefund} disabled={processing} style={{textTransform : "none"}}>
               {processing ? 'Traitement...' : 'Confirmer le remboursement'}
             </MDBBtn>
           </MDBModalFooter>
