@@ -18,7 +18,6 @@ router.get("/dashboard", authenticate, async (req, res) => {
     const userId = req.user.uid;
     const userEmail = req.user.email; // L'email de l'utilisateur authentifié
 
-
     // Récupérer les données utilisateur à partir de la collection 'users' en utilisant l'email
     const userSnapshot = await db
       .collection("users")
@@ -106,11 +105,11 @@ router.get("/navbar", authenticate, async (req, res) => {
 });
 
 // Route pour obtenir les informations de l'utilisateur par token
-router.get('/profile', authenticate, async (req, res) => {
-    try {
-      const userEmail = req.user.email; // Récupérer l'email de l'utilisateur à partir du token
-  
-      const userSnapshot = await db
+router.get("/profile", authenticate, async (req, res) => {
+  try {
+    const userEmail = req.user.email; // Récupérer l'email de l'utilisateur à partir du token
+
+    const userSnapshot = await db
       .collection("users")
       .where("email", "==", userEmail) // Recherche par email
       .get();
@@ -125,37 +124,62 @@ router.get('/profile', authenticate, async (req, res) => {
     const user = userSnapshot.docs[0].data(); // Récupérer les données de l'utilisateur
     console.log(user); // Afficher les données utilisateur dans la console
     res.json({ user }); // Retourner les informations utilisateur (nom, photo, etc.)
-    } catch (error) {
-      res.status(500).json({ message: 'Erreur interne du serveur' });
-    }
-  });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur interne du serveur" });
+  }
+});
 
 // Route pour mettre à jour les informations du profil
-router.put('/profile', authenticate, async (req, res) => {
-    try {
-      const userEmail = req.user.email;
-      const updateData = req.body;
-  
-      // Récupérer l'utilisateur par email
-      const userSnapshot = await db
-        .collection("users")
-        .where("email", "==", userEmail)
-        .get();
-  
-      if (userSnapshot.empty) {
-        return res.status(404).json({ message: "Utilisateur non trouvé." });
-      }
-  
-      const userDoc = userSnapshot.docs[0];
-      await db.collection("users").doc(userDoc.id).update(updateData);
-  
-      const updatedUser = (await userDoc.ref.get()).data();
-  
-      res.json(updatedUser); // Renvoie les nouvelles données
-    } catch (error) {
-      console.error("Erreur backend:", error);
-      res.status(500).json({ message: "Erreur lors de la mise à jour du profil" });
+router.put("/profile", authenticate, async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const updateData = req.body;
+
+    // Récupérer l'utilisateur par email
+    const userSnapshot = await db
+      .collection("users")
+      .where("email", "==", userEmail)
+      .get();
+
+    if (userSnapshot.empty) {
+      return res.status(404).json({ message: "Utilisateur non trouvé." });
     }
-  });
-  
+
+    const userDoc = userSnapshot.docs[0];
+    await db.collection("users").doc(userDoc.id).update(updateData);
+
+    const updatedUser = (await userDoc.ref.get()).data();
+
+    res.json(updatedUser); // Renvoie les nouvelles données
+  } catch (error) {
+    console.error("Erreur backend:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la mise à jour du profil" });
+  }
+});
+const multer = require("multer");
+const path = require("path");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); // <== Dossier local 'uploads' !
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Exemple: 1713982340021.jpg
+  },
+});
+
+const upload = multer({ storage });
+
+router.post("/upload", authenticate, upload.single("image"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "Aucun fichier envoyé." });
+  }
+
+  const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+  res.json({ imageUrl });
+});
+
+
 module.exports = router;

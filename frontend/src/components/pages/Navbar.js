@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { MDBIcon } from "mdb-react-ui-kit";
 import logo from "../../images/logo-3.png";
 import { auth } from "../../firebase";
+import { UserContext } from "../../contexts/UserContext";
 
 import { onAuthStateChanged, getIdToken } from "firebase/auth";
 
@@ -12,7 +13,7 @@ function Navbar() {
   const [userName, setUserName] = useState("");
   const [userPhoto, setUserPhoto] = useState("");
   const [error, setError] = useState(null); // État pour gérer les erreurs
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useContext(UserContext);
   const [userEmail, setUserEmail] = useState(null);
 
   useEffect(() => {
@@ -92,7 +93,9 @@ function Navbar() {
           <img
             src={
               user?.photoURL ||
-              "https://ui-avatars.com/api/?name=Utilisateur&background=3B71CA&color=fff&size=40"
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                user?.username || "Utilisateur"
+              )}&background=3B71CA&color=fff&size=150`
             }
             alt="Avatar"
             className="rounded-circle shadow-sm"

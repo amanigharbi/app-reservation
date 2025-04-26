@@ -11,8 +11,7 @@ app.use(
     origin: "http://localhost:3000", // Frontend React sur localhost:3000
     methods: ["GET", "POST", "PUT", "DELETE"], // Méthodes autorisées
     allowedHeaders: ["Content-Type", "Authorization"],
-      credentials: true,              // Permet l'envoi des cookies
-
+    credentials: true, // Permet l'envoi des cookies
   })
 );
 
@@ -21,6 +20,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/protected", protectedRoutes);
+app.use("/uploads", express.static("uploads"));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));

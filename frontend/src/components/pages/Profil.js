@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { UserContext } from "../../contexts/UserContext";
 
 import {
   MDBContainer,
@@ -18,7 +19,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 
 function Profil() {
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useContext(UserContext);
   const [editData, setEditData] = useState({});
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState({
@@ -28,18 +29,19 @@ function Profil() {
   });
   const navigate = useNavigate();
   const getToken = () => localStorage.getItem("token");
-
   // Récupérer les données de l'utilisateur depuis l'API backend
   const fetchUserData = async () => {
     const token = getToken();
-  
-    
+
     try {
-      const response = await axios.get("http://localhost:5000/api/protected/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        "http://localhost:5000/api/protected/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       console.log("Données utilisateur récupérées:", response.data);
       setUser(response.data.user);
       setEditData(response.data.user);
@@ -54,6 +56,44 @@ function Profil() {
       setLoading(false);
     }
   };
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // 1. Preview immédiate juste pour affichage (PAS pour editData)
+      const previewUrl = URL.createObjectURL(file);
+      setUser((prevUser) => ({ ...prevUser, photoURL: previewUrl }));
+
+      // 2. Upload réel au serveur
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const token = localStorage.getItem("token");
+
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/protected/upload",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // ✅ ici tu récupères la VRAIE URL du serveur
+        const uploadedImageUrl = response.data.imageUrl;
+
+        // ✅ Là tu mets à jour editData AVEC le vrai lien HTTP (PAS le blob)
+        setEditData((prevEditData) => ({
+          ...prevEditData,
+          photoURL: uploadedImageUrl,
+        }));
+      } catch (error) {
+        console.error("Erreur upload image", error);
+      }
+    }
+  };
 
   // Mettre à jour le profil
   const handleUpdate = async () => {
@@ -64,11 +104,15 @@ function Profil() {
     }
 
     try {
-      const response = await axios.put("http://localhost:5000/api/protected/profile", editData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.put(
+        "http://localhost:5000/api/protected/profile",
+        editData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setUser(response.data); // Mettre à jour les informations de l'utilisateur
       setShowToast({
         type: "success",
@@ -80,7 +124,11 @@ function Profil() {
       }, 3000);
     } catch (error) {
       console.error("Erreur de mise à jour du profil", error);
-      setShowToast({ type: "error", visible: true, message: "Erreur lors de la mise à jour." });
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Erreur lors de la mise à jour.",
+      });
     }
   };
 
@@ -88,9 +136,6 @@ function Profil() {
   useEffect(() => {
     fetchUserData();
   }, []);
-
-  
-
 
   if (loading) {
     return (
@@ -109,9 +154,9 @@ function Profil() {
 
   return (
     <MDBContainer fluid className="dashboard-bg px-0">
-     <Navbar />
-   {/* ✅ TOAST SUCCÈS & ERREUR */}
-   {showToast.visible && (
+      <Navbar />
+      {/* ✅ TOAST SUCCÈS & ERREUR */}
+      {showToast.visible && (
         <div
           className="position-fixed top-0 end-0 p-3"
           style={{ zIndex: 9999 }}
@@ -305,79 +350,109 @@ function Profil() {
                   label="Username"
                   name="username"
                   value={editData.username || ""}
-                  onChange={(e) => setEditData({ ...editData, username: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, username: e.target.value })
+                  }
                   className="mb-3"
                 />
                 <MDBInput
                   label="Prénom"
                   name="firstName"
                   value={editData.firstName || ""}
-                  onChange={(e) => setEditData({ ...editData, firstName: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, firstName: e.target.value })
+                  }
                   className="mb-3"
                 />
                 <MDBInput
                   label="Nom"
                   name="lastName"
                   value={editData.lastName || ""}
-                  onChange={(e) => setEditData({ ...editData, lastName: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, lastName: e.target.value })
+                  }
                   className="mb-3"
                 />
                 <MDBInput
                   label="Poste"
                   name="position"
                   value={editData.position || ""}
-                  onChange={(e) => setEditData({ ...editData, position: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, position: e.target.value })
+                  }
                   className="mb-3"
                 />
                 <MDBInput
                   label="Localisation"
                   name="location"
                   value={editData.location || ""}
-                  onChange={(e) => setEditData({ ...editData, location: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, location: e.target.value })
+                  }
                   className="mb-3"
                 />
                 <MDBInput
                   label="Site Web"
                   name="website"
                   value={editData.website || ""}
-                  onChange={(e) => setEditData({ ...editData, website: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, website: e.target.value })
+                  }
                   className="mb-3"
                 />
                 <MDBInput
                   label="GitHub"
                   name="github"
                   value={editData.github || ""}
-                  onChange={(e) => setEditData({ ...editData, github: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, github: e.target.value })
+                  }
                   className="mb-3"
                 />
                 <MDBInput
                   label="Twitter"
                   name="twitter"
                   value={editData.twitter || ""}
-                  onChange={(e) => setEditData({ ...editData, twitter: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, twitter: e.target.value })
+                  }
                   className="mb-3"
                 />
                 <MDBInput
                   label="Instagram"
                   name="instagram"
                   value={editData.instagram || ""}
-                  onChange={(e) => setEditData({ ...editData, instagram: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, instagram: e.target.value })
+                  }
                   className="mb-3"
                 />
                 <MDBInput
                   label="Facebook"
                   name="facebook"
                   value={editData.facebook || ""}
-                  onChange={(e) => setEditData({ ...editData, facebook: e.target.value })}
+                  onChange={(e) =>
+                    setEditData({ ...editData, facebook: e.target.value })
+                  }
                   className="mb-3"
                 />
-                <MDBInput
+                {/* <MDBInput
                   label="Lien de l'image (CDN)"
                   name="photoURL"
                   value={editData.photoURL || ""}
                   onChange={(e) => setEditData({ ...editData, photoURL: e.target.value })}
                   className="mb-3"
-                />
+                /> */}
+                <div className="mb-3">
+                  <label className="form-label">Choisir une image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="form-control"
+                    onChange={handleFileChange}
+                  />
+                </div>
+
                 <MDBBtn onClick={handleUpdate} color="primary" className="mt-3">
                   Mettre à jour
                 </MDBBtn>
@@ -387,7 +462,7 @@ function Profil() {
         </MDBRow>
       </MDBContainer>
 
-    $<Footer />
+      <Footer />
     </MDBContainer>
   );
 }
