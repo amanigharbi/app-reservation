@@ -42,7 +42,8 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(
-          `http://localhost:5000/api/protected/reservations/${reservationId}`,
+          process.env.REACT_APP_API_URL +
+            `/api/protected/reservations/${reservationId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -136,7 +137,8 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       }
 
       await axios.put(
-        `http://localhost:5000/api/protected/reservations/${reservationId}`,
+        process.env.REACT_APP_API_URL +
+          `/api/protected/reservations/${reservationId}`,
         {
           date: reservation.date,
           numGuests: reservation.participants,
@@ -211,7 +213,8 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       console.log("Reservation envoyée au PUT:", reservation);
 
       await axios.put(
-        `http://localhost:5000/api/protected/reservations/${reservationId}`,
+        process.env.REACT_APP_API_URL +
+          `/api/protected/reservations/${reservationId}`,
         {
           date: reservation.date,
           numGuests: reservation.participants,

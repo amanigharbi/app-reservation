@@ -26,7 +26,7 @@ function Navbar() {
         try {
           // Appel backend sécurisé
           const response = await axios.get(
-            "http://localhost:5000/api/protected/navbar",
+            process.env.REACT_APP_API_URL +"/api/protected/navbar",
             {
               headers: {
                 Authorization: `Bearer ${token}`,

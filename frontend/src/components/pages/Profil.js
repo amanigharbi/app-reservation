@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserContext } from "../../contexts/UserContext";
@@ -35,7 +35,7 @@ function Profil() {
 
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/protected/profile",
+        process.env.REACT_APP_API_URL + "/api/protected/profile",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -71,7 +71,7 @@ function Profil() {
 
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/protected/upload",
+          process.env.REACT_APP_API_URL +"/api/protected/upload",
           formData,
           {
             headers: {
@@ -105,7 +105,7 @@ function Profil() {
 
     try {
       const response = await axios.put(
-        "http://localhost:5000/api/protected/profile",
+        process.env.REACT_APP_API_URL +"/api/protected/profile",
         editData,
         {
           headers: {

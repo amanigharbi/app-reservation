@@ -25,7 +25,7 @@ function Reserver() {
     const fetchAvailableSpaces = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/protected/spaces"
+          process.env.REACT_APP_API_URL + "/api/protected/spaces"
         );
         setAvailableSpaces(response.data.spaces);
       } catch (error) {

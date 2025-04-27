@@ -71,7 +71,7 @@ function MesReservations() {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/protected/reservations",
+        process.env.REACT_APP_API_URL +"/api/protected/reservations",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -98,7 +98,7 @@ function MesReservations() {
       const token = localStorage.getItem("token");
 
       await axios.delete(
-        `http://localhost:5000/api/protected/reservations/${id}`,
+        process.env.REACT_APP_API_URL +`/api/protected/reservations/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

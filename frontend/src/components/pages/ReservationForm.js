@@ -153,7 +153,7 @@ function ReservationForm({ space }) {
         };
         console.log("Données de réservation:", reservationData);
         const response = await axios.post(
-          "http://localhost:5000/api/protected/reservations",
+          process.env.REACT_APP_API_URL + "/api/protected/reservations",
           reservationData,
           {
             headers: {

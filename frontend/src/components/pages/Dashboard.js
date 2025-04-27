@@ -47,7 +47,7 @@ function Dashboard() {
 
         try {
           // Appel backend sécurisé
-          const response = await axios.get("http://localhost:5000/api/protected/dashboard", {
+          const response = await axios.get(process.env.REACT_APP_API_URL +"/api/protected/dashboard", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
