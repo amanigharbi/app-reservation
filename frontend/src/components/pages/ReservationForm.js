@@ -9,15 +9,19 @@ import {
   MDBCardText,
   MDBBadge,
 } from "mdb-react-ui-kit";
-import { addDoc, collection } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { db } from "../../firebase";
-import { getAuth } from "firebase/auth";
+import axios from "axios";
 
 function ReservationForm({ space }) {
   const [etape, setEtape] = useState(1);
   const [nouveauRappel, setNouveauRappel] = useState("");
-  const [showToast, setShowToast] = useState({ type: "", visible: false });
+  const [showToast, setShowToast] = useState({
+    type: "",
+    visible: false,
+    message: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [spaceDetails, setSpaceDetails] = useState(space || {});
 
   const [reservationDetails, setReservationDetails] = useState({
     service: "",
@@ -37,69 +41,54 @@ function ReservationForm({ space }) {
     spaceLocation: space?.location || "",
     spaceMontant: space?.montant || "",
   });
+
   const [errors, setErrors] = useState({});
-  const [userId, setUserId] = useState(null);
-  const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState("carte");
   const [cardDetails, setCardDetails] = useState({
     number: "",
     expiry: "",
     cvv: "",
   });
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (user) {
-      setUserId(user.uid);
-    } else {
-      console.error("Utilisateur non connecté");
-      navigate("/login");
-    }
-  }, [navigate]);
+  // Calcul de la durée
   useEffect(() => {
     const { heure_arrivee, heure_depart } = reservationDetails;
-
     if (heure_arrivee && heure_depart) {
       const [h1, m1] = heure_arrivee.split(":").map(Number);
       const [h2, m2] = heure_depart.split(":").map(Number);
-
       const debut = h1 * 60 + m1;
       const fin = h2 * 60 + m2;
 
       if (fin > debut) {
         const dureeMinutes = fin - debut;
-        const dureeHeures = (dureeMinutes / 60).toFixed(2); // arrondi à 2 décimales
+        const dureeHeures = (dureeMinutes / 60).toFixed(2);
         setReservationDetails((prev) => ({
           ...prev,
           duree: dureeHeures,
-        }));
-      } else {
-        // Cas où l'heure de départ est avant celle d'arrivée
-        setReservationDetails((prev) => ({
-          ...prev,
-          duree: "",
         }));
       }
     }
   }, [reservationDetails.heure_arrivee, reservationDetails.heure_depart]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setReservationDetails({ ...reservationDetails, [name]: value });
-  };
+  // Calcul du montant
   useEffect(() => {
     const duree = parseFloat(reservationDetails.duree);
-    const montantParHeure = parseFloat(space?.montant || 0);
+    const montantParHeure = parseFloat(spaceDetails?.montant || 0);
 
     if (!isNaN(duree) && !isNaN(montantParHeure)) {
       const total = duree * montantParHeure;
       setReservationDetails((prev) => ({
         ...prev,
-        montant: total.toFixed(2), // 2 décimales
+        montant: total.toFixed(2),
       }));
     }
-  }, [reservationDetails.duree, space]);
+  }, [reservationDetails.duree, spaceDetails]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setReservationDetails({ ...reservationDetails, [name]: value });
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -108,20 +97,19 @@ function ReservationForm({ space }) {
       if (!reservationDetails.service)
         newErrors.service = "Le service est requis";
       if (!reservationDetails.date) newErrors.date = "La date est requise";
-      if (!reservationDetails.duree) newErrors.duree = "La durée est requise";
       if (!reservationDetails.participants)
         newErrors.participants = "Le nombre de participants est requis";
 
-      // Vérification de la disponibilité horaire
+      // Validation des heures
       const { heure_arrivee, heure_depart } = reservationDetails;
-      const { availableFrom, availableTo } = space || {};
-
-      const toMinutes = (time) => {
-        const [h, m] = time.split(":").map(Number);
-        return h * 60 + m;
-      };
+      const { availableFrom, availableTo } = spaceDetails || {};
 
       if (heure_arrivee && heure_depart && availableFrom && availableTo) {
+        const toMinutes = (time) => {
+          const [h, m] = time.split(":").map(Number);
+          return h * 60 + m;
+        };
+
         const arriveeMin = toMinutes(heure_arrivee);
         const departMin = toMinutes(heure_depart);
         const dispoMin = toMinutes(availableFrom);
@@ -146,48 +134,53 @@ function ReservationForm({ space }) {
     const formErrors = validateForm();
 
     if (Object.keys(formErrors).length === 0) {
+      setLoading(true);
       try {
-        if (!userId) throw new Error("L'ID de l'utilisateur est requis");
-
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
         const codeReservation = `RES-${Date.now()}`;
-        const currentDate = new Date();
 
-        await addDoc(collection(db, "reservations"), {
-          ...reservationDetails,
-          utilisateurId: userId,
+        const reservationData = {
           code_reservation: codeReservation,
-          statut: "En attente",
-          createdAt: currentDate.toISOString(),
-          date: reservationDetails.date || currentDate.toISOString(),
+
+          ...reservationDetails,
+          spaceId: spaceDetails.id,
+          status: "En attente",
+          createdAt: new Date().toISOString(),
+        };
+        console.log("Données de réservation:", reservationData);
+        const response = await axios.post(
+          "http://localhost:5000/api/protected/reservations",
+          reservationData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setShowToast({
+          type: "success",
+          visible: true,
+          message: "Réservation créée avec succès!",
         });
-        setShowToast({ type: "success", visible: true });
-        setTimeout(() => setShowToast({ type: "", visible: false }), 2000);
-        setEtape(1);
-        setReservationDetails({
-          service: "",
-          lieu: "",
-          date: "",
-          duree: "",
-          participants: "",
-          description: "",
-          commentaires: "",
-          mode_paiement: "",
-          heure_arrivee: "",
-          heure_depart: "",
-          rappels: [],
-          spaceId: space?.id || "",
-          spaceName: space?.name || "",
-          spaceLocation: space?.location || "",
-          spaceMontant: space?.montant || "",
-        });
-        setNouveauRappel("");
+
         setTimeout(() => {
-          navigate("/mes-reservations"); // Redirection après 5 sec
+          navigate("/mes-reservations");
         }, 2000);
       } catch (error) {
-        console.error("Erreur lors de la réservation:", error);
-        setShowToast({ type: "error", visible: true });
-        setTimeout(() => setShowToast({ type: "", visible: false }), 5000);
+        console.error("Erreur création réservation:", error);
+        setShowToast({
+          type: "error",
+          visible: true,
+          message:
+            error.response?.data?.message || "Erreur lors de la réservation",
+        });
+      } finally {
+        setLoading(false);
       }
     } else {
       setErrors(formErrors);
@@ -196,7 +189,7 @@ function ReservationForm({ space }) {
 
   return (
     <MDBContainer className="py-5">
-      {/* ✅ TOAST SUCCÈS & ERREUR */}
+      {/* Toast de notification */}
       {showToast.visible && (
         <div
           className="position-fixed top-0 end-0 p-3"
@@ -207,58 +200,41 @@ function ReservationForm({ space }) {
               showToast.type === "success" ? "bg-success" : "bg-danger"
             }`}
             role="alert"
-            aria-live="assertive"
-            aria-atomic="true"
           >
-            <div
-              className={`toast-header ${
-                showToast.type === "success" ? "bg-success" : "bg-danger"
-              } text-white`}
-            >
-              <i
-                className={`fas ${
-                  showToast.type === "success" ? "fa-check" : "fa-times"
-                } fa-lg me-2`}
-              ></i>
-              <strong className="me-auto">
-                {showToast.type === "success" ? "Succès" : "Erreur"}
-              </strong>
-              <small>
-                {new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </small>
+            <div className="toast-body">
+              {showToast.message}
               <button
                 type="button"
-                className="btn-close btn-close-white"
-                onClick={() => setShowToast({ type: "", visible: false })}
+                className="btn-close btn-close-white float-end"
+                onClick={() =>
+                  setShowToast({ type: "", visible: false, message: "" })
+                }
               ></button>
-            </div>
-            <div className="toast-body">
-              {showToast.type === "success"
-                ? "Réservation réussie !"
-                : "Une erreur est survenue. Veuillez réessayer."}
             </div>
           </div>
         </div>
       )}
-      {space && (
-        <div className="text-center">
+
+      {/* En-tête avec les détails de l'espace */}
+      {spaceDetails && (
+        <div className="text-center mb-4">
           <h4>
-            <b>Réservation pour l'espace :</b> {space.name}
+            <b>Réservation pour l'espace :</b> {spaceDetails.name}
           </h4>
           <MDBCardText>
-            <strong>Lieu :</strong> {space.location}
+            <strong>Lieu :</strong> {spaceDetails.location}
           </MDBCardText>
           <MDBCardText>
-            <strong>Disponible :</strong> {space.availableFrom} -{" "}
-            {space.availableTo}
+            <strong>Disponible :</strong> {spaceDetails.availableFrom} -{" "}
+            {spaceDetails.availableTo}
           </MDBCardText>
-          <br></br>
+          <MDBCardText>
+            <strong>Tarif :</strong> {spaceDetails.montant} €/heure
+          </MDBCardText>
         </div>
       )}
 
+      {/* Étape 1: Détails de la réservation */}
       {etape === 1 && (
         <MDBRow>
           <MDBCol md="6" className="mb-4">
@@ -267,7 +243,6 @@ function ReservationForm({ space }) {
               name="service"
               value={reservationDetails.service}
               onChange={handleChange}
-              invalid={!!errors.service}
             />
             {errors.service && (
               <div
@@ -277,7 +252,6 @@ function ReservationForm({ space }) {
                 {errors.service}
               </div>
             )}
-            <br />
           </MDBCol>
           <MDBCol md="6" className="mb-4">
             <MDBInput
@@ -285,7 +259,6 @@ function ReservationForm({ space }) {
               name="participants"
               value={reservationDetails.participants}
               onChange={handleChange}
-              invalid={!!errors.participants}
             />
             {errors.participants && (
               <div
@@ -295,7 +268,6 @@ function ReservationForm({ space }) {
                 {errors.participants}
               </div>
             )}
-            <br />
           </MDBCol>
           <MDBCol md="6" className="mb-4">
             <MDBInput
@@ -303,7 +275,6 @@ function ReservationForm({ space }) {
               name="date"
               value={reservationDetails.date}
               onChange={handleChange}
-              invalid={!!errors.date}
               feedback={errors.date}
               type="date"
             />
@@ -316,7 +287,6 @@ function ReservationForm({ space }) {
                 {errors.date}
               </div>
             )}
-            <br />
           </MDBCol>
           <MDBCol md="6" className="mb-4">
             <MDBInput
@@ -325,7 +295,6 @@ function ReservationForm({ space }) {
               value={reservationDetails.duree}
               onChange={handleChange}
               disabled
-              invalid={!!errors.duree}
               feedback={errors.duree}
             />
             {errors.duree && (
@@ -345,7 +314,6 @@ function ReservationForm({ space }) {
               name="heure_arrivee"
               value={reservationDetails.heure_arrivee}
               onChange={handleChange}
-              invalid={!!errors.heure_arrivee}
             />
             {errors.heure_arrivee && (
               <div
@@ -363,7 +331,6 @@ function ReservationForm({ space }) {
               name="heure_depart"
               value={reservationDetails.heure_depart}
               onChange={handleChange}
-              invalid={!!errors.heure_depart}
             />
             {errors.heure_depart && (
               <div
@@ -373,7 +340,6 @@ function ReservationForm({ space }) {
                 {errors.heure_depart}
               </div>
             )}
-            <br />
           </MDBCol>
           <MDBCol md="12" className="mb-4">
             <MDBInput
@@ -382,7 +348,6 @@ function ReservationForm({ space }) {
               value={reservationDetails.description}
               onChange={handleChange}
             />
-            <br />
           </MDBCol>
           <MDBCol md="12" className="mb-4">
             <MDBInput
@@ -391,7 +356,6 @@ function ReservationForm({ space }) {
               value={reservationDetails.commentaires}
               onChange={handleChange}
             />
-            <br />
           </MDBCol>
           <MDBCol md="12" className="mb-4">
             <MDBInput
@@ -430,93 +394,73 @@ function ReservationForm({ space }) {
         </MDBRow>
       )}
 
+      {/* Étape 2: Paiement */}
       {etape === 2 && (
-        <>
-          <MDBRow className="mb-4">
-            <MDBCol md="12">
-              <label className="form-label">Mode de paiement</label>
-              <select
-                className="form-select mb-3"
-                value={paymentMethod}
-                onChange={(e) => {
-                  setPaymentMethod(e.target.value);
-                  setReservationDetails((prev) => ({
-                    ...prev,
-                    mode_paiement: e.target.value,
-                  }));
-                }}
-              >
-                <option value="carte">Carte de crédit</option>
-                <option value="paypal">PayPal</option>
-                <option value="virement">Virement bancaire</option>
-              </select>
+        <MDBRow>
+          <MDBCol md="12">
+            <label className="form-label">Mode de paiement</label>
+            <select
+              className="form-select mb-3"
+              value={paymentMethod}
+              onChange={(e) => {
+                setPaymentMethod(e.target.value);
+                setReservationDetails((prev) => ({
+                  ...prev,
+                  mode_paiement: e.target.value,
+                }));
+              }}
+            >
+              <option value="carte">Carte de crédit</option>
+              <option value="paypal">PayPal</option>
+              <option value="virement">Virement bancaire</option>
+            </select>
 
-              {paymentMethod === "carte" && (
-                <>
-                  <MDBInput
-                    label="Numéro de carte"
-                    value={cardDetails.number}
-                    onChange={(e) =>
-                      setCardDetails({ ...cardDetails, number: e.target.value })
-                    }
-                    className="mb-2"
-                  />
-                  <div className="d-flex mb-3">
-                    <MDBInput
-                      label="Date expiration"
-                      value={cardDetails.expiry}
-                      onChange={(e) =>
-                        setCardDetails({
-                          ...cardDetails,
-                          expiry: e.target.value,
-                        })
-                      }
-                      className="me-2"
-                    />
-                    <MDBInput
-                      label="CVV"
-                      value={cardDetails.cvv}
-                      onChange={(e) =>
-                        setCardDetails({ ...cardDetails, cvv: e.target.value })
-                      }
-                    />
-                  </div>
-                </>
-              )}
-
-              <MDBCardText className="mt-3">
-                <strong>Montant à payer :</strong>{" "}
-                {reservationDetails.montant
-                  ? `${Number(reservationDetails.montant).toLocaleString(
-                      "fr-FR"
-                    )} €`
-                  : "Non spécifié"}
-              </MDBCardText>
-
-              <MDBBtn
-                onClick={() => {
-                  const missingCardData =
-                    paymentMethod === "carte" &&
-                    (!cardDetails.number ||
-                      !cardDetails.expiry ||
-                      !cardDetails.cvv);
-
-                  if (missingCardData) {
-                    alert("Veuillez remplir tous les champs de la carte.");
-                  } else {
-                    setEtape(3);
+            {paymentMethod === "carte" && (
+              <>
+                <MDBInput
+                  label="Numéro de carte"
+                  value={cardDetails.number}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, number: e.target.value })
                   }
-                }}
-                color="primary"
-                style={{ textTransform: "none" }}
-              >
-                Suivant
-              </MDBBtn>
-            </MDBCol>
-          </MDBRow>
-        </>
+                  className="mb-2"
+                />
+                <div className="d-flex mb-3">
+                  <MDBInput
+                    label="Date expiration"
+                    value={cardDetails.expiry}
+                    onChange={(e) =>
+                      setCardDetails({
+                        ...cardDetails,
+                        expiry: e.target.value,
+                      })
+                    }
+                    className="me-2"
+                  />
+                  <MDBInput
+                    label="CVV"
+                    value={cardDetails.cvv}
+                    onChange={(e) =>
+                      setCardDetails({ ...cardDetails, cvv: e.target.value })
+                    }
+                  />
+                </div>
+              </>
+            )}
+
+            <MDBCardText className="mt-3">
+              <strong>Montant à payer :</strong>{" "}
+              {reservationDetails.montant
+                ? `${Number(reservationDetails.montant).toLocaleString(
+                    "fr-FR"
+                  )} €`
+                : "Non spécifié"}
+            </MDBCardText>
+          </MDBCol>
+        </MDBRow>
       )}
 
+      {/* Étape 3: Confirmation */}
       {etape === 3 && (
         <MDBRow>
           <MDBCol md="12">
@@ -562,24 +506,31 @@ function ReservationForm({ space }) {
               <strong>Rappels :</strong>
             </MDBCardText>
             <ul>
-              {reservationDetails.rappels.map((r, i) => <li key={i}>{r}</li>) ||
-                "Aucun"}
+              {reservationDetails.rappels.length > 0 ? (
+                reservationDetails.rappels.map((r, i) => (
+                  <li key={i}>{new Date(r).toLocaleString()}</li>
+                ))
+              ) : (
+                <li>Aucun</li>
+              )}
             </ul>
           </MDBCol>
         </MDBRow>
       )}
 
+      {/* Navigation entre les étapes */}
       <div className="d-flex justify-content-between mt-4">
         {etape > 1 && (
           <MDBBtn
             color="secondary"
             style={{ textTransform: "none" }}
             onClick={() => setEtape(etape - 1)}
+            disabled={loading}
           >
             <MDBIcon icon="arrow-left" className="me-2" /> Précédent
           </MDBBtn>
         )}
-        {etape < 3 && (
+        {etape < 3 ? (
           <MDBBtn
             style={{ textTransform: "none" }}
             onClick={() => {
@@ -590,17 +541,32 @@ function ReservationForm({ space }) {
                 setErrors(formErrors);
               }
             }}
+            disabled={loading}
           >
             Suivant <MDBIcon icon="arrow-right" className="ms-2" />
           </MDBBtn>
-        )}
-        {etape === 3 && (
+        ) : (
           <MDBBtn
-            color="success"
             style={{ textTransform: "none" }}
+            color="success"
             onClick={handleSubmitReservation}
+            disabled={loading}
           >
-            Confirmer la réservation <MDBIcon icon="check" className="ms-2" />
+            {loading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                En cours...
+              </>
+            ) : (
+              <>
+                Confirmer la réservation{" "}
+                <MDBIcon icon="check" className="ms-2" />
+              </>
+            )}
           </MDBBtn>
         )}
       </div>

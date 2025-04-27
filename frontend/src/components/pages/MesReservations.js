@@ -62,9 +62,7 @@ function MesReservations() {
         .includes(searchTerm.toLowerCase())
   );
   const navigate = useNavigate();
-  useEffect(() => {
-    console.log("showModal:", showModal);
-  }, [showModal]);
+  useEffect(() => {}, [showModal]);
   const [loadingDelete, setLoadingDelete] = useState(false);
 
   // Récupérer les réservations
@@ -114,7 +112,7 @@ function MesReservations() {
         visible: true,
         message: "Réservation supprimée !",
       });
-      fetchReservations(); 
+      fetchReservations();
     } catch (error) {
       console.error("Erreur suppression:", error);
       setShowToast({
@@ -519,8 +517,8 @@ function MesReservations() {
                 </tr>
               </MDBTableHead>
               <MDBTableBody className=" text-center">
-                {filteredRappels.map((rappel) => (
-                  <tr key={rappel.reservationId}>
+                {filteredRappels.map((rappel, index) => (
+                  <tr key={`${rappel.reservationId}-${index}`}>
                     <td>{new Date(rappel.date).toLocaleString()}</td>
                     <td>{rappel.message}</td>
                   </tr>
@@ -536,7 +534,7 @@ function MesReservations() {
           onClose={(refresh = false) => {
             setShowUpdateModal(false);
             setSelectedReservationId(null);
-            if (refresh) fetchReservations(); 
+            if (refresh) fetchReservations();
           }}
           showModal={showUpdateModal}
         />

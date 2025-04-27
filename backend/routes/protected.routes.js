@@ -332,4 +332,175 @@ router.put("/reservations/:id", authenticate, async (req, res) => {
   }
 });
 
+// Route pour créer une nouvelle réservation
+router.post("/reservations", authenticate, async (req, res) => {
+  try {
+    // 1. Validation des données
+    const requiredFields = [
+      "code_reservation",
+      "spaceId",
+      "date",
+      "participants",
+      "status",
+      "heure_arrivee",
+      "heure_depart",
+      "duree",
+      "montant",
+    ];
+    const missingFields = requiredFields.filter((field) => !req.body[field]);
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: `Champs manquants: ${missingFields.join(", ")}`,
+        code: "MISSING_FIELDS",
+      });
+    }
+
+    // 2. Vérification de la cohérence des heures
+    const { heure_arrivee, heure_depart, duree } = req.body;
+
+    if (
+      new Date(`1970-01-01T${heure_depart}`) <=
+      new Date(`1970-01-01T${heure_arrivee}`)
+    ) {
+      return res.status(400).json({
+        message: "L'heure de départ doit être après l'heure d'arrivée",
+        code: "INVALID_TIME_RANGE",
+      });
+    }
+
+    // 3. Vérification du montant
+    if (isNaN(parseFloat(req.body.montant))) {
+      return res.status(400).json({
+        message: "Le montant doit être un nombre valide",
+        code: "INVALID_AMOUNT",
+      });
+    }
+
+    // 4. Vérification de la disponibilité de l'espace
+    const spaceRef = db.collection("spaces").doc(req.body.spaceId);
+    const spaceDoc = await spaceRef.get();
+
+    if (!spaceDoc.exists) {
+      return res.status(404).json({
+        message: "Espace non trouvé",
+        code: "SPACE_NOT_FOUND",
+      });
+    }
+
+    // 5. Vérification des conflits de réservation
+    const reservationsSnapshot = await db
+      .collection("reservations")
+      .where("spaceId", "==", req.body.spaceId)
+      .where("date", "==", req.body.date)
+      .get();
+
+    const hasConflict = reservationsSnapshot.docs.some((doc) => {
+      const reservation = doc.data();
+      return (
+        (heure_arrivee >= reservation.heure_arrivee &&
+          heure_arrivee < reservation.heure_depart) ||
+        (heure_depart > reservation.heure_arrivee &&
+          heure_depart <= reservation.heure_depart) ||
+        (heure_arrivee <= reservation.heure_arrivee &&
+          heure_depart >= reservation.heure_depart)
+      );
+    });
+
+    if (hasConflict) {
+      return res.status(409).json({
+        message:
+          "Conflit de réservation - L'espace est déjà réservé pour cette plage horaire",
+        code: "RESERVATION_CONFLICT",
+      });
+    }
+
+    // 6. Création de la réservation
+    const newReservation = {
+      utilisateurId: req.user.uid,
+      ...req.body,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // 7. Transaction pour garantir l'intégrité des données
+    const reservationRef = await db.runTransaction(async (transaction) => {
+      const reservationRef = db.collection("reservations").doc();
+      await transaction.set(reservationRef, newReservation);
+      return reservationRef;
+    });
+
+    // 8. Réponse avec données enrichies
+    res.status(201).json({
+      success: true,
+      reservationId: reservationRef.id,
+      reservation: {
+        ...newReservation,
+        id: reservationRef.id,
+        spaceName: spaceDoc.data().name,
+        spaceLocation: spaceDoc.data().location,
+      },
+      links: {
+        view: `/reservations/${reservationRef.id}`,
+        cancel: `/reservations/${reservationRef.id}/cancel`,
+      },
+    });
+  } catch (error) {
+    console.error("Erreur création réservation:", {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      user: req.user.uid,
+    });
+
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la création de la réservation",
+      code: "SERVER_ERROR",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+});
+
+// Backend (exemple en Express.js)
+router.get("/spaces", async (req, res) => {
+  // Récupération des espaces disponibles dans la base de données
+  try {
+    const spacesSnapshot = await db.collection("spaces").get();
+    const spaces = spacesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json({ spaces });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des espaces :", error);
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors du chargement des espaces." });
+  }
+});
+// Récupérer les détails d'un espace spécifique
+router.get("/spaces/:id", authenticate, async (req, res) => {
+  try {
+    const spaceId = req.params.id;
+    const spaceRef = db.collection("spaces").where("id", "==", spaceId);
+    const spaceSnap = await spaceRef.get();
+    if (!spaceSnap.exists) {
+      return res.status(404).json({ message: "Espace introuvable." });
+    }
+    const spaceData = spaceSnap.data();
+
+    res.json({
+      ...spaceData,
+      id: spaceId,
+    });
+  } catch (error) {
+    console.error("Erreur récupération d'espace:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors de la récupération." });
+  }
+});
 module.exports = router;
