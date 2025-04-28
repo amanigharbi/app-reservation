@@ -107,7 +107,7 @@ router.get("/navbar", authenticate, async (req, res) => {
 // Route pour obtenir les informations de l'utilisateur par token
 router.get("/profile", authenticate, async (req, res) => {
   try {
-    const userEmail = req.user.email; // Récupérer l'email de l'utilisateur à partir du token
+    const userEmail = req.user.email; 
 
     const userSnapshot = await db
       .collection("users")

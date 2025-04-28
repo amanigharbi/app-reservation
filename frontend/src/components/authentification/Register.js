@@ -92,6 +92,7 @@ function Register() {
         lastName,
         username,
         email,
+        role: "user",
         createdAt: new Date()
       });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   MDBContainer,
   MDBRow,
@@ -14,14 +14,24 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
+import axios from "axios";
+import { UserContext } from "../../contexts/UserContext";
+
 import { auth } from "../../firebase";
 import { useNavigate, Link } from "react-router-dom";
-import { verifyToken } from "../../api/auth.api"; // <-- appel backend
+import { verifyToken } from "../../api/auth.api";
 import logo from "../../images/logo.png";
 import "../styles/Pages.css";
 import "mdb-react-ui-kit/dist/css/mdb.min.css";
 
 function Login() {
+  const getToken = () => localStorage.getItem("token");
+  const [showToast, setShowToast] = useState({
+    type: "",
+    visible: false,
+    message: "",
+  });
+  const { userGet, setUser } = useContext(UserContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -47,13 +57,38 @@ function Login() {
     };
     verifyStoredToken();
   }, [navigate]);
+  const fetchUserData = async () => {
+    const token = getToken();
 
+    try {
+      const response = await axios.get(
+        process.env.REACT_APP_API_URL + "/api/protected/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Données utilisateur récupérées:", response.data);
+      setUser(response.data.user);
+
+    } catch (error) {
+      console.error("Erreur de récupération des données utilisateur", error);
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Impossible de récupérer les données utilisateur.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccessMessage("");
     setLoading(true);
-
+    
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -62,10 +97,10 @@ function Login() {
       );
       const user = userCredential.user;
       const token = await user.getIdToken();
-
+      
       // Vérification côté backend
       await verifyToken(token);
-
+  
       if (rememberMe) {
         // On peut ajuster la durée de validité du localStorage si nécessaire
         localStorage.setItem(
@@ -73,14 +108,35 @@ function Login() {
           JSON.stringify({ email: user.email, token })
         );
       }
-
-      setSuccessMessage("Connexion réussie.");
-      navigate("/dashboard");
+  
+      // Récupération des données utilisateur
+      const response = await axios.get(
+        process.env.REACT_APP_API_URL + "/api/protected/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      console.log("Données utilisateur récupérées:", response.data);
+      setUser(response.data.user);
+  
+      if (response.data.user?.role === "user") {
+        setSuccessMessage("Connexion réussie.");
+        navigate("/dashboard");
+      } else if (response.data.user?.role === "admin") {
+        setSuccessMessage("Connexion réussie.");
+        console.log("Admin connecté:", user.email);
+      }
     } catch (err) {
       console.error("Erreur Firebase:", err.code, err.message);
       setError("Email ou mot de passe incorrect");
+    } finally {
+      setLoading(false);
     }
   };
+  
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();

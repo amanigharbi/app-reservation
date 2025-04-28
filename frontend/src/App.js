@@ -1,10 +1,10 @@
 // src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./components/users/Login";
-import Register from "./components/users/Register";
-import ResetPassword from "./components/users/ResetPassword";
-import ResetPasswordForm from "./components/users/ResetPasswordForm";
+import Login from "./components/authentification/Login";
+import Register from "./components/authentification/Register";
+import ResetPassword from "./components/authentification/ResetPassword";
+import ResetPasswordForm from "./components/authentification/ResetPasswordForm";
 import Dashboard from "./components/users/Dashboard";
 import MesReservations from "./components/users/MesReservations";
 import Reserver from "./components/users/Reserver";
