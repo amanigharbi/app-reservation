@@ -76,8 +76,8 @@ function Dashboard() {
 
       {/* Section Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <RevenueChart />
-        <TrendChart />
+        <RevenueChart revenueData={dashboardData.revenuePerMonth} />
+        <TrendChart reservationsData={dashboardData.reservationsPerMonth} />
       </div>
 
       {/* Section Dernières réservations */}

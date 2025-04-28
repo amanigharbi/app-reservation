@@ -529,6 +529,26 @@ router.get("/dashboard-admin", authenticate, async (req, res) => {
       (acc, res) => acc + (parseFloat(res.montant) || 0),
       0
     );
+    // Générer les statistiques par mois
+    const revenuePerMonth = {}; // { "2024-01": 500, "2024-02": 600, ... }
+    const reservationsPerMonth = {}; // { "2024-01": 10, "2024-02": 12, ... }
+
+    allReservations.forEach((res) => {
+      const date = new Date(res.date);
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`; // ex: 2024-01
+      console.log("Month Key:", monthKey); // Debugging
+      if (!revenuePerMonth[monthKey]) {
+        revenuePerMonth[monthKey] = 0;
+      }
+      if (!reservationsPerMonth[monthKey]) {
+        reservationsPerMonth[monthKey] = 0;
+      }
+
+      revenuePerMonth[monthKey] += parseFloat(res.montant) || 0;
+      reservationsPerMonth[monthKey] += 1;
+    });
 
     const spacesCountSnapshot = await db.collection("spaces").get();
 
@@ -538,6 +558,8 @@ router.get("/dashboard-admin", authenticate, async (req, res) => {
       totalAmount,
       recentReservations: allReservations.slice(0, 3),
       usersCount,
+      revenuePerMonth, // Ajouté ✅
+      reservationsPerMonth,
     });
   } catch (error) {
     console.error("Erreur lors du traitement des données:", error);

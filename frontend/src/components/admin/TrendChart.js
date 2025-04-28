@@ -1,38 +1,28 @@
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from "recharts";
 
-const mockData = [
-  { month: "Jan", reservations: 30 },
-  { month: "Feb", reservations: 45 },
-  { month: "Mar", reservations: 50 },
-  { month: "Apr", reservations: 25 },
-  { month: "May", reservations: 60 },
-  { month: "Jun", reservations: 70 },
-];
+function TrendChart({ reservationsData }) {
+  const months = Object.keys(reservationsData);
 
-function TrendChart() {
+  const data = months.map((key) => {
+    const [year, month] = key.split("-");
+    const label = `${month}/${year.slice(2)}`; 
+    return {
+      month: label,
+      reservations: reservationsData[key] || 0,
+    };
+  });
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h3 className="text-lg font-semibold mb-4">Tendance des Réservations</h3>
+      <h2 className="text-lg font-semibold mb-4">Tendance Réservations</h2>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={mockData}>
+        <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />
           <YAxis />
           <Tooltip />
-          <Line
-            type="monotone"
-            dataKey="reservations"
-            stroke="#10b981"
-            strokeWidth={3}
-          />
+          <Legend />
+          <Line type="monotone" dataKey="reservations" stroke="#10b981" strokeWidth={3} />
         </LineChart>
       </ResponsiveContainer>
     </div>
