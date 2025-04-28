@@ -1,15 +1,15 @@
 // src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./components/pages/Login";
-import Register from "./components/pages/Register";
-import ResetPassword from "./components/pages/ResetPassword";
-import ResetPasswordForm from "./components/pages/ResetPasswordForm";
-import Dashboard from "./components/pages/Dashboard";
-import MesReservations from "./components/pages/MesReservations";
-import Reserver from "./components/pages/Reserver";
-import UpdateReservation from "./components/pages/UpdateReservation";
-import Profil from "./components/pages/Profil";
+import Login from "./components/users/Login";
+import Register from "./components/users/Register";
+import ResetPassword from "./components/users/ResetPassword";
+import ResetPasswordForm from "./components/users/ResetPasswordForm";
+import Dashboard from "./components/users/Dashboard";
+import MesReservations from "./components/users/MesReservations";
+import Reserver from "./components/users/Reserver";
+import UpdateReservation from "./components/users/UpdateReservation";
+import Profil from "./components/users/Profil";
 import "mdb-react-ui-kit/dist/css/mdb.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 

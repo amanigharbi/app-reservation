@@ -22,7 +22,6 @@ import RefundModal from "./RefundModal";
 
 function UpdateReservation({ reservationId, onClose, showModal }) {
   const [reservation, setReservation] = useState(null);
-  const [nouveauRappel, setNouveauRappel] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,7 +33,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
   const [error, setError] = useState("");
   const [showModificationHistory, setShowModificationHistory] = useState(false); // Etat pour l'historique
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [reservationToCancel, setReservationToCancel] = useState(null);
+  const [setReservationToCancel] = useState(false);
   const [setShowModal] = useState(false);
 
   useEffect(() => {
@@ -73,23 +72,27 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       const [h1, m1] = reservation.heure_arrivee.split(":").map(Number);
       const [h2, m2] = reservation.heure_depart.split(":").map(Number);
 
+      // Vérifier si l'heure de départ est avant l'heure d'arrivée
       if (h2 * 60 + m2 <= h1 * 60 + m1) {
         setError("L'heure de départ doit être après l'heure d'arrivée");
         return;
       }
 
+      // Calculer la durée et la différence
       const nouvelleDuree = (h2 * 60 + m2 - (h1 * 60 + m1)) / 60;
       const differenceDuree = nouvelleDuree - reservation.dureeInitiale;
 
       let supplement = 0;
       let remboursement = 0;
 
+      // Calculer le supplément ou le remboursement
       if (differenceDuree > 0) {
         supplement = differenceDuree * reservation.spaceMontant;
       } else {
         remboursement = Math.abs(differenceDuree) * reservation.spaceMontant;
       }
 
+      // Mettre à jour l'état de la réservation avec les nouvelles valeurs
       setReservation((prev) => ({
         ...prev,
         dureeModifiee: nouvelleDuree,
@@ -100,7 +103,12 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
 
       setError("");
     }
-  }, [reservation?.heure_arrivee, reservation?.heure_depart]);
+  }, [
+    reservation?.heure_arrivee,
+    reservation?.heure_depart,
+    reservation?.dureeInitiale,
+    reservation?.spaceMontant,
+  ]);
 
   const formatDuree = (heuresDecimales) => {
     const totalMinutes = Math.round(parseFloat(heuresDecimales) * 60);
@@ -420,14 +428,6 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                                 (a, b) => new Date(b.date) - new Date(a.date)
                               )
                               .map((modification, index) => {
-                                // Trouver l'annulation correspondante si c'est une annulation
-                                const annulation =
-                                  modification.type === "annulation"
-                                    ? reservation.annulations?.find(
-                                        (a) => a.date === modification.date
-                                      )
-                                    : null;
-
                                 return (
                                   <tr key={index}>
                                     <td>

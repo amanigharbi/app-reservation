@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "../../firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
 import axios from "axios";
 
 import {
@@ -21,24 +19,14 @@ import {
   MDBModalFooter,
   MDBBadge,
 } from "mdb-react-ui-kit";
-import { db } from "../../firebase";
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  doc,
-  deleteDoc,
-} from "firebase/firestore";
+// eslint-disable-next-line
 import html2pdf from "html2pdf.js";
-
 import "../styles/Pages.css";
 import UpdateReservation from "./UpdateReservation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
 function MesReservations() {
-  const [userEmail, setUserEmail] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -48,8 +36,7 @@ function MesReservations() {
     visible: false,
     message: "",
   });
-  const [loading, setLoading] = useState(true);
-
+  const [loading, setLoading] = useState(false);
   const [rappels, setRappels] = useState([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [selectedReservationId, setSelectedReservationId] = useState(null);
@@ -165,7 +152,7 @@ function MesReservations() {
       "Espace",
       "Montant de l'espace",
       "Montant payé",
-      "Mode de paiement", // Nouvelle colonne ajoutée
+      "Mode de paiement",
       "Participants",
     ];
 

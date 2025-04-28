@@ -1,6 +1,6 @@
 // routes/protected.routes.js
 const express = require("express");
-const cors = require("cors"); // Importation de CORS
+const cors = require("cors");
 const router = express.Router();
 const { authenticate } = require("../middlewares/auth.middleware");
 const { db } = require("../config/firebase.config");
@@ -9,19 +9,19 @@ const app = express();
 // Autoriser les requêtes provenant de localhost:3000
 app.use(
   cors({
-    origin: "http://localhost:3000", // Frontend
-    credentials: true, // Permet l'envoi des cookies
+    origin: "http://localhost:3000",
+    credentials: true,
   })
 );
 router.get("/dashboard", authenticate, async (req, res) => {
   try {
     const userId = req.user.uid;
-    const userEmail = req.user.email; // L'email de l'utilisateur authentifié
+    const userEmail = req.user.email;
 
     // Récupérer les données utilisateur à partir de la collection 'users' en utilisant l'email
     const userSnapshot = await db
       .collection("users")
-      .where("email", "==", userEmail) // Rechercher par email
+      .where("email", "==", userEmail)
       .get();
 
     // Vérifier si un utilisateur a été trouvé
@@ -32,7 +32,7 @@ router.get("/dashboard", authenticate, async (req, res) => {
     }
 
     // Récupérer les données de l'utilisateur
-    const userData = userSnapshot.docs[0].data(); // Supposons qu'il y a un seul utilisateur correspondant à l'email
+    const userData = userSnapshot.docs[0].data();
 
     // Récupérer les réservations de l'utilisateur
     const reservationsSnapshot = await db
@@ -61,13 +61,13 @@ router.get("/dashboard", authenticate, async (req, res) => {
 
     res.json({
       user: {
-        ...userData, // Ajouter les informations utilisateur récupérées
-        email: userEmail, // Inclure l'email dans la réponse
+        ...userData,
+        email: userEmail,
       },
-      reservationsCount: allReservations.length, // Nombre total de réservations
-      spacesCount: spacesCountSnapshot.size, // Nombre d'espaces disponibles
-      totalAmount, // Montant total des réservations
-      recentReservations, // 3 réservations les plus récentes
+      reservationsCount: allReservations.length,
+      spacesCount: spacesCountSnapshot.size,
+      totalAmount,
+      recentReservations,
     });
   } catch (error) {
     console.error("Erreur dashboard backend:", error);
@@ -78,11 +78,11 @@ router.get("/dashboard", authenticate, async (req, res) => {
 // Exemple d'API pour récupérer les données utilisateur à partir de la base de données
 router.get("/navbar", authenticate, async (req, res) => {
   try {
-    const userEmail = req.user.email; // L'email de l'utilisateur authentifié
+    const userEmail = req.user.email; 
     // Récupérer les données utilisateur de la collection 'users' via l'email
     const userSnapshot = await db
       .collection("users")
-      .where("email", "==", userEmail) // Recherche par email
+      .where("email", "==", userEmail) 
       .get();
 
     // Vérifier si un utilisateur a été trouvé
@@ -92,9 +92,9 @@ router.get("/navbar", authenticate, async (req, res) => {
         .json({ error: "Utilisateur non trouvé dans la base de données." });
     }
 
-    const user = userSnapshot.docs[0].data(); // Récupérer les données de l'utilisateur
+    const user = userSnapshot.docs[0].data(); 
 
-    res.json({ user }); // Retourner les informations utilisateur (nom, photo, etc.)
+    res.json({ user }); 
   } catch (error) {
     console.error(
       "Erreur lors de la récupération des données utilisateur:",
@@ -150,7 +150,7 @@ router.put("/profile", authenticate, async (req, res) => {
 
     const updatedUser = (await userDoc.ref.get()).data();
 
-    res.json(updatedUser); // Renvoie les nouvelles données
+    res.json(updatedUser); 
   } catch (error) {
     console.error("Erreur backend:", error);
     res
@@ -163,10 +163,10 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // <== Dossier local 'uploads' !
+    cb(null, "uploads/"); 
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Exemple: 1713982340021.jpg
+    cb(null, Date.now() + path.extname(file.originalname)); 
   },
 });
 
