@@ -78,11 +78,11 @@ router.get("/dashboard", authenticate, async (req, res) => {
 // Exemple d'API pour récupérer les données utilisateur à partir de la base de données
 router.get("/navbar", authenticate, async (req, res) => {
   try {
-    const userEmail = req.user.email; 
+    const userEmail = req.user.email;
     // Récupérer les données utilisateur de la collection 'users' via l'email
     const userSnapshot = await db
       .collection("users")
-      .where("email", "==", userEmail) 
+      .where("email", "==", userEmail)
       .get();
 
     // Vérifier si un utilisateur a été trouvé
@@ -92,9 +92,9 @@ router.get("/navbar", authenticate, async (req, res) => {
         .json({ error: "Utilisateur non trouvé dans la base de données." });
     }
 
-    const user = userSnapshot.docs[0].data(); 
+    const user = userSnapshot.docs[0].data();
 
-    res.json({ user }); 
+    res.json({ user });
   } catch (error) {
     console.error(
       "Erreur lors de la récupération des données utilisateur:",
@@ -107,7 +107,7 @@ router.get("/navbar", authenticate, async (req, res) => {
 // Route pour obtenir les informations de l'utilisateur par token
 router.get("/profile", authenticate, async (req, res) => {
   try {
-    const userEmail = req.user.email; 
+    const userEmail = req.user.email; // Récupérer l'email de l'utilisateur à partir du token
 
     const userSnapshot = await db
       .collection("users")
@@ -150,7 +150,7 @@ router.put("/profile", authenticate, async (req, res) => {
 
     const updatedUser = (await userDoc.ref.get()).data();
 
-    res.json(updatedUser); 
+    res.json(updatedUser);
   } catch (error) {
     console.error("Erreur backend:", error);
     res
@@ -163,10 +163,10 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); 
+    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); 
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
@@ -503,4 +503,46 @@ router.get("/spaces/:id", authenticate, async (req, res) => {
       .json({ message: "Erreur serveur lors de la récupération." });
   }
 });
+
+// admin
+
+router.get("/dashboard-admin", authenticate, async (req, res) => {
+  try {
+    const usersSnapshot = await db
+      .collection("users")
+      .where("role", "==", "user")
+      .get();
+
+    const usersCount = usersSnapshot.size;
+    // Récupérer les réservations
+    const reservationsSnapshot = await db.collection("reservations").get();
+    if (!reservationsSnapshot) {
+      throw new Error("Aucune réservation trouvée.");
+    }
+    const allReservations = reservationsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Calculer les autres informations
+    const totalAmount = allReservations.reduce(
+      (acc, res) => acc + (parseFloat(res.montant) || 0),
+      0
+    );
+
+    const spacesCountSnapshot = await db.collection("spaces").get();
+
+    res.json({
+      reservationsCount: allReservations.length,
+      spacesCount: spacesCountSnapshot.size,
+      totalAmount,
+      recentReservations: allReservations.slice(0, 3),
+      usersCount,
+    });
+  } catch (error) {
+    console.error("Erreur lors du traitement des données:", error);
+    res.status(500).json({ error: "Erreur lors du chargement des données" });
+  }
+});
+
 module.exports = router;

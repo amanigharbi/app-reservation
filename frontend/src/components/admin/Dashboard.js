@@ -1,10 +1,75 @@
+import { useEffect, useState } from "react";
+import { fetchDashboard } from "../../services/dashboard.api";
+import KPI from "./KPI";
+import RevenueChart from "./RevenueChart";
+import TrendChart from "./TrendChart";
+import ReservationTable from "./ReservationTable";
+
 function Dashboard() {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const res = await fetchDashboard(token);
+        setDashboardData(res);
+      } catch (error) {
+        console.error("Erreur lors du chargement du dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      loadDashboard();
+    }
+  }, [token]);
+
+  if (loading) {
     return (
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Bienvenue sur le tableau de bord Admin</h2>
-        <p>Quelques statistiques ici...</p>
+      <div className="flex justify-center items-center h-full text-gray-500">
+        Chargement...
       </div>
     );
   }
-  export default Dashboard;
-  
+
+  if (!dashboardData) {
+    return (
+      <div className="flex justify-center items-center h-full text-red-500">
+        Impossible de charger les données du Dashboard.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-10 p-6">
+      {/* Section KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <KPI
+          title="Nombre de Réservations"
+          value={dashboardData.reservationsCount}
+        />
+        <KPI title="Nombre d'Espaces" value={dashboardData.spacesCount} />
+        <KPI
+          title="Total Payé"
+          value={`${dashboardData.totalAmount.toFixed(2)} €`}
+        />
+        <KPI title="Nombre d'Utilisateurs" value={dashboardData.usersCount} />
+      </div>
+
+      {/* Section Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <RevenueChart />
+        <TrendChart />
+      </div>
+
+      {/* Section Dernières réservations */}
+      <ReservationTable reservations={dashboardData.recentReservations} />
+    </div>
+  );
+}
+
+export default Dashboard;

@@ -5,6 +5,7 @@ function AdminLayout() {
 
   const handleLogout = () => {
     // ici ajouter logout logique plus tard
+    localStorage.clear();
     navigate("/");
   };
 
