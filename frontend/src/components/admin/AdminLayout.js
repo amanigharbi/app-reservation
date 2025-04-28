@@ -12,10 +12,11 @@ function AdminLayout() {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-md flex flex-col">
+      <div className="w-64 bg-blue-900 text-white flex flex-col min-h-screen">
         <div className="text-2xl font-bold p-6 border-b">ReserGo Admin</div>
         <nav className="flex-1 p-4 space-y-2">
           <NavLink
+            style={{ color: "white" }}
             to="/admin"
             end
             className={({ isActive }) =>
@@ -27,6 +28,7 @@ function AdminLayout() {
             🏠 Dashboard
           </NavLink>
           <NavLink
+            style={{ color: "white" }}
             to="/admin/reservations"
             className={({ isActive }) =>
               isActive
@@ -37,6 +39,7 @@ function AdminLayout() {
             📅 Réservations
           </NavLink>
           <NavLink
+            style={{ color: "white" }}
             to="/admin/espaces"
             className={({ isActive }) =>
               isActive
@@ -47,6 +50,7 @@ function AdminLayout() {
             🏢 Espaces
           </NavLink>
           <NavLink
+            style={{ color: "white" }}
             to="/admin/users"
             className={({ isActive }) =>
               isActive

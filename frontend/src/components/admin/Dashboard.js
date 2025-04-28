@@ -51,13 +51,27 @@ function Dashboard() {
         <KPI
           title="Nombre de Réservations"
           value={dashboardData.reservationsCount}
+          icon="mdi:calendar-check"
+          color="bg-sky-500"
         />
-        <KPI title="Nombre d'Espaces" value={dashboardData.spacesCount} />
+        <KPI
+          title="Nombre d'Espaces"
+          value={dashboardData.spacesCount}
+          icon="mdi:office-building"
+          color="bg-emerald-500"
+        />
         <KPI
           title="Total Payé"
           value={`${dashboardData.totalAmount.toFixed(2)} €`}
+          icon="mdi:cash-multiple"
+          color="bg-amber-400"
         />
-        <KPI title="Nombre d'Utilisateurs" value={dashboardData.usersCount} />
+        <KPI
+          title="Nombre d'Utilisateurs"
+          value={dashboardData.usersCount}
+          icon="mdi:account-group"
+          color="bg-indigo-500"
+        />
       </div>
 
       {/* Section Charts */}

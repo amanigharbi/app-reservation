@@ -57,13 +57,13 @@ function Login() {
     };
     verifyStoredToken();
   }, [navigate]);
- 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccessMessage("");
     setLoading(true);
-    
+
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -72,10 +72,10 @@ function Login() {
       );
       const user = userCredential.user;
       const token = await user.getIdToken();
-      
+
       // Vérification côté backend
       await verifyToken(token);
-  
+
       if (rememberMe) {
         // On peut ajuster la durée de validité du localStorage si nécessaire
         localStorage.setItem(
@@ -83,7 +83,7 @@ function Login() {
           JSON.stringify({ email: user.email, token })
         );
       }
-  
+
       // Récupération des données utilisateur
       const response = await axios.get(
         process.env.REACT_APP_API_URL + "/api/protected/profile",
@@ -93,18 +93,20 @@ function Login() {
           },
         }
       );
-  
+
       console.log("Données utilisateur récupérées:", response.data);
       setUser(response.data.user);
-  
+
       if (response.data.user?.role === "user") {
         setSuccessMessage("Connexion réussie.");
         navigate("/dashboard");
       } else if (response.data.user?.role === "admin") {
         setSuccessMessage("Connexion réussie.");
         console.log("Admin connecté:", user.email);
-        navigate("/admin/dashboard");
 
+        localStorage.setItem("token", token);
+
+        navigate("/admin");
       }
     } catch (err) {
       console.error("Erreur Firebase:", err.code, err.message);
@@ -113,7 +115,6 @@ function Login() {
       setLoading(false);
     }
   };
-  
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();

@@ -5,7 +5,7 @@ function ReservationTable({ reservations }) {
       <table className="min-w-full text-sm text-gray-700">
         <thead>
           <tr className="bg-gray-100">
-            <th className="text-left p-2">Nom</th>
+            <th className="text-left p-2">Code</th>
             <th className="text-left p-2">Espace</th>
             <th className="text-left p-2">Date</th>
             <th className="text-left p-2">Montant (€)</th>
@@ -15,7 +15,7 @@ function ReservationTable({ reservations }) {
           {reservations.length > 0 ? (
             reservations.map((res, index) => (
               <tr key={index} className="border-t hover:bg-gray-50">
-                <td className="p-2">{res.utilisateurName || "Non défini"}</td>
+                <td className="p-2">{res.code_reservation || "Non défini"}</td>
                 <td className="p-2">{res.spaceName || "Non défini"}</td>
                 <td className="p-2">
                   {new Date(res.date).toLocaleDateString()}
