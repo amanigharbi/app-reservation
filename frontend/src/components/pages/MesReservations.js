@@ -71,7 +71,7 @@ function MesReservations() {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.get(
-        process.env.REACT_APP_API_URL +"/api/protected/reservations",
+        process.env.REACT_APP_API_URL + "/api/protected/reservations",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -98,7 +98,7 @@ function MesReservations() {
       const token = localStorage.getItem("token");
 
       await axios.delete(
-        process.env.REACT_APP_API_URL +`/api/protected/reservations/${id}`,
+        process.env.REACT_APP_API_URL + `/api/protected/reservations/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -229,7 +229,7 @@ function MesReservations() {
       // Recherche dans tous les champs pertinents
       res.code_reservation.toLowerCase().includes(searchTerm.toLowerCase()) ||
       res.date.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      res.duree.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      res.duree?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
       res.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
       res.spaceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       res.spaceLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
