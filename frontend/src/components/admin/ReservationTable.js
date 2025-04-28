@@ -1,3 +1,4 @@
+import { MDBBadge } from "mdb-react-ui-kit";
 function ReservationTable({ reservations }) {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
@@ -9,6 +10,7 @@ function ReservationTable({ reservations }) {
             <th className="text-left p-2">Espace</th>
             <th className="text-left p-2">Date</th>
             <th className="text-left p-2">Montant (€)</th>
+            <th className="text-left p-2">Staus</th>
           </tr>
         </thead>
         <tbody>
@@ -21,6 +23,34 @@ function ReservationTable({ reservations }) {
                   {new Date(res.date).toLocaleDateString()}
                 </td>
                 <td className="p-2">{res.montant} €</td>
+                <td>
+                  {" "}
+                  {res.status === "annulation demandée" && (
+                    <MDBBadge color="warning" className="ms-2">
+                      A annulée{" "}
+                    </MDBBadge>
+                  )}
+                  {res.status === "annulée" && (
+                    <MDBBadge color="danger" className="ms-2">
+                      Annulée
+                    </MDBBadge>
+                  )}
+                  {res.status === "En attente" && (
+                    <MDBBadge color="secondary" className="ms-2">
+                      A confirmée
+                    </MDBBadge>
+                  )}
+                  {res.status === "acceptée" && (
+                    <MDBBadge color="success" className="ms-2">
+                      Confirmée
+                    </MDBBadge>
+                  )}
+                  {res.status === "refusée" && (
+                    <MDBBadge color="danger" className="ms-2">
+                      Refusée
+                    </MDBBadge>
+                  )}
+                </td>
               </tr>
             ))
           ) : (

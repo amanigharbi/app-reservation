@@ -1,3 +1,5 @@
+import { MDBBadge } from "mdb-react-ui-kit";
+
 function SpaceTable({ spaces, onDelete }) {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
@@ -20,19 +22,19 @@ function SpaceTable({ spaces, onDelete }) {
                 <td className="p-2">{space.name}</td>
                 <td className="p-2">{space.location}</td>
                 <td className="p-2">{space.capacity}</td>
-                <td className="p-2">{space.montant}€</td>
+                <td className="p-2">{space.montant} €</td>
                 <td className="p-2">
                   {space.availableFrom} - {space.availableTo}
                 </td>
                 <td className="p-2">
-                  {space.available ? (
-                    <span className="inline-block px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
+                  {space.available  === "true" ? (
+                    <MDBBadge color="success" className="ms-2">
                       Disponible
-                    </span>
+                    </MDBBadge>
                   ) : (
-                    <span className="inline-block px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">
+                    <MDBBadge color="danger" className="ms-2">
                       Non disponible
-                    </span>
+                    </MDBBadge>
                   )}
                 </td>
               </tr>

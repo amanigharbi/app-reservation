@@ -372,7 +372,7 @@ function MesReservations() {
                         </MDBBadge>
                       )}
                       {res.status === "En attente" && (
-                        <MDBBadge color="warning" className="ms-2">
+                        <MDBBadge color="secondary" className="ms-2">
                           A confirmée
                         </MDBBadge>
                       )}
