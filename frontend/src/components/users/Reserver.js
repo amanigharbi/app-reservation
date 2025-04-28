@@ -89,6 +89,9 @@ function Reserver() {
                         <br />
                         🕒 {space.availableFrom} - {space.availableTo}
                         <br />
+                        👥 Capacité :{" "}
+                        {space.capacity ? space.capacity : "Non spécifiée"} personnes
+                        <br />
                         💰{" "}
                         {space.montant
                           ? `${space.montant} € par heure`

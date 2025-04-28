@@ -100,6 +100,13 @@ function ReservationForm({ space }) {
       if (!reservationDetails.participants)
         newErrors.participants = "Le nombre de participants est requis";
 
+        // Vérification capacité max
+        const participants = parseInt(reservationDetails.participants, 10);
+        const maxCapacity = parseInt(spaceDetails.capacity || 0, 10);
+  
+        if (!isNaN(participants) && participants > maxCapacity) {
+          newErrors.participants = `Le nombre de participants dépasse la capacité maximale (${maxCapacity})`;
+        }
       // Validation des heures
       const { heure_arrivee, heure_depart } = reservationDetails;
       const { availableFrom, availableTo } = spaceDetails || {};
@@ -230,6 +237,9 @@ function ReservationForm({ space }) {
           </MDBCardText>
           <MDBCardText>
             <strong>Tarif :</strong> {spaceDetails.montant} €/heure
+          </MDBCardText>
+          <MDBCardText>
+            <strong>Capacité :</strong> {spaceDetails.capacity} personnes
           </MDBCardText>
         </div>
       )}
