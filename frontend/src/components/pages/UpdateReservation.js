@@ -288,8 +288,38 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       <MDBModal open={showModal} onClose={() => onClose(false)} tabIndex="-1">
         <MDBModalDialog size="lg">
           <MDBModalContent>
-            <MDBModalHeader>
-              <MDBModalTitle>Modifier Réservation</MDBModalTitle>
+            <MDBModalHeader className="d-flex align-items-center justify-content-between">
+              <div className="d-flex align-items-center">
+                <h5 className="modal-title text-primary fw-bold mb-0 me-3">
+                  Modifier Réservation{" "}
+                </h5>
+                {/* Badge Status */}
+                {reservation?.status && (
+                  <MDBBadge
+                    color={
+                      reservation?.status === "acceptée"
+                        ? "success"
+                        : reservation?.status === "annulée"
+                        ? "danger"
+                        : reservation?.status === "annulation demandée"
+                        ? "warning"
+                        : reservation?.status === "En attente"
+                        ? "warning"
+                        : "secondary"
+                    }
+                    pill
+                    className="px-3 py-2"
+                    style={{ fontSize: "0.9rem" }}
+                  >
+                    {reservation.status}
+                  </MDBBadge>
+                )}
+              </div>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={() => onClose(false)}
+              ></MDBBtn>
             </MDBModalHeader>
             <MDBModalBody>
               {error && <div className="alert alert-danger">{error}</div>}

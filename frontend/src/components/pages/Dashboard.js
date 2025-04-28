@@ -20,6 +20,10 @@ import {
   MDBModalHeader,
   MDBModalBody,
   MDBModalFooter,
+  MDBTable,
+  MDBTableBody,
+  MDBTableHead,
+  MDBBadge,
 } from "mdb-react-ui-kit";
 import axios from "axios";
 import "../styles/Pages.css";
@@ -47,11 +51,14 @@ function Dashboard() {
 
         try {
           // Appel backend sécurisé
-          const response = await axios.get(process.env.REACT_APP_API_URL +"/api/protected/dashboard", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const response = await axios.get(
+            process.env.REACT_APP_API_URL + "/api/protected/dashboard",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
           const data = response.data;
 
@@ -74,9 +81,24 @@ function Dashboard() {
     return () => unsubscribeAuth();
   }, [navigate]);
 
-  const handleShowDetails = (reservation) => {
-    setSelectedReservation(reservation);
-    setModalOpen(true);
+  const handleShowDetails = async (reservationId) => {
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const response = await axios.get(
+        process.env.REACT_APP_API_URL +
+          `/api/protected/reservations/${reservationId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setSelectedReservation(response.data);
+      setModalOpen(true);
+    } catch (error) {
+      console.error("Erreur récupération réservation:", error);
+    }
   };
 
   const handleCloseModal = () => {
@@ -86,8 +108,7 @@ function Dashboard() {
 
   return (
     <MDBContainer fluid className="dashboard-bg px-0">
- <Navbar 
-             />
+      <Navbar />
       {error && <div className="alert alert-danger">{error}</div>}
 
       <MDBCarousel showIndicators showControls fade className="carousel-top">
@@ -142,17 +163,26 @@ function Dashboard() {
             </MDBCol>
           </MDBRow>
 
-          <h3 className="text-primary fw-bold mt-5 mb-4">Réservations récentes</h3>
+          <h3 className="text-primary fw-bold mt-5 mb-4">
+            Réservations récentes
+          </h3>
 
           {reservations.length === 0 ? (
-            <MDBRow className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "400px" }}>
+            <MDBRow
+              className="d-flex flex-column align-items-center justify-content-center"
+              style={{ minHeight: "400px" }}
+            >
               <img
                 src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
                 alt="Aucune réservation"
                 style={{ width: "180px", marginBottom: "20px", opacity: 0.7 }}
               />
-              <h5 className="text-muted text-center">Aucune réservation trouvée</h5>
-              <p className="text-muted text-center">Vous n'avez pas encore effectué de réservation.</p>
+              <h5 className="text-muted text-center">
+                Aucune réservation trouvée
+              </h5>
+              <p className="text-muted text-center">
+                Vous n'avez pas encore effectué de réservation.
+              </p>
               <Link to="/reserver">
                 <MDBBtn color="primary" style={{ textTransform: "none" }}>
                   Faire une réservation
@@ -165,7 +195,10 @@ function Dashboard() {
                 <MDBCol md="6" lg="4" key={res.id} className="mb-4">
                   <MDBCard className="h-100">
                     <MDBCardBody>
-                      <MDBCardTitle className="text-center" style={{ color: "black" }}>
+                      <MDBCardTitle
+                        className="text-center"
+                        style={{ color: "black" }}
+                      >
                         <b>Réservation N.</b> {res.code_reservation}
                       </MDBCardTitle>
                       <MDBCardText style={{ color: "black" }}>
@@ -174,8 +207,12 @@ function Dashboard() {
                       </MDBCardText>
                       <MDBBtn
                         size="lg"
-                        style={{ backgroundColor: "#3B71CA", color: "white", textTransform: "none" }}
-                        onClick={() => handleShowDetails(res)}
+                        style={{
+                          backgroundColor: "#3B71CA",
+                          color: "white",
+                          textTransform: "none",
+                        }}
+                        onClick={() => handleShowDetails(res.id)}
                       >
                         Voir Détails
                       </MDBBtn>
@@ -190,34 +227,129 @@ function Dashboard() {
 
       <MDBModal open={modalOpen} onClose={handleCloseModal} tabIndex="-1">
         <MDBModalDialog size="lg" className="modal-content">
-          <MDBModalHeader>
-            <h5 className="modal-title text-primary">Détails de la Réservation</h5>
-            <MDBBtn className="btn-close" color="none" onClick={handleCloseModal}></MDBBtn>
-          </MDBModalHeader>
+        <MDBModalHeader className="d-flex align-items-center justify-content-between">
+  <div className="d-flex align-items-center">
+    <h5 className="modal-title text-dark fw-bold mb-0 me-3">
+      {selectedReservation?.code_reservation}
+    </h5>
+    {/* Badge Status */}
+    {selectedReservation?.status && (
+      <MDBBadge
+        color={
+          selectedReservation?.status === "acceptée"
+            ? "success"
+            : selectedReservation?.status === "annulée"
+            ? "danger"
+            : selectedReservation?.status === "annulation demandée"
+            ? "warning"
+            : selectedReservation?.status === "En attente"
+            ? "warning"
+            : "secondary"
+        }
+        pill
+        className="px-3 py-2"
+        style={{ fontSize: "0.9rem" }}
+      >
+        {selectedReservation.status}
+      </MDBBadge>
+    )}
+  </div>
+  <MDBBtn
+    className="btn-close"
+    color="none"
+    onClick={handleCloseModal}
+  ></MDBBtn>
+</MDBModalHeader>
+
           <MDBModalBody>
             {selectedReservation && (
-              <MDBRow>
-                <MDBCol md="6">
-                  <p><strong>Service:</strong> {selectedReservation.service}</p>
-                  <p><strong>Lieu:</strong> {selectedReservation.lieu}</p>
-                  <p><strong>Date:</strong> {selectedReservation.date}</p>
-                  <p><strong>Durée:</strong> {selectedReservation.duree}</p>
-                  <p><strong>Statut:</strong> {selectedReservation.statut}</p>
-                  <p><strong>Participants:</strong> {selectedReservation.participants}</p>
-                </MDBCol>
-                <MDBCol md="6">
-                  <p><strong>Commentaires:</strong> {selectedReservation.commentaires}</p>
-                  <p><strong>Code de Réservation:</strong> {selectedReservation.code_reservation}</p>
-                  <p><strong>Heure d'arrivée:</strong> {selectedReservation.heure_arrivee}</p>
-                  <p><strong>Heure de départ:</strong> {selectedReservation.heure_depart}</p>
-                  <p><strong>Mode de Paiement:</strong> {selectedReservation.mode_paiement}</p>
-                  <p><strong>Rappels:</strong> {Array.isArray(selectedReservation.rappels) ? selectedReservation.rappels.join(", ") : "Aucun rappel"}</p>
-                </MDBCol>
-              </MDBRow>
+              <div className="container mt-4">
+                <h5 className="text-center text-primary mb-4">
+                  Détails de la Réservation
+                </h5>
+                <MDBTable striped hover responsive>
+                  <MDBTableHead>
+                    <tr>
+                      <th>Champ</th>
+                      <th>Valeur</th>
+                    </tr>
+                  </MDBTableHead>
+                  <MDBTableBody>
+                    <tr>
+                      <td>Code Réservation</td>
+                      <td>{selectedReservation.code_reservation || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td>Date</td>
+                      <td>
+                        {new Date(selectedReservation.date).toLocaleString() ||
+                          "-"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Service</td>
+                      <td>{selectedReservation.service || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td>Lieu</td>
+                      <td>{selectedReservation.lieu || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td>Heure d'arrivée</td>
+                      <td>{selectedReservation.heure_arrivee || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td>Heure de départ</td>
+                      <td>{selectedReservation.heure_depart || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td>Durée</td>
+                      <td>
+                        {selectedReservation.duree
+                          ? `${selectedReservation.duree} h`
+                          : "-"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Participants</td>
+                      <td>{selectedReservation.participants || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td>Montant de l'espace</td>
+                      <td>
+                        {selectedReservation.spaceMontant
+                          ? `${selectedReservation.spaceMontant} €`
+                          : "-"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Mode de paiement</td>
+                      <td>{selectedReservation.mode_paiement || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td>Statut</td>
+                      <td>{selectedReservation.status || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td>Description</td>
+                      <td>{selectedReservation.description || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td>Commentaires</td>
+                      <td>{selectedReservation.commentaires || "-"}</td>
+                    </tr>
+                  </MDBTableBody>
+                </MDBTable>
+              </div>
             )}
           </MDBModalBody>
+
           <MDBModalFooter>
-            <MDBBtn color="secondary" onClick={handleCloseModal} style={{ textTransform: "none" }}>
+            <MDBBtn
+              color="secondary"
+              onClick={handleCloseModal}
+              style={{ textTransform: "none" }}
+            >
               Fermer
             </MDBBtn>
           </MDBModalFooter>
