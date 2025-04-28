@@ -57,32 +57,7 @@ function Login() {
     };
     verifyStoredToken();
   }, [navigate]);
-  const fetchUserData = async () => {
-    const token = getToken();
-
-    try {
-      const response = await axios.get(
-        process.env.REACT_APP_API_URL + "/api/protected/profile",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log("Données utilisateur récupérées:", response.data);
-      setUser(response.data.user);
-
-    } catch (error) {
-      console.error("Erreur de récupération des données utilisateur", error);
-      setShowToast({
-        type: "error",
-        visible: true,
-        message: "Impossible de récupérer les données utilisateur.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -128,6 +103,8 @@ function Login() {
       } else if (response.data.user?.role === "admin") {
         setSuccessMessage("Connexion réussie.");
         console.log("Admin connecté:", user.email);
+        navigate("/admin/dashboard");
+
       }
     } catch (err) {
       console.error("Erreur Firebase:", err.code, err.message);

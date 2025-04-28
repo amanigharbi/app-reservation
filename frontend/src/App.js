@@ -12,7 +12,13 @@ import UpdateReservation from "./components/users/UpdateReservation";
 import Profil from "./components/users/Profil";
 import "mdb-react-ui-kit/dist/css/mdb.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+//partie admin
 
+import AdminLayout from "./components/admin/AdminLayout";
+import DashboardAdmin from "./components/admin/Dashboard";
+import Reservations from "./components/admin/Reservations";
+import Espaces from "./components/admin/Espaces";
+import Users from "./components/admin/Users";
 const App = () => {
   return (
     <Router>
@@ -27,6 +33,13 @@ const App = () => {
         <Route path="/reserver" element={<Reserver />} />
         <Route path="/update-reservation/:id" element={<UpdateReservation />} />
         <Route path="/profil" element={<Profil />} />
+        {/*  Partie admin */}
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route index element={<DashboardAdmin />} />
+          <Route path="reservations" element={<Reservations />} />
+          <Route path="espaces" element={<Espaces />} />
+          <Route path="users" element={<Users />} />
+        </Route>
       </Routes>
     </Router>
   );
