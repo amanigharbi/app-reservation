@@ -27,7 +27,11 @@ function Reserver() {
         const response = await axios.get(
           process.env.REACT_APP_API_URL + "/api/protected/spaces"
         );
-        setAvailableSpaces(response.data.spaces);
+        // Filtrer uniquement les espaces disponibles
+        const spacesAvailable = response.data.spaces.filter(
+          (space) => space.available === "true"
+        );
+        setAvailableSpaces(spacesAvailable);
       } catch (error) {
         console.error("Erreur lors de la récupération des espaces:", error);
       }
@@ -43,6 +47,7 @@ function Reserver() {
   return (
     <MDBContainer fluid className="dashboard-bg px-0">
       <Navbar />
+
       {/* Étape 1: Affichage des espaces disponibles */}
       {step === 1 && (
         <MDBContainer className="py-5">

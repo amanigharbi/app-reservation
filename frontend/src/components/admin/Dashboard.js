@@ -4,6 +4,7 @@ import KPI from "./KPI";
 import RevenueChart from "./RevenueChart";
 import TrendChart from "./TrendChart";
 import ReservationTable from "./ReservationTable";
+import SpaceTable from "./SpaceTable";
 
 function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -82,6 +83,8 @@ function Dashboard() {
 
       {/* Section Dernières réservations */}
       <ReservationTable reservations={dashboardData.recentReservations} />
+
+      <SpaceTable spaces={dashboardData.recentSpace} />
     </div>
   );
 }

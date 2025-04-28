@@ -122,7 +122,6 @@ router.get("/profile", authenticate, async (req, res) => {
     }
 
     const user = userSnapshot.docs[0].data(); // Récupérer les données de l'utilisateur
-    console.log(user); // Afficher les données utilisateur dans la console
     res.json({ user }); // Retourner les informations utilisateur (nom, photo, etc.)
   } catch (error) {
     res.status(500).json({ message: "Erreur interne du serveur" });
@@ -538,7 +537,6 @@ router.get("/dashboard-admin", authenticate, async (req, res) => {
       const monthKey = `${date.getFullYear()}-${String(
         date.getMonth() + 1
       ).padStart(2, "0")}`; // ex: 2024-01
-      console.log("Month Key:", monthKey); // Debugging
       if (!revenuePerMonth[monthKey]) {
         revenuePerMonth[monthKey] = 0;
       }
@@ -551,8 +549,12 @@ router.get("/dashboard-admin", authenticate, async (req, res) => {
     });
 
     const spacesCountSnapshot = await db.collection("spaces").get();
-
+    const allSpaces = spacesCountSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     res.json({
+      recentSpace: allSpaces.slice(0, 3),
       reservationsCount: allReservations.length,
       spacesCount: spacesCountSnapshot.size,
       totalAmount,
