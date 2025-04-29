@@ -8,10 +8,12 @@ import {
   MDBIcon,
   MDBCardText,
   MDBBadge,
+  MDBListGroup,
+  MDBListGroupItem,
 } from "mdb-react-ui-kit";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-
+import "../styles/Pages.css";
 function ReservationForm({ space }) {
   const [etape, setEtape] = useState(1);
   const [nouveauRappel, setNouveauRappel] = useState("");
@@ -50,7 +52,124 @@ function ReservationForm({ space }) {
     cvv: "",
   });
   const navigate = useNavigate();
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [selectedStartSlot, setSelectedStartSlot] = useState(null);
+  const [selectedEndSlot, setSelectedEndSlot] = useState(null);
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [reservedTimeSlots, setReservedTimeSlots] = useState([]);
+  const [reservedSlots, setReservedSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  // Ajoutez cet effet pour charger les créneaux réservés
+  useEffect(() => {
+    const fetchReservations = async () => {
+      if (reservationDetails.date && spaceDetails.id) {
+        setLoadingSlots(true);
+        try {
+          const token = localStorage.getItem("token");
 
+          const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/protected/reservations`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          const allReservations = response.data.reservations;
+
+          // ✅ Filtrer uniquement celles correspondant à la date sélectionnée
+          const matchingReservations = allReservations.filter(
+            (res) =>
+              res.date === reservationDetails.date &&
+              res.spaceId === spaceDetails.id
+          );
+
+          const slots = matchingReservations.map((res) => ({
+            start: res.heure_arrivee,
+            end: res.heure_depart,
+          }));
+
+          setReservedSlots(slots);
+        } catch (error) {
+          console.error("Erreur chargement réservations:", error);
+        } finally {
+          setLoadingSlots(false);
+        }
+      }
+    };
+
+    fetchReservations();
+  }, [reservationDetails.date, spaceDetails.id]);
+  const isSlotAvailable = (time) => {
+    // Convertir l'heure en minutes pour faciliter la comparaison
+    const [hours, minutes] = time.split(":").map(Number);
+    const slotMinutes = hours * 60 + minutes;
+
+    // Vérifier chaque réservation existante
+    return !reservedSlots.some((reservation) => {
+      const [resStartH, resStartM] = reservation.start.split(":").map(Number);
+      const [resEndH, resEndM] = reservation.end.split(":").map(Number);
+      const resStart = resStartH * 60 + resStartM;
+      const resEnd = resEndH * 60 + resEndM;
+
+      return slotMinutes >= resStart && slotMinutes < resEnd + 15;
+    });
+  };
+  // Modifiez la fonction generateTimeSlots
+  const generateTimeSlots = () => {
+    const slots = [];
+    const [openHour, openMinute] = spaceDetails.availableFrom
+      .split(":")
+      .map(Number);
+    const [closeHour, closeMinute] = spaceDetails.availableTo
+      .split(":")
+      .map(Number);
+
+    let currentHour = openHour;
+    let currentMinute = openMinute;
+
+    while (
+      currentHour < closeHour ||
+      (currentHour === closeHour && currentMinute < closeMinute)
+    ) {
+      const time = `${currentHour.toString().padStart(2, "0")}:${currentMinute
+        .toString()
+        .padStart(2, "0")}`;
+
+      // ❗ Correction ici : on utilise isSlotAvailable(time) qui utilise reservedSlots
+      slots.push({
+        time,
+        available: isSlotAvailable(time),
+      });
+
+      currentMinute += 15;
+      if (currentMinute >= 60) {
+        currentHour += 1;
+        currentMinute -= 60;
+      }
+    }
+
+    return slots;
+  };
+
+  // Générer les créneaux disponibles lorsque la date ou les réservations changent
+  useEffect(() => {
+    if (spaceDetails.availableFrom && spaceDetails.availableTo) {
+      setAvailableSlots(generateTimeSlots());
+    }
+  }, [spaceDetails, bookedSlots, reservationDetails.date]);
+
+  // Mettre à jour les heures de réservation lorsqu'un créneau est sélectionné
+  useEffect(() => {
+    if (selectedStartSlot && selectedEndSlot) {
+      setReservationDetails((prev) => ({
+        ...prev,
+        heure_arrivee: selectedStartSlot,
+        heure_depart: selectedEndSlot,
+      }));
+    }
+  }, [selectedStartSlot, selectedEndSlot]);
   // Calcul de la durée
   useEffect(() => {
     const { heure_arrivee, heure_depart } = reservationDetails;
@@ -100,13 +219,13 @@ function ReservationForm({ space }) {
       if (!reservationDetails.participants)
         newErrors.participants = "Le nombre de participants est requis";
 
-        // Vérification capacité max
-        const participants = parseInt(reservationDetails.participants, 10);
-        const maxCapacity = parseInt(spaceDetails.capacity || 0, 10);
-  
-        if (!isNaN(participants) && participants > maxCapacity) {
-          newErrors.participants = `Le nombre de participants dépasse la capacité maximale (${maxCapacity})`;
-        }
+      // Vérification capacité max
+      const participants = parseInt(reservationDetails.participants, 10);
+      const maxCapacity = parseInt(spaceDetails.capacity || 0, 10);
+
+      if (!isNaN(participants) && participants > maxCapacity) {
+        newErrors.participants = `Le nombre de participants dépasse la capacité maximale (${maxCapacity})`;
+      }
       // Validation des heures
       const { heure_arrivee, heure_depart } = reservationDetails;
       const { availableFrom, availableTo } = spaceDetails || {};
@@ -158,6 +277,7 @@ function ReservationForm({ space }) {
           status: "En attente",
           createdAt: new Date().toISOString(),
         };
+
         console.log("Données de réservation:", reservationData);
         const response = await axios.post(
           process.env.REACT_APP_API_URL + "/api/protected/reservations",
@@ -193,6 +313,44 @@ function ReservationForm({ space }) {
       setErrors(formErrors);
     }
   };
+  const TimeSlotSelector = ({ label, value, onChange, availableSlots }) => (
+    <MDBCol md="6" className="mb-4">
+      <label className="form-label">{label}</label>
+      {loadingSlots ? (
+        <div className="text-center py-3">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Chargement...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="time-slots-grid">
+          {availableSlots.map((slot, index) => {
+            const isAvailable = isSlotAvailable(slot.time);
+            return (
+              <button
+                key={`${label}-${index}`}
+                type="button"
+                className={`time-slot ${
+                  value === slot.time ? "selected" : ""
+                } ${!isAvailable ? "disabled" : ""}`}
+                disabled={!isAvailable}
+                onClick={() => isAvailable && onChange(slot.time)}
+              >
+                {slot.time}
+                {!isAvailable && <span className="reserved-indicator">✗</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {errors[`heure_${label.toLowerCase()}`] && (
+        <div className="text-danger small mt-1">
+          {errors[`heure_${label.toLowerCase()}`]}
+        </div>
+      )}
+    </MDBCol>
+  );
+  const today = new Date().toISOString().split("T")[0]; // 'YYYY-MM-DD'
 
   return (
     <MDBContainer className="py-5">
@@ -287,6 +445,7 @@ function ReservationForm({ space }) {
               onChange={handleChange}
               feedback={errors.date}
               type="date"
+              min={today} 
             />
 
             {errors.date && (
@@ -317,7 +476,7 @@ function ReservationForm({ space }) {
             )}
           </MDBCol>
 
-          <MDBCol md="6" className="mb-4">
+          {/* <MDBCol md="6" className="mb-4">
             <MDBInput
               label="Heure d'arrivée"
               type="time"
@@ -350,7 +509,35 @@ function ReservationForm({ space }) {
                 {errors.heure_depart}
               </div>
             )}
-          </MDBCol>
+          </MDBCol> */}
+          <TimeSlotSelector
+            label="Arrivée"
+            value={reservationDetails.heure_arrivee}
+            onChange={(time) => {
+              setReservationDetails((prev) => ({
+                ...prev,
+                heure_arrivee: time,
+              }));
+              setSelectedStartSlot(time);
+              setSelectedEndSlot(null); // Réinitialiser l'heure de départ
+            }}
+            availableSlots={generateTimeSlots()}
+          />
+
+          <TimeSlotSelector
+            label="Départ"
+            value={reservationDetails.heure_depart}
+            onChange={(time) => {
+              setReservationDetails((prev) => ({
+                ...prev,
+                heure_depart: time,
+              }));
+              setSelectedEndSlot(time);
+            }}
+            availableSlots={generateTimeSlots().filter(
+              (slot) => !selectedStartSlot || slot.time > selectedStartSlot
+            )}
+          />
           <MDBCol md="12" className="mb-4">
             <MDBInput
               label="Description"
