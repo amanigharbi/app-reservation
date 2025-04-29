@@ -25,6 +25,8 @@ import "../styles/Pages.css";
 import UpdateReservation from "./UpdateReservation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import { format } from "date-fns";
+import moment from "moment";
 
 function MesReservations() {
   const [reservations, setReservations] = useState([]);
@@ -228,6 +230,61 @@ function MesReservations() {
         .includes(searchTerm.toLowerCase()) // pour les montants
   );
 
+  // Séparer les réservations passées et futures
+  const today = moment();
+  const futureReservations = reservations.filter((res) =>
+    moment(res.date).isSameOrAfter(today, "day")
+  );
+  const archivedReservations = reservations.filter((res) =>
+    moment(res.date).isBefore(today, "day")
+  );
+  const getStatusBadge = (status) => {
+    switch (status?.toLowerCase()) {
+      case "annulation_demandée":
+        return (
+          <MDBBadge color="warning" className="ms-2">
+            A annulée
+          </MDBBadge>
+        );
+      case "confirmée":
+      case "acceptée":
+        return (
+          <MDBBadge color="success" className="ms-1">
+            Confirmée
+          </MDBBadge>
+        );
+      case "annulée":
+        return (
+          <MDBBadge color="danger" className="ms-1">
+            Annulée
+          </MDBBadge>
+        );
+      case "en attente":
+        return (
+          <MDBBadge color="dark" className="ms-1">
+            En attente
+          </MDBBadge>
+        );
+      case "refusée":
+        return (
+          <MDBBadge color="danger" className="ms-1">
+            Refusée
+          </MDBBadge>
+        );
+      case "archivé":
+        return (
+          <MDBBadge color="secondary" className="ms-1">
+            Archivé
+          </MDBBadge>
+        );
+      default:
+        return (
+          <MDBBadge color="light" className="ms-1">
+            Inconnu
+          </MDBBadge>
+        );
+    }
+  };
   return (
     <MDBContainer fluid className="dashboard-bg px-0">
       {/* Navbar */}
@@ -359,49 +416,24 @@ function MesReservations() {
                     <td>{res.montant} €</td>
                     <td>{getMethodePaiement(res.paiements, res)}</td>
                     <td>{res.participants}</td>
-                    <td>
-                      {" "}
-                      {res.status === "annulation demandée" && (
-                        <MDBBadge color="warning" className="ms-2">
-                          A annulée{" "}
-                        </MDBBadge>
-                      )}
-                      {res.status === "annulée" && (
-                        <MDBBadge color="danger" className="ms-2">
-                          Annulée
-                        </MDBBadge>
-                      )}
-                      {res.status === "En attente" && (
-                        <MDBBadge color="secondary" className="ms-2">
-                          A confirmée
-                        </MDBBadge>
-                      )}
-                      {res.status === "acceptée" && (
-                        <MDBBadge color="success" className="ms-2">
-                          Confirmée
-                        </MDBBadge>
-                      )}
-                      {res.status === "refusée" && (
-                        <MDBBadge color="danger" className="ms-2">
-                          Refusée
-                        </MDBBadge>
-                      )}
-                    </td>
+                    <td>{getStatusBadge(res.status)}</td>
                     <td>
                       {res.spaceName} ({res.spaceLocation})
                     </td>
                     <td>
                       <div className="d-flex justify-content-center gap-2">
-                        <MDBBtn
-                          size="sm"
-                          color="secondary"
-                          onClick={() => {
-                            setSelectedReservationId(res.id);
-                            setShowUpdateModal(true);
-                          }}
-                        >
-                          <MDBIcon fas icon="pen" />
-                        </MDBBtn>
+                        {res.status.toLowerCase() !== "archivé" && res.status.toLowerCase() !== "annulée"&& (
+                          <MDBBtn
+                            size="sm"
+                            color="secondary"
+                            onClick={() => {
+                              setSelectedReservationId(res.id);
+                              setShowUpdateModal(true);
+                            }}
+                          >
+                            <MDBIcon fas icon="pen" />
+                          </MDBBtn>
+                        )}
 
                         <MDBBtn
                           size="sm"

@@ -558,7 +558,7 @@ router.get("/dashboard-admin", authenticate, async (req, res) => {
       reservationsCount: allReservations.length,
       spacesCount: spacesCountSnapshot.size,
       totalAmount,
-      recentReservations: allReservations.slice(0, 3),
+      recentReservations: allReservations.slice(0, 4),
       usersCount,
       revenuePerMonth, // Ajouté ✅
       reservationsPerMonth,

@@ -369,7 +369,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                         : reservation?.status === "annulation demandée"
                         ? "warning"
                         : reservation?.status === "En attente"
-                        ? "warning"
+                        ? "dark"
                         : "secondary"
                     }
                     pill

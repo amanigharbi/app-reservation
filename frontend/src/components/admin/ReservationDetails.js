@@ -18,6 +18,7 @@ import {
   MessageSquareText,
   StickyNote,
 } from "lucide-react";
+import { MDBBadge } from "mdb-react-ui-kit";
 
 const ReservationDetail = () => {
   const { id } = useParams();
@@ -50,20 +51,6 @@ const ReservationDetail = () => {
   const isPast = moment(reservation.date).isBefore(moment());
   const status = isPast ? "Archivé" : reservation.status || "Inconnu";
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "En attente":
-        return "bg-yellow-200 text-yellow-800";
-      case "confirmée":
-        return "bg-green-200 text-green-800";
-      case "annulée":
-        return "bg-red-200 text-red-800";
-      case "Archivé":
-        return "bg-gray-200 text-gray-800";
-      default:
-        return "bg-blue-200 text-blue-800";
-    }
-  };
   const formatDuree = (duree) => {
     const heures = Math.floor(duree);
     const minutes = Math.round((duree - heures) * 60);
@@ -72,39 +59,27 @@ const ReservationDetail = () => {
 
   const handleAction = async (action) => {
     const token = localStorage.getItem("token");
-
-    // Debug: Afficher la valeur de l'action reçue
-    console.log("Action reçue:", action);
-
     try {
       let newStatus = null;
-
-      // Vérifier que l'action est bien l'une des valeurs attendues
       if (action === "confirmer") {
         newStatus = "confirmée";
       } else if (action === "annuler") {
         newStatus = "annulée";
       } else if (action === "confirmer_annulation") {
-        newStatus = "annulée"; // Confirmer l'annulation, même action que "annuler" dans ce cas
+        newStatus = "annulée";
       } else if (action === "archiver") {
         newStatus = "Archivé";
       }
 
-      // Affichage de la nouvelle valeur de status
-      console.log("Nouveau statut:", newStatus);
-
-      // Si newStatus est null, arrêter la fonction
       if (!newStatus) {
         console.error("Action inconnue, aucun statut modifié");
         return;
       }
 
-      // Mettre à jour la réservation
       await updateReservation(token, id, {
         status: newStatus,
       });
 
-      // Rafraîchir l'UI avec le nouveau statut
       setReservation((prev) => ({
         ...prev,
         status: newStatus,
@@ -115,6 +90,27 @@ const ReservationDetail = () => {
         "Une erreur est survenue lors de la modification de la réservation."
       );
     }
+  };
+
+  const renderStatusBadge = (status) => {
+    const badgeProps = {
+      "En attente": { color: "dark", text: "À confirmer" },
+      acceptée: { color: "success", text: "Confirmée" },
+      annulée: { color: "danger", text: "Annulée" },
+      Archivé: { color: "secondary", text: "Archivé" },
+      annulation_demandée: { color: "warning", text: "À annuler" },
+    };
+
+    const { color, text } = badgeProps[status] || {
+      color: "success",
+      text: status,
+    };
+
+    return (
+      <MDBBadge color={color} className="text-sm px-3 py-2 rounded-pill">
+        {text}
+      </MDBBadge>
+    );
   };
 
   return (
@@ -133,20 +129,14 @@ const ReservationDetail = () => {
         <h2 className="text-2xl font-bold">
           Réservation {reservation.code_reservation}
         </h2>
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-            status
-          )}`}
-        >
-          {status}
-        </span>
+        {renderStatusBadge(status)}
       </div>
 
       {/* Infos principales */}
       <div className="grid md:grid-cols-2 gap-4 bg-white shadow rounded-xl p-4">
         <p>
           <CalendarDays className="inline mr-2" /> <strong>Date :</strong>{" "}
-          {moment(reservation.date).format("LLL")}
+          {moment(reservation.date).format("LL")}
         </p>
         <p>
           <Clock className="inline mr-2" /> <strong>Heures :</strong>{" "}
@@ -157,7 +147,7 @@ const ReservationDetail = () => {
             <Clock className="inline mr-2" />
             Durée :
           </strong>{" "}
-          {formatDuree(reservation.duree)} heures
+          {formatDuree(reservation.duree)}
         </p>
         <p>
           <MapPin className="inline mr-2" /> <strong>Lieu :</strong>{" "}
@@ -177,7 +167,6 @@ const ReservationDetail = () => {
           </strong>{" "}
           {reservation.description || "Aucune"}
         </p>
-
         <p>
           <strong>
             <MessageSquareText className="inline mr-2" /> Commentaires :
@@ -206,10 +195,7 @@ const ReservationDetail = () => {
         )}
         {status === "annulation demandée" && (
           <button
-            onClick={() => {
-              console.log("confirmer_annulation");
-              handleAction("confirmer_annulation");
-            }}
+            onClick={() => handleAction("confirmer_annulation")}
             className="bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600"
           >
             Confirmer l'annulation
@@ -233,7 +219,7 @@ const ReservationDetail = () => {
               className="p-4 bg-blue-50 border-l-4 border-blue-400 rounded mb-3"
             >
               <p>
-                <strong>Date :</strong> {moment(mod.date).format("LLL")}
+                <strong>Date :</strong> {moment(mod.date).format("LL")}
               </p>
               <p>
                 <strong>Ancienne durée :</strong> {mod.ancienneDuree} h
