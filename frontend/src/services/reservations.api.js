@@ -34,7 +34,7 @@ export const deleteReservation = async (token, id) => {
 };
 
 export const updateReservation = async (token, id, data) => {
-  return await axios.put(`${API_URL}/api/protected/reservations/${id}`, data, {
+  return await axios.put(`${API_URL}/api/protected/reservations-admin/${id}`, data, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };

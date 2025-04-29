@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useParams,Link } from "react-router-dom";
-import { getReservationById } from "../../services/reservations.api";
+import { useParams, Link } from "react-router-dom";
+import {
+  getReservationById,
+  updateReservation,
+} from "../../services/reservations.api";
 import moment from "moment";
 import "moment/locale/fr";
 import {
@@ -67,24 +70,66 @@ const ReservationDetail = () => {
     return `${heures}h ${minutes}min`;
   };
 
-  const handleAction = (action) => {
-    console.log(
-      `Action : ${action} sur la réservation ${reservation.code_reservation}`
-    );
-    // Appel API ici
+  const handleAction = async (action) => {
+    const token = localStorage.getItem("token");
+
+    // Debug: Afficher la valeur de l'action reçue
+    console.log("Action reçue:", action);
+
+    try {
+      let newStatus = null;
+
+      // Vérifier que l'action est bien l'une des valeurs attendues
+      if (action === "confirmer") {
+        newStatus = "confirmée";
+      } else if (action === "annuler") {
+        newStatus = "annulée";
+      } else if (action === "confirmer_annulation") {
+        newStatus = "annulée"; // Confirmer l'annulation, même action que "annuler" dans ce cas
+      } else if (action === "archiver") {
+        newStatus = "Archivé";
+      }
+
+      // Affichage de la nouvelle valeur de status
+      console.log("Nouveau statut:", newStatus);
+
+      // Si newStatus est null, arrêter la fonction
+      if (!newStatus) {
+        console.error("Action inconnue, aucun statut modifié");
+        return;
+      }
+
+      // Mettre à jour la réservation
+      await updateReservation(token, id, {
+        status: newStatus,
+      });
+
+      // Rafraîchir l'UI avec le nouveau statut
+      setReservation((prev) => ({
+        ...prev,
+        status: newStatus,
+      }));
+    } catch (error) {
+      console.error("Erreur lors de l'action admin:", error);
+      setError(
+        "Une erreur est survenue lors de la modification de la réservation."
+      );
+    }
   };
 
   return (
-    
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-        <div className="mb-3">
-  <Link to="/admin/reservations" className="text-primary" style={{ textDecoration: "none", fontWeight: "500" }}>
-    ← Retour aux réservations
-  </Link>
-</div>
+      <div className="mb-3">
+        <Link
+          to="/admin/reservations"
+          className="text-primary"
+          style={{ textDecoration: "none", fontWeight: "500" }}
+        >
+          ← Retour aux réservations
+        </Link>
+      </div>
 
       <div className="flex items-center justify-between">
-        
         <h2 className="text-2xl font-bold">
           Réservation {reservation.code_reservation}
         </h2>
@@ -161,7 +206,10 @@ const ReservationDetail = () => {
         )}
         {status === "annulation demandée" && (
           <button
-            onClick={() => handleAction("confirmer annulation")}
+            onClick={() => {
+              console.log("confirmer_annulation");
+              handleAction("confirmer_annulation");
+            }}
             className="bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600"
           >
             Confirmer l'annulation

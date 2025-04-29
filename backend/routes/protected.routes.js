@@ -623,5 +623,33 @@ router.get("/reservations-admin/:id", authenticate, async (req, res) => {
       .json({ message: "Erreur serveur lors de la récupération." });
   }
 });
+router.put("/reservations-admin/:id", authenticate, async (req, res) => {
+  try {
+    const reservationId = req.params.id;
 
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ message: "Informations incomplètes." });
+    }
+
+    const reservationRef = db.collection("reservations").doc(reservationId);
+    const reservationSnapshot = await reservationRef.get();
+
+    if (!reservationSnapshot.exists) {
+      return res.status(404).json({ message: "Réservation introuvable." });
+    }
+
+    const reservationData = reservationSnapshot.data();
+
+    await reservationRef.update({
+      status,
+    });
+
+    res.json({ message: "Réservation mise à jour avec succès." });
+  } catch (error) {
+    console.error("Erreur maj réservation:", error);
+    res.status(500).json({ message: "Erreur serveur mise à jour." });
+  }
+});
 module.exports = router;
