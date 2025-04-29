@@ -35,7 +35,61 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [setReservationToCancel] = useState(false);
   const [setShowModal] = useState(false);
-
+  const checkConflict = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/protected/reservations`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      const reservations = response.data.reservations;
+  
+      // Filtrer sur la même date + même espace + exclure cette réservation elle-même
+      const conflicts = reservations.filter((res) => {
+        if (
+          res.date !== reservation.date ||
+          res.spaceId !== reservation.spaceId ||
+          res.id === reservation.id
+        ) {
+          return false;
+        }
+  
+        const [start1, end1] = [
+          parseTime(reservation.heure_arrivee),
+          parseTime(reservation.heure_depart),
+        ];
+        const [start2, end2] = [
+          parseTime(res.heure_arrivee),
+          parseTime(res.heure_depart),
+        ];
+  
+        // Conflit si chevauchement
+        return start1 < end2 && end1 > start2;
+      });
+  
+      if (conflicts.length > 0) {
+        setError("Le créneau sélectionné est déjà réservé pour cette date.");
+        return true; // conflit détecté
+      }
+  
+      setError(""); // pas d'erreur
+      return false;
+    } catch (err) {
+      console.error("Erreur vérification conflit:", err);
+      return false;
+    }
+  };
+  
+  const parseTime = (time) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 60 + m;
+  };
+  
   useEffect(() => {
     const fetchReservation = async () => {
       try {
@@ -185,7 +239,10 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    const hasConflict = await checkConflict();
+    if (hasConflict) return;
+  
     if (reservation.montantSupplementaire > 0) {
       setShowPaymentModal(true);
     } else if (reservation.montantRemboursable > 0) {
@@ -194,7 +251,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       saveReservation();
     }
   };
-
+  
   const handlePaymentSuccess = (paymentResult) => {
     setShowPaymentModal(false);
     saveReservation({ ...paymentResult, type: "paiement" });
