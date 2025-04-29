@@ -82,7 +82,8 @@ function ReservationForm({ space }) {
           const matchingReservations = allReservations.filter(
             (res) =>
               res.date === reservationDetails.date &&
-              res.spaceId === spaceDetails.id
+              res.spaceId === spaceDetails.id &&
+              res.status !== "annulée"
           );
 
           const slots = matchingReservations.map((res) => ({
@@ -337,7 +338,6 @@ function ReservationForm({ space }) {
                 onClick={() => isAvailable && onChange(slot.time)}
               >
                 {slot.time}
-                {!isAvailable && <span className="reserved-indicator">✗</span>}
               </button>
             );
           })}
@@ -445,7 +445,7 @@ function ReservationForm({ space }) {
               onChange={handleChange}
               feedback={errors.date}
               type="date"
-              min={today} 
+              min={today}
             />
 
             {errors.date && (
