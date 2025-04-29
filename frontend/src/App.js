@@ -17,6 +17,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import AdminLayout from "./components/admin/AdminLayout";
 import DashboardAdmin from "./components/admin/Dashboard";
 import Reservations from "./components/admin/Reservations";
+import ReservationDetail from "./components/admin/ReservationDetails";
 import Espaces from "./components/admin/Espaces";
 import Users from "./components/admin/Users";
 const App = () => {
@@ -37,6 +38,8 @@ const App = () => {
         <Route path="/admin/*" element={<AdminLayout />}>
           <Route index element={<DashboardAdmin />} />
           <Route path="reservations" element={<Reservations />} />
+          <Route path="reservation/:id" element={<ReservationDetail />} />
+
           <Route path="espaces" element={<Espaces />} />
           <Route path="users" element={<Users />} />
         </Route>

@@ -17,6 +17,7 @@
     "file-saver": "^2.0.5",
     "firebase": "^11.6.0",
     "html2pdf.js": "^0.10.3",
+    "lucide-react": "^0.503.0",
     "mdb-react-ui-kit": "^9.0.0",
     "moment": "^2.30.1",
     "react": "^18.3.1",

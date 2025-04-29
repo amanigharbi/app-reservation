@@ -603,4 +603,25 @@ router.get("/reservations-admin", authenticate, async (req, res) => {
   }
 });
 
+router.get("/reservations-admin/:id", authenticate, async (req, res) => {
+  try {
+    const reservationId = req.params.id;
+
+    const reservationRef = db.collection("reservations").doc(reservationId);
+    const reservationSnap = await reservationRef.get();
+
+    if (!reservationSnap.exists) {
+      return res.status(404).json({ message: "Réservation introuvable." });
+    }
+
+    const reservationData = reservationSnap.data();
+    res.json(reservationData);
+  } catch (error) {
+    console.error("Erreur récupération réservation:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors de la récupération." });
+  }
+});
+
 module.exports = router;

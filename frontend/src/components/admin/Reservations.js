@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { fetchReservations } from "../../services/reservations.api";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 function Reservations() {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await fetchReservations(token);
-        console.log("Données des réservations :", data.reservations);
         setReservations(data.reservations);
       } catch (err) {
         console.error("Erreur lors du chargement des réservations :", err);
@@ -75,7 +76,7 @@ function Reservations() {
                     {format(new Date(res.date), "dd/MM/yyyy")}
                   </td>
                   <td className="px-6 py-4">
-                    {res.heure_arrivee} - {res.heure_depart} 
+                    {res.heure_arrivee} - {res.heure_depart}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -89,10 +90,7 @@ function Reservations() {
                   <td className="px-6 py-4 text-right">
                     <button
                       className="text-blue-500 hover:underline"
-                      onClick={() => {
-                        // Naviguer vers une page détails (à adapter selon votre routeur)
-                        console.log("Voir réservation :", res._id);
-                      }}
+                      onClick={() => navigate(`/admin/reservation/${res.id}`)}
                     >
                       Voir
                     </button>
