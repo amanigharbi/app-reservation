@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { fetchDashboard } from "../../services/dashboard.api";
-import KPI from "./KPI";
-import RevenueChart from "./RevenueChart";
-import TrendChart from "./TrendChart";
-import ReservationTable from "./ReservationTable";
-import SpaceTable from "./SpaceTable";
+import KPI from "./charts/KPI";
+import RevenueChart from "./charts/RevenueChart";
+import TrendChart from "./charts/TrendChart";
+import ReservationTable from "./charts/ReservationTable";
+import SpaceTable from "./charts/SpaceTable";
 
 function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);

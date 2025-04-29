@@ -4,9 +4,15 @@ const API_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5000/api/protected";
 
 export const fetchReservations = async (token) => {
-  return await axios.get(`${API_URL}/api/protected/reservations`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get(
+    `${API_URL}/api/protected/reservations-admin`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
 };
 
 export const deleteReservation = async (token, id) => {

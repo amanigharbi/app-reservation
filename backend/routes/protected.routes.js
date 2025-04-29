@@ -568,5 +568,39 @@ router.get("/dashboard-admin", authenticate, async (req, res) => {
     res.status(500).json({ error: "Erreur lors du chargement des données" });
   }
 });
+router.get("/reservations-admin", authenticate, async (req, res) => {
+  try {
+    const reservationsSnapshot = await db.collection("reservations").get();
+
+    const reservations = await Promise.all(
+      reservationsSnapshot.docs.map(async (doc) => {
+        const reservationData = doc.data();
+        const utilisateurId = reservationData.utilisateurId;
+
+        let utilisateurData = null;
+
+        if (utilisateurId) {
+          const userDoc = await db.collection("users").doc(utilisateurId).get();
+          if (userDoc.exists) {
+            utilisateurData = userDoc.data();
+          }
+        }
+
+        return {
+          id: doc.id,
+          ...reservationData,
+          utilisateur: utilisateurData, // Inclut les données utilisateur ici
+        };
+      })
+    );
+
+    res.json({ reservations });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des réservations :", error);
+    res.status(500).json({
+      message: "Erreur serveur lors du chargement des réservations.",
+    });
+  }
+});
 
 module.exports = router;
