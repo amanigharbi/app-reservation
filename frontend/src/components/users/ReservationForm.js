@@ -83,7 +83,8 @@ function ReservationForm({ space }) {
             (res) =>
               res.date === reservationDetails.date &&
               res.spaceId === spaceDetails.id &&
-              res.status !== "annulée"
+              res.status !== "annulée" &&
+              res.status !== "refusée"
           );
 
           const slots = matchingReservations.map((res) => ({

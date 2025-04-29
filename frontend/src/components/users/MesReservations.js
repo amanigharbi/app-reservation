@@ -422,18 +422,20 @@ function MesReservations() {
                     </td>
                     <td>
                       <div className="d-flex justify-content-center gap-2">
-                        {res.status.toLowerCase() !== "archivé" && res.status.toLowerCase() !== "annulée"&& (
-                          <MDBBtn
-                            size="sm"
-                            color="secondary"
-                            onClick={() => {
-                              setSelectedReservationId(res.id);
-                              setShowUpdateModal(true);
-                            }}
-                          >
-                            <MDBIcon fas icon="pen" />
-                          </MDBBtn>
-                        )}
+                        {res.status.toLowerCase() !== "archivé" &&
+                          res.status.toLowerCase() !== "annulée" &&
+                          res.status.toLowerCase() !== "refusée" && (
+                            <MDBBtn
+                              size="sm"
+                              color="secondary"
+                              onClick={() => {
+                                setSelectedReservationId(res.id);
+                                setShowUpdateModal(true);
+                              }}
+                            >
+                              <MDBIcon fas icon="pen" />
+                            </MDBBtn>
+                          )}
 
                         <MDBBtn
                           size="sm"

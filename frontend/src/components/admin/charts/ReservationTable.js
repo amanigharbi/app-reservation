@@ -14,7 +14,7 @@ function ReservationTable({ reservations }) {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case "annulation demandée":
+      case "annulation_demandée":
         return (
           <MDBBadge color="warning" className="ms-2">
             A annulée

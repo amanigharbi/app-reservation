@@ -94,9 +94,14 @@ function Dashboard() {
         return "success";
       case "annulée":
         return "danger";
-      case "annulation demandée":
-      case "En attente":
+      case "annulation_demandée":
         return "warning";
+      case "En attente":
+        return "dark";
+      case "Archivé":
+        return "secondary";
+      case "refusée":
+        return "danger";
       default:
         return "secondary";
     }

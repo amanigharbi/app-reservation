@@ -652,4 +652,24 @@ router.put("/reservations-admin/:id", authenticate, async (req, res) => {
     res.status(500).json({ message: "Erreur serveur mise à jour." });
   }
 });
+router.delete("/reservations-admin/:id", authenticate, async (req, res) => {
+  try {
+    const reservationId = req.params.id;
+
+    const reservationRef = db.collection("reservations").doc(reservationId);
+    const reservationSnapshot = await reservationRef.get();
+
+    if (!reservationSnapshot.exists) {
+      return res.status(404).json({ message: "Réservation introuvable." });
+    }
+
+    const reservationData = reservationSnapshot.data();
+
+    await reservationRef.delete();
+    res.json({ message: "Réservation supprimée avec succès." });
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la réservation :", error);
+    res.status(500).json({ message: "Erreur serveur lors de la suppression." });
+  }
+});
 module.exports = router;
