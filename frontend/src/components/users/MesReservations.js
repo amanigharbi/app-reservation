@@ -25,7 +25,6 @@ import "../styles/Pages.css";
 import UpdateReservation from "./UpdateReservation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import { format } from "date-fns";
 import moment from "moment";
 
 function MesReservations() {

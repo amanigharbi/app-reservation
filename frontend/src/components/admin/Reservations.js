@@ -19,7 +19,11 @@ function Reservations() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState("asc");
-
+  const [showToast, setShowToast] = useState({
+    type: "",
+    visible: false,
+    message: "",
+  });
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
@@ -141,12 +145,21 @@ function Reservations() {
       body: rows,
     });
     doc.save("reservations.pdf");
+    setShowToast({
+      type: "success",
+      visible: true,
+      message: "Export PDF effectué !",
+    });
+
+    setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
 
   // Function to export to CSV
   const exportCSV = (list) => {
     const csvData = list.map((res) => ({
-      Client: `${res.utilisateur?.firstName || ""} ${res.utilisateur?.lastName || ""}`,
+      Client: `${res.utilisateur?.firstName || ""} ${
+        res.utilisateur?.lastName || ""
+      }`,
       Espace: res.spaceName,
       Date: format(new Date(res.date), "dd/MM/yyyy"),
       Heure: `${res.heure_arrivee} - ${res.heure_depart}`,
@@ -159,6 +172,13 @@ function Reservations() {
     link.href = URL.createObjectURL(blob);
     link.download = "reservations.csv";
     link.click();
+    // Afficher un message de réussite après l'exportation
+    setShowToast({
+      type: "success",
+      visible: true,
+      message: "Export CSV effectué !",
+    });
+    setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
 
   const renderFilters = () => (
@@ -285,6 +305,52 @@ function Reservations() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      {/* ✅ TOAST SUCCÈS & ERREUR */}
+      {showToast.visible && (
+        <div
+          className="position-fixed top-0 end-0 p-3"
+          style={{ zIndex: 9999 }}
+        >
+          <div
+            className={`toast show fade text-white ${
+              showToast.type === "success" ? "bg-success" : "bg-danger"
+            }`}
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+          >
+            <div
+              className={`toast-header ${
+                showToast.type === "success" ? "bg-success" : "bg-danger"
+              } text-white`}
+            >
+              <i
+                className={`fas ${
+                  showToast.type === "success" ? "fa-check" : "fa-times"
+                } fa-lg me-2`}
+              ></i>
+              <strong className="me-auto">
+                {showToast.type === "success" ? "Succès" : "Erreur"}
+              </strong>
+              <small>
+                {new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </small>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                onClick={() => setShowToast({ type: "", visible: false })}
+              ></button>
+            </div>
+            <div className="toast-body">
+              {showToast.message || "Une action a été effectuée."}
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold mb-6 text-center text-primary">
         Réservations
       </h1>
