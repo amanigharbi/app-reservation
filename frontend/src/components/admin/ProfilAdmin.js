@@ -15,7 +15,13 @@ import {
 } from "../../services/profile.api";
 import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../../contexts/UserContext";
-
+import {
+  getAuth,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+} from "firebase/auth";
+import { Modal, Button, Form } from "react-bootstrap";
 function ProfilAdmin() {
   const [adminData, setAdminData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +32,13 @@ function ProfilAdmin() {
   });
   const { user, setUser } = useContext(UserContext);
   const token = localStorage.getItem("token");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const loadProfilAdmin = async () => {
@@ -82,6 +95,54 @@ function ProfilAdmin() {
         type: "error",
         visible: true,
         message: "Erreur lors de la mise à jour du profil.",
+      });
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (newPassword !== confirmPassword) {
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Les mots de passe ne correspondent pas.",
+      });
+      return;
+    }
+
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) throw new Error("Aucun utilisateur connecté.");
+
+      // Prompt for current password (you need to add an input field in your modal)
+      const currentPassword = prompt("Entrez votre mot de passe actuel :");
+
+      const credential = EmailAuthProvider.credential(
+        currentUser.email,
+        currentPassword
+      );
+
+      await reauthenticateWithCredential(currentUser, credential);
+
+      await updatePassword(currentUser, newPassword);
+
+      setShowToast({
+        type: "success",
+        visible: true,
+        message: "Mot de passe mis à jour avec succès.",
+      });
+
+      setShowPasswordModal(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      console.error("Erreur de mise à jour du mot de passe:", error);
+      setShowToast({
+        type: "error",
+        visible: true,
+        message:
+          error.message || "Erreur lors de la mise à jour du mot de passe.",
       });
     }
   };
@@ -154,7 +215,12 @@ function ProfilAdmin() {
               <p className="text-muted">
                 {user?.location || "Localisation inconnue"}
               </p>
-              <MDBBtn color="danger" size="sm">
+              <MDBBtn
+                color="danger"
+                size="sm"
+                style={{ textTransform: "none" }}
+                onClick={() => setShowPasswordModal(true)}
+              >
                 Modifier le mot de passe
               </MDBBtn>
             </MDBCardBody>
@@ -197,13 +263,103 @@ function ProfilAdmin() {
                   onChange={handleFileChange}
                 />
               </div>
-              <MDBBtn color="primary" className="mt-3" onClick={handleUpdate}>
+              <MDBBtn
+                color="primary"
+                className="mt-3"
+                onClick={handleUpdate}
+                style={{ textTransform: "none" }}
+              >
                 Enregistrer les modifications
               </MDBBtn>
             </MDBCardBody>
           </MDBCard>
         </MDBCol>
       </MDBRow>
+      <Modal
+        show={showPasswordModal}
+        onHide={() => {
+          setShowPasswordModal(false);
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmPassword("");
+        }}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Changer le mot de passe</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Mot de passe actuel</Form.Label>
+              <div className="d-flex align-items-center">
+                <Form.Control
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="ms-2"
+                >
+                  {showCurrentPassword ? "🙈" : "👁️"}
+                </Button>
+              </div>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Nouveau mot de passe</Form.Label>
+              <div className="d-flex align-items-center">
+                <Form.Control
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="ms-2"
+                >
+                  {showNewPassword ? "🙈" : "👁️"}
+                </Button>
+              </div>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Confirmer le mot de passe</Form.Label>
+              <div className="d-flex align-items-center">
+                <Form.Control
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="ms-2"
+                >
+                  {showConfirmPassword ? "🙈" : "👁️"}
+                </Button>
+              </div>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowPasswordModal(false)}
+          >
+            Annuler
+          </Button>
+          <Button variant="primary" onClick={handlePasswordChange}>
+            Valider
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </MDBContainer>
   );
 }
