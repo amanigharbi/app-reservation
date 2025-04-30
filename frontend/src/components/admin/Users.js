@@ -48,16 +48,17 @@ function Users() {
     role: "user",
     password: "",
   });
+  const [searchTerm, setSearchTerm] = useState("");
 
   const token = localStorage.getItem("token");
   const showToastWithTimeout = ({ type, message }) => {
     setShowToast({ type, visible: true, message });
-  
+
     setTimeout(() => {
       setShowToast({ type: "", visible: false, message: "" });
     }, 2000);
   };
-  
+
   useEffect(() => {
     const loadProfils = async () => {
       try {
@@ -70,7 +71,6 @@ function Users() {
           type: "error",
           message: "Impossible de charger les utilisateurs.",
         });
-     
       } finally {
         setLoading(false);
       }
@@ -87,7 +87,7 @@ function Users() {
         type: "success",
         message: "Utilisateur supprimé avec succès.",
       });
-      
+
       setUserData(userData.filter((user) => user.id !== userId));
       setShowModal(false);
     } catch (error) {
@@ -96,7 +96,6 @@ function Users() {
         type: "error",
         message: "Erreur lors de la suppression de l'utilisateur.",
       });
-    
     } finally {
       setLoadingDelete(false);
     }
@@ -122,7 +121,7 @@ function Users() {
         type: "error",
         message: "Veuillez corriger les erreurs du formulaire.",
       });
-   
+
       return;
     }
 
@@ -135,7 +134,6 @@ function Users() {
         type: "success",
         message: "Utilisateur ajouté avec succès.",
       });
-    
 
       setShowAddModal(false);
       setNewUser({
@@ -153,7 +151,6 @@ function Users() {
         type: "error",
         message: "Erreur lors de l'ajout de l'utilisateurs.",
       });
-    
     }
   };
 
@@ -161,6 +158,14 @@ function Users() {
     setUserToDelete(user);
     setShowModal(!showModal);
   };
+  const filteredUsers = userData.filter((user) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      user.username.toLowerCase().includes(search) ||
+      user.email.toLowerCase().includes(search) ||
+      (user.position && user.position.toLowerCase().includes(search))
+    );
+  });
 
   if (loading) return <div className="text-center py-5">Chargement...</div>;
 
@@ -202,12 +207,24 @@ function Users() {
               <MDBIcon icon="users-cog" className="me-2" />
               Gestion des Profils utilisateurs
             </MDBCardTitle>
+
             <MDBBtn color="success" onClick={() => setShowAddModal(true)}>
               <MDBIcon icon="plus" className="me-2" />
               Ajouter un utilisateur
             </MDBBtn>
           </div>
+          {/* Recherche */}
 
+          <div className="d-flex gap-2 mb-4 flex-wrap">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Rechercher par nom, email ou poste"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          
+          </div>
           <MDBTable hover responsive>
             <MDBTableHead light>
               <tr>
@@ -221,7 +238,7 @@ function Users() {
               </tr>
             </MDBTableHead>
             <MDBTableBody>
-              {userData.map((user, index) => (
+              {filteredUsers.map((user, index) => (
                 <tr key={user.id}>
                   <td>{index + 1}</td>
                   <td>{user.username}</td>
