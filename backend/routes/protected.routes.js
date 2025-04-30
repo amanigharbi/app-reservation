@@ -757,6 +757,7 @@ router.delete("/profile/:id", authenticate, async (req, res) => {
     }
 
     // Supprimer l'utilisateur
+    await admin.auth().deleteUser(userId);
     await UserRef.delete();
     res.json({ message: "Utilisateur supprimé avec succès." });
   } catch (error) {

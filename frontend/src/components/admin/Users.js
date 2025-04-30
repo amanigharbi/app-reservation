@@ -37,6 +37,8 @@ function Users() {
   const [loadingDelete, setLoadingDelete] = useState(false);
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [inputErrors, setInputErrors] = useState({});
   const [newUser, setNewUser] = useState({
     username: "",
     firstName: "",
@@ -46,10 +48,16 @@ function Users() {
     role: "user",
     password: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
 
   const token = localStorage.getItem("token");
-
+  const showToastWithTimeout = ({ type, message }) => {
+    setShowToast({ type, visible: true, message });
+  
+    setTimeout(() => {
+      setShowToast({ type: "", visible: false, message: "" });
+    }, 2000);
+  };
+  
   useEffect(() => {
     const loadProfils = async () => {
       try {
@@ -58,11 +66,11 @@ function Users() {
         setUserData(allUsers);
       } catch (error) {
         console.error("Erreur lors du chargement des profils:", error);
-        setShowToast({
+        showToastWithTimeout({
           type: "error",
-          visible: true,
           message: "Impossible de charger les utilisateurs.",
         });
+     
       } finally {
         setLoading(false);
       }
@@ -75,48 +83,60 @@ function Users() {
     try {
       await deleteUser(token, userId);
       setLoadingDelete(true);
-      setTimeout(() => {
-        setShowToast({
-          type: "success",
-          visible: true,
-          message: "Utilisateur supprimé avec succès.",
-        });
-      }, 2000); // Simulate a delay for the loading spinner
-
+      showToastWithTimeout({
+        type: "success",
+        message: "Utilisateur supprimé avec succès.",
+      });
+      
       setUserData(userData.filter((user) => user.id !== userId));
       setShowModal(false);
     } catch (error) {
       console.error("Erreur lors de la suppression de l'utilisateur:", error);
-      setShowToast({
+      showToastWithTimeout({
         type: "error",
-        visible: true,
         message: "Erreur lors de la suppression de l'utilisateur.",
       });
+    
     } finally {
       setLoadingDelete(false);
     }
   };
 
   const handleAddUser = async () => {
-    const { username, firstName, lastName, email, password } = newUser;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let errors = {};
 
-    if (!username || !firstName || !lastName || !email || !password) {
-      setShowToast({
+    ["username", "firstName", "lastName", "email", "password"].forEach(
+      (field) => {
+        if (!newUser[field]) errors[field] = "Ce champ est requis.";
+      }
+    );
+
+    if (newUser.email && !emailRegex.test(newUser.email)) {
+      errors.email = "Adresse email invalide.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setInputErrors(errors);
+      showToastWithTimeout({
         type: "error",
-        visible: true,
-        message: "Veuillez remplir tous les champs obligatoires.",
+        message: "Veuillez corriger les erreurs du formulaire.",
       });
+   
       return;
     }
+
+    setInputErrors({});
 
     try {
       const res = await createUser(token, newUser);
       setUserData([...userData, res.user]);
-      setShowToast({
+      showToastWithTimeout({
         type: "success",
-        visible: true,
         message: "Utilisateur ajouté avec succès.",
       });
+    
+
       setShowAddModal(false);
       setNewUser({
         username: "",
@@ -129,11 +149,11 @@ function Users() {
       });
     } catch (error) {
       console.error("Erreur lors de l'ajout:", error);
-      setShowToast({
+      showToastWithTimeout({
         type: "error",
-        visible: true,
-        message: "Erreur lors de l'ajout de l'utilisateur.",
+        message: "Erreur lors de l'ajout de l'utilisateurs.",
       });
+    
     }
   };
 
@@ -174,6 +194,7 @@ function Users() {
         </div>
       )}
 
+      {/* Table des utilisateurs */}
       <MDBCard className="shadow border-0 bg-light">
         <MDBCardBody>
           <div className="d-flex justify-content-between align-items-center mb-4">
@@ -310,53 +331,39 @@ function Users() {
             </MDBModalHeader>
             <MDBModalBody>
               <form>
-                <div className="mb-3">
-                  <label>Nom d'utilisateur</label>
-                  <input
-                    className="form-control"
-                    value={newUser.username}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, username: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="mb-3">
-                  <label>Prénom</label>
-                  <input
-                    className="form-control"
-                    value={newUser.firstName}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, firstName: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="mb-3">
-                  <label>Nom</label>
-                  <input
-                    className="form-control"
-                    value={newUser.lastName}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, lastName: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="mb-3">
-                  <label>Email</label>
-                  <input
-                    className="form-control"
-                    type="email"
-                    value={newUser.email}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, email: e.target.value })
-                    }
-                  />
-                </div>
+                {[
+                  { label: "Nom d'utilisateur", name: "username" },
+                  { label: "Prénom", name: "firstName" },
+                  { label: "Nom", name: "lastName" },
+                  { label: "Email", name: "email", type: "email" },
+                ].map(({ label, name, type = "text" }) => (
+                  <div className="mb-3" key={name}>
+                    <label>{label}</label>
+                    <input
+                      type={type}
+                      className={`form-control ${
+                        inputErrors[name] ? "is-invalid" : ""
+                      }`}
+                      value={newUser[name]}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, [name]: e.target.value })
+                      }
+                    />
+                    {inputErrors[name] && (
+                      <div className="invalid-feedback">
+                        {inputErrors[name]}
+                      </div>
+                    )}
+                  </div>
+                ))}
                 <div className="mb-3">
                   <label>Mot de passe</label>
                   <div className="input-group">
                     <input
-                      className="form-control"
                       type={showPassword ? "text" : "password"}
+                      className={`form-control ${
+                        inputErrors.password ? "is-invalid" : ""
+                      }`}
                       value={newUser.password}
                       onChange={(e) =>
                         setNewUser({ ...newUser, password: e.target.value })
@@ -370,6 +377,11 @@ function Users() {
                     >
                       <MDBIcon icon={showPassword ? "eye-slash" : "eye"} />
                     </button>
+                    {inputErrors.password && (
+                      <div className="invalid-feedback d-block ms-1">
+                        {inputErrors.password}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="mb-3">

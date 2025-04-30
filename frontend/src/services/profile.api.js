@@ -43,31 +43,27 @@ export const updateRole = async (token, id, data) => {
   });
 };
 
-
-
 export const deleteUser = async (token, userId) => {
   return await axios.delete(`${API_URL}/api/protected/profile/${userId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
 
-export const createUser = async (token, userData) => {
-  try {
-    const res = await fetch(`${API_URL}/api/protected/profile`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(userData),
-    });
+  export const createUser = async (token, userData) => {
+    try {
+      const res = await fetch(`${API_URL}/api/protected/profile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      });
 
-    if (!res.ok) throw new Error("Erreur lors de la création");
+      if (!res.ok) throw new Error("Erreur lors de la création");
 
-    return await res.json();
-  } catch (err) {
-    throw err;
-  }
-};
-
-
+      return await res.json();
+    } catch (err) {
+      throw err;
+    }
+  };
