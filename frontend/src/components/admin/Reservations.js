@@ -283,7 +283,7 @@ function Reservations() {
               <td className="px-6 py-4 text-right">
                 <button
                   className="text-blue-500 hover:underline"
-                  onClick={() => navigate(`/admin/reservation/${res._id}`)}
+                  onClick={() => navigate(`/admin/reservation/${res.id}`)}
                 >
                   Voir
                 </button>

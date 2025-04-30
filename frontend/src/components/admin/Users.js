@@ -11,6 +11,7 @@ import {
 } from "mdb-react-ui-kit";
 import { fetchProfileUsers } from "../../services/profile.api";
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 function Users() {
   const [userData, setUserData] = useState([]);
@@ -54,7 +55,7 @@ function Users() {
     );
 
   return (
-    <MDBContainer className="py-5">
+    <MDBContainer className="py-2">
       {showToast.visible && (
         <div
           className="position-fixed top-0 end-0 p-3"
@@ -117,12 +118,12 @@ function Users() {
                   <td>{user.role || "Utilisateur"}</td>
                   <td>
                     <div className="d-flex gap-2">
-                      <MDBBtn color="primary" size="sm">
-                        <MDBIcon icon="eye" />
-                      </MDBBtn>
-                      {/* <MDBBtn color="warning" size="sm">
-                        <MDBIcon icon="edit" />
-                      </MDBBtn> */}
+                      {/* Lien vers la page des détails utilisateur avec l'ID utilisateur comme paramètre */}
+                      <Link to={`/admin/user-details/${user.id}`}>
+                        <MDBBtn color="primary" size="sm">
+                          <MDBIcon icon="eye" />
+                        </MDBBtn>
+                      </Link>
                       <MDBBtn color="danger" size="sm">
                         <MDBIcon icon="trash" />
                       </MDBBtn>

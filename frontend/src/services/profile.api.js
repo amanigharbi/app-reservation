@@ -3,7 +3,6 @@ import axios from "axios";
 const API_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5000/api/protected";
 
-
 export const fetchProfile = async (token) => {
   return await axios.get(`${API_URL}/api/protected/profile`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -28,8 +27,13 @@ export const uploadProfileImage = async (token, file) => {
   });
 };
 
-  export const fetchProfileUsers = async (token) => {
-    return await axios.get(`${API_URL}/api/protected/profile-users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  };
+export const fetchProfileUsers = async (token) => {
+  return await axios.get(`${API_URL}/api/protected/profile-users`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+export const fetchProfileUser = async (token, userId) => {
+  return await axios.get(`${API_URL}/api/protected/profile/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};

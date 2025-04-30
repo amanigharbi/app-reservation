@@ -22,6 +22,8 @@ import Reservations from "./components/admin/Reservations";
 import ReservationDetail from "./components/admin/ReservationDetails";
 import Espaces from "./components/admin/Espaces";
 import Users from "./components/admin/Users";
+import UserDetails from "./components/admin/UserDetails";
+
 const App = () => {
   return (
     <Router>
@@ -45,6 +47,7 @@ const App = () => {
 
           <Route path="espaces" element={<Espaces />} />
           <Route path="users" element={<Users />} />
+          <Route path="user-details/:userId" element={<UserDetails />} />
         </Route>
       </Routes>
     </Router>

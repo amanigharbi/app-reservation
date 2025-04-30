@@ -31,6 +31,7 @@ import {
   MDBBtn,
   MDBModalBody,
   MDBModalFooter,
+  MDBIcon,
 } from "mdb-react-ui-kit";
 
 const ReservationDetail = () => {
@@ -46,6 +47,7 @@ const ReservationDetail = () => {
     message: "",
   });
   const [loadingDelete, setLoadingDelete] = useState(false);
+  const token = localStorage.getItem("token");
 
   // Supprimer une réservation
   const handleConfirmDelete = async () => {
@@ -79,8 +81,6 @@ const ReservationDetail = () => {
     }
   };
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
     const fetchReservation = async () => {
       try {
         const data = await getReservationById(token, id);
@@ -168,6 +168,17 @@ const ReservationDetail = () => {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <div className="mb-4 text-start">
+        <MDBBtn
+          color="secondary"
+          onClick={() => navigate("/admin/reservations")}
+          size="sm"
+          style={{ textTransform: "none" }}
+        >
+          <MDBIcon icon="arrow-left" className="me-2" />
+          Retour aux réservations
+        </MDBBtn>
+      </div>
       {/* ✅ TOAST SUCCÈS & ERREUR */}
       {showToast.visible && (
         <div
@@ -213,16 +224,6 @@ const ReservationDetail = () => {
           </div>
         </div>
       )}
-
-      <div className="mb-3">
-        <Link
-          to="/admin/reservations"
-          className="text-primary"
-          style={{ textDecoration: "none", fontWeight: "500" }}
-        >
-          ← Retour aux réservations
-        </Link>
-      </div>
 
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">

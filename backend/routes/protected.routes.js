@@ -680,13 +680,34 @@ router.get("/profile-users", authenticate, async (req, res) => {
     const userSnapshot = await db.collection("users").get();
 
     const users = userSnapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(user => user.email !== currentUserEmail); // exclure l'utilisateur connecté
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .filter((user) => user.email !== currentUserEmail); // exclure l'utilisateur connecté
 
     res.json({ users }); // ✅ retourner un tableau d'utilisateurs
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Erreur interne du serveur" });
+  }
+});
+router.get("/profile/:id", authenticate, async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const userRef = db.collection("users").doc(userId);
+    const UserSnap = await userRef.get();
+
+    if (!UserSnap.exists) {
+      return res.status(404).json({ message: "User introuvable." });
+    }
+
+    const userData = UserSnap.data();
+
+    res.json(userData);
+  } catch (error) {
+    console.error("Erreur récupération de l'utilisateur:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors de la récupération." });
   }
 });
 
