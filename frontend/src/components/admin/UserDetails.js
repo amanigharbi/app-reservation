@@ -38,7 +38,16 @@ function UserDetails() {
   const [showModal, setShowModal] = useState(false); // Étape 1 : état pour gérer la modale
   const token = localStorage.getItem("token");
   const [loadingDelete, setLoadingDelete] = useState(false);
+  const [editingRole, setEditingRole] = useState(false);
+  const [newRole, setNewRole] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const showToastWithTimeout = ({ type, message }) => {
+    setShowToast({ type, visible: true, message });
 
+    setTimeout(() => {
+      setShowToast({ type: "", visible: false, message: "" });
+    }, 2000);
+  };
   useEffect(() => {
     const loadUserDetails = async () => {
       try {
@@ -62,9 +71,8 @@ function UserDetails() {
       setLoadingDelete(true);
 
       await deleteUser(token, userId); // Appel de la méthode deleteUser
-      setShowToast({
+      showToastWithTimeout({
         type: "success",
-        visible: true,
         message: "Utilisateur supprimé avec succès.",
       });
 
@@ -73,13 +81,41 @@ function UserDetails() {
       }, 2000);
     } catch (error) {
       console.error("Erreur lors de la suppression de l'utilisateur:", error);
-      setShowToast({
+      showToastWithTimeout({
         type: "error",
-        visible: true,
         message: "Erreur lors de la suppression de l'utilisateur.",
       });
     }
     setShowModal(false); // Fermer la modale après la suppression
+  };
+  const handleRoleUpdate = async () => {
+    if (!newRole || newRole === userDetails.role) {
+      setEditingRole(false);
+      return;
+    }
+
+    try {
+      setUpdating(true);
+      await updateRole(token, userId, { role: newRole });
+      if (newRole === "user") {
+        setUserDetails((prev) => ({ ...prev, role: "Utilisateur" }));
+      } else {
+        setUserDetails((prev) => ({ ...prev, role: "Administrateur" }));
+      }
+      setEditingRole(false);
+      showToastWithTimeout({
+        type: "success",
+        message: "Rôle mis à jour avec succès.",
+      });
+    } catch (err) {
+      console.error("Erreur lors de la mise à jour du rôle :", err);
+      showToastWithTimeout({
+        type: "error",
+        message: "Échec de la mise à jour du rôle.",
+      });
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const toggleModal = () => setShowModal(!showModal); // Fonction pour ouvrir/fermer la modale
@@ -141,7 +177,38 @@ function UserDetails() {
                   {userDetails.position || "Non renseigné"}
                 </MDBCol>
                 <MDBCol md="6" className="mb-3">
-                  <strong>Rôle :</strong> {userDetails.role || "Non renseigné"}
+                  <strong>Rôle :</strong>{" "}
+                  {editingRole ? (
+                    <>
+                      <select
+                        value={newRole}
+                        onChange={(e) => setNewRole(e.target.value)}
+                        className="form-select form-select-sm d-inline w-auto mx-2"
+                      >
+                        <option value="user">Utilisateur</option>
+                        <option value="admin">Administrateur</option>
+                      </select>
+                      <MDBBtn
+                        color="success"
+                        size="sm"
+                        onClick={handleRoleUpdate}
+                        disabled={updating}
+                        style={{ textTransform: "none" }}
+                      >
+                        Valider
+                      </MDBBtn>
+                      <MDBBtn
+                        color="light"
+                        size="sm"
+                        onClick={() => setEditingRole(false)}
+                        style={{ textTransform: "none" }}
+                      >
+                        Annuler
+                      </MDBBtn>
+                    </>
+                  ) : (
+                    <>{userDetails.role || "Non renseigné"}</>
+                  )}
                 </MDBCol>
                 <MDBCol md="6" className="mb-3">
                   <strong>Localisation :</strong>{" "}
@@ -235,7 +302,11 @@ function UserDetails() {
             >
               Supprimer l'utilisateur
             </MDBBtn>
-            <MDBBtn color="warning" style={{ textTransform: "none" }}>
+            <MDBBtn
+              color="warning"
+              style={{ textTransform: "none" }}
+              onClick={() => setEditingRole(true)}
+            >
               Modifier le rôle
             </MDBBtn>
           </div>
