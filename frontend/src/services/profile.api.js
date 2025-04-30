@@ -25,7 +25,7 @@ export const uploadProfileImage = async (token, file) => {
   const formData = new FormData();
   formData.append("image", file);
 
-  return await axios.post(`${API_URL}/upload`, formData, {
+  return await axios.post(`${API_URL}/api/protected/upload`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data",

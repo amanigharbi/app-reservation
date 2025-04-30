@@ -8,23 +8,30 @@ import {
   MDBBtn,
   MDBInput,
 } from "mdb-react-ui-kit";
-import { fetchProfile } from "../../services/profile.api";
-import React, { useState, useEffect } from "react";
+import {
+  fetchProfile,
+  updateProfile,
+  uploadProfileImage,
+} from "../../services/profile.api";
+import React, { useState, useEffect, useContext } from "react";
+import { UserContext } from "../../contexts/UserContext";
+
 function ProfilAdmin() {
   const [adminData, setAdminData] = useState(null);
-  const token = localStorage.getItem("token");
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState({
     type: "",
     visible: false,
     message: "",
   });
+  const { user, setUser } = useContext(UserContext);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const loadProfilAdmin = async () => {
       try {
         const res = await fetchProfile(token);
-        console.log("Profil admin:", res.data);
+        setUser(res.data.user);
         setAdminData(res.data.user);
       } catch (error) {
         console.error("Erreur lors du chargement du profil:", error);
@@ -33,28 +40,60 @@ function ProfilAdmin() {
       }
     };
 
-    if (token) {
-      loadProfilAdmin();
-    }
+    if (token) loadProfilAdmin();
   }, [token]);
-  if (loading) {
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const previewUrl = URL.createObjectURL(file);
+    setUser((prev) => ({ ...prev, photoURL: previewUrl }));
+
+    try {
+      const response = await uploadProfileImage(token, file);
+      const uploadedImageUrl = response.data.imageUrl;
+
+      setAdminData((prev) => ({ ...prev, photoURL: uploadedImageUrl }));
+
+      URL.revokeObjectURL(previewUrl);
+    } catch (error) {
+      console.error("Erreur lors de l'upload de l'image:", error);
+    }
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const response = await updateProfile(token, adminData);
+      setUser(response.data);
+      setShowToast({
+        type: "success",
+        visible: true,
+        message: "Profil mis à jour avec succès!",
+      });
+      window.location.reload();
+      setTimeout(
+        () => setShowToast({ type: "", visible: false, message: "" }),
+        3000
+      );
+    } catch (error) {
+      console.error("Erreur de mise à jour du profil:", error);
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Erreur lors de la mise à jour du profil.",
+      });
+    }
+  };
+
+  if (loading) return <div className="text-center py-5">Chargement...</div>;
+  if (!adminData)
     return (
-      <div className="flex justify-center items-center h-full text-gray-500">
-        Chargement...
-      </div>
+      <div className="text-danger text-center py-5">Erreur de chargement.</div>
     );
-  }
-  if (!adminData) {
-    return (
-      <div className="flex justify-center items-center h-full text-red-500">
-        Impossible de charger les données de l'admin.
-      </div>
-    );
-  }
 
   return (
     <MDBContainer className="py-0">
-      {/* ✅ TOAST SUCCÈS & ERREUR */}
       {showToast.visible && (
         <div
           className="position-fixed top-0 end-0 p-3"
@@ -68,49 +107,34 @@ function ProfilAdmin() {
             aria-live="assertive"
             aria-atomic="true"
           >
-            <div
-              className={`toast-header ${
-                showToast.type === "success" ? "bg-success" : "bg-danger"
-              } text-white`}
-            >
-              <i
-                className={`fas ${
-                  showToast.type === "success" ? "fa-check" : "fa-times"
-                } fa-lg me-2`}
-              ></i>
+            <div className="toast-header text-white">
               <strong className="me-auto">
                 {showToast.type === "success" ? "Succès" : "Erreur"}
               </strong>
-              <small>
-                {new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </small>
               <button
                 type="button"
                 className="btn-close btn-close-white"
-                onClick={() => setShowToast({ type: "", visible: false })}
+                onClick={() =>
+                  setShowToast({ type: "", visible: false, message: "" })
+                }
               ></button>
             </div>
-            <div className="toast-body">
-              {showToast.message || "Une action a été effectuée."}
-            </div>
+            <div className="toast-body">{showToast.message}</div>
           </div>
         </div>
       )}
+
       <h3 className="text-primary fw-bold mb-4">Mon Profil Administrateur</h3>
       <MDBRow>
-        {/* Affichage profil */}
         <MDBCol md="4">
           <MDBCard className="shadow border-0 bg-light">
             <MDBCardBody className="text-center">
               <div className="d-flex justify-content-center align-items-center mb-3">
                 <img
                   src={
-                    adminData.photoURL ||
+                    user?.photoURL ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      adminData.username || "Utilisateur"
+                      adminData.username || "Admin"
                     )}&background=3B71CA&color=fff&size=150`
                   }
                   alt="Avatar"
@@ -122,17 +146,13 @@ function ProfilAdmin() {
                   }}
                 />
               </div>
-              <h4 className="mb-1">
-                {adminData.firstName} {adminData.lastName}
+              <h4>
+                {user?.firstName} {user?.lastName}
               </h4>
-              <p className="text-muted">{adminData.email}</p>
+              <p className="text-muted">{user?.email}</p>
+              <p className="text-muted">{user?.position || "Super Admin"}</p>
               <p className="text-muted">
-                {" "}
-                {adminData.position || "Super Admin"}
-              </p>
-              <p className="text-muted">
-                {" "}
-                {adminData.location || "Localisation inconnue"}
+                {user?.location || "Localisation inconnue"}
               </p>
               <MDBBtn color="danger" size="sm">
                 Modifier le mot de passe
@@ -141,85 +161,43 @@ function ProfilAdmin() {
           </MDBCard>
         </MDBCol>
 
-        {/* Modification infos */}
         <MDBCol md="8">
           <MDBCard className="shadow border-0 bg-light">
             <MDBCardBody>
               <MDBCardTitle className="text-primary mb-4">
                 Modifier mes informations
               </MDBCardTitle>
-
-              <MDBInput
-                label="Nom d'utilisateur"
-                className="mb-3"
-                name="username"
-                value={adminData.username || ""}
-                onChange={(e) =>
-                  setAdminData({ ...adminData, username: e.target.value })
-                }
-              />
-              <MDBInput
-                label="Nom"
-                className="mb-3"
-                name="firstName"
-                value={adminData.firstName || ""}
-                onChange={(e) =>
-                  setAdminData({ ...adminData, firstName: e.target.value })
-                }
-              />
-              <MDBInput
-                label="Prénom"
-                className="mb-3"
-                name="lastName"
-                value={adminData.lastName || ""}
-                onChange={(e) =>
-                  setAdminData({ ...adminData, lastName: e.target.value })
-                }
-              />
-              <MDBInput
-                label="Poste"
-                className="mb-3"
-                name="position"
-                value={adminData.position || ""}
-                onChange={(e) =>
-                  setAdminData({ ...adminData, position: e.target.value })
-                }
-              />
-              <MDBInput
-                label="Localisation"
-                className="mb-3"
-                name="location"
-                value={adminData.location || ""}
-                onChange={(e) =>
-                  setAdminData({ ...adminData, location: e.target.value })
-                }
-              />
-              <MDBInput
-                label="Site Web"
-                className="mb-3"
-                name="website"
-                value={adminData.website || ""}
-                onChange={(e) =>
-                  setAdminData({ ...adminData, website: e.target.value })
-                }
-              />
-              <MDBInput
-                label="Email"
-                className="mb-3"
-                type="email"
-                name="email"
-                value={adminData.email || ""}
-                onChange={(e) =>
-                  setAdminData({ ...adminData, email: e.target.value })
-                }
-              />
-
+              {[
+                { name: "username", label: "Nom d'utilisateur" },
+                { name: "firstName", label: "Nom" },
+                { name: "lastName", label: "Prénom" },
+                { name: "position", label: "Poste" },
+                { name: "location", label: "Localisation" },
+                { name: "website", label: "Site Web" },
+                { name: "email", label: "Email", type: "email" },
+              ].map(({ name, label, type }) => (
+                <MDBInput
+                  key={name}
+                  label={label}
+                  className="mb-3"
+                  type={type || "text"}
+                  name={name}
+                  value={adminData[name] || ""}
+                  onChange={(e) =>
+                    setAdminData({ ...adminData, [name]: e.target.value })
+                  }
+                />
+              ))}
               <div className="mb-3">
                 <label className="form-label">Photo de profil</label>
-                <input type="file" className="form-control" accept="image/*" />
+                <input
+                  type="file"
+                  className="form-control"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
               </div>
-
-              <MDBBtn color="primary" className="mt-3">
+              <MDBBtn color="primary" className="mt-3" onClick={handleUpdate}>
                 Enregistrer les modifications
               </MDBBtn>
             </MDBCardBody>

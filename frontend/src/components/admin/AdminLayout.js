@@ -1,12 +1,15 @@
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { MDBIcon } from "mdb-react-ui-kit";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { fetchProfile } from "../../services/profile.api";
+import { UserContext } from "../../contexts/UserContext";
 
 function AdminLayout() {
   const navigate = useNavigate();
+  const { user, setUser } = useContext(UserContext);
+
   const [showToast, setShowToast] = useState({
     type: "",
     visible: false,
@@ -22,6 +25,7 @@ function AdminLayout() {
       try {
         const res = await fetchProfile(token);
         console.log("Profil admin:", res.data);
+        setUser(res.data.user);
         setAdminData(res.data.user);
       } catch (error) {
         console.error("Erreur lors du chargement du profil:", error);
@@ -138,18 +142,18 @@ function AdminLayout() {
         <div className="flex flex-col items-center py-6 border-b border-blue-700">
           <img
             src={
-              adminData.photoURL ||
+              user?.photoURL ||
               `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                adminData.username || "Utilisateur"
+                user?.username || "Utilisateur"
               )}&background=fff&color=3B71CA&size=150`
             }
             alt="User Avatar"
             className="w-20 h-20 rounded-full mb-2 border-4 border-white shadow"
           />
           <h2 className="text-lg font-semibold">
-            {adminData.firstName} {adminData.lastName}
+            {user?.firstName} {user?.lastName}
           </h2>
-          <p className="text-sm text-blue-200">{adminData.email}</p>
+          <p className="text-sm text-blue-200">{user?.email}</p>
         </div>
 
         {/* Navigation Links */}
@@ -215,16 +219,16 @@ function AdminLayout() {
             >
               <img
                 src={
-                  adminData.photoURL ||
+                  user?.photoURL ||
                   `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    adminData.username || "Utilisateur"
+                    user?.username || "Utilisateur"
                   )}&background=3B71CA&color=fff&size=150`
                 }
                 alt="Profil"
                 className="w-8 h-8 rounded-full border border-gray-300"
               />
               <span className="text-primary font-semibold">
-                {adminData.username || "Utilisateur"}
+                {user?.username || "Utilisateur"}
               </span>
             </Link>
 
