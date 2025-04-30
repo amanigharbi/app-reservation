@@ -24,7 +24,6 @@ function AdminLayout() {
     const loadProfilAdmin = async () => {
       try {
         const res = await fetchProfile(token);
-        console.log("Profil admin:", res.data);
         setUser(res.data.user);
         setAdminData(res.data.user);
       } catch (error) {

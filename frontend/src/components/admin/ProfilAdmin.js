@@ -30,8 +30,9 @@ function ProfilAdmin() {
     visible: false,
     message: "",
   });
-  const { user, setUser } = useContext(UserContext);
   const token = localStorage.getItem("token");
+  const { user, setUser } = useContext(UserContext);
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");

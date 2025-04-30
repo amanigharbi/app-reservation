@@ -623,6 +623,7 @@ router.get("/reservations-admin/:id", authenticate, async (req, res) => {
       .json({ message: "Erreur serveur lors de la récupération." });
   }
 });
+
 router.put("/reservations-admin/:id", authenticate, async (req, res) => {
   try {
     const reservationId = req.params.id;
@@ -672,4 +673,21 @@ router.delete("/reservations-admin/:id", authenticate, async (req, res) => {
     res.status(500).json({ message: "Erreur serveur lors de la suppression." });
   }
 });
+router.get("/profile-users", authenticate, async (req, res) => {
+  try {
+    const currentUserEmail = req.user.email; // Email depuis le token
+
+    const userSnapshot = await db.collection("users").get();
+
+    const users = userSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(user => user.email !== currentUserEmail); // exclure l'utilisateur connecté
+
+    res.json({ users }); // ✅ retourner un tableau d'utilisateurs
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur interne du serveur" });
+  }
+});
+
 module.exports = router;
