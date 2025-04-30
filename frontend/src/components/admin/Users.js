@@ -16,7 +16,11 @@ import {
   MDBModalContent,
   MDBModalTitle,
 } from "mdb-react-ui-kit";
-import { fetchProfileUsers, deleteUser } from "../../services/profile.api";
+import {
+  fetchProfileUsers,
+  deleteUser,
+  createUser,
+} from "../../services/profile.api";
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
@@ -28,9 +32,21 @@ function Users() {
     visible: false,
     message: "",
   });
-  const [showModal, setShowModal] = useState(false); // Gérer la visibilité de la modale
-  const [userToDelete, setUserToDelete] = useState(null); // Utilisateur à supprimer
+  const [showModal, setShowModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    username: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    position: "",
+    role: "user",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -57,16 +73,18 @@ function Users() {
 
   const handleDeleteUser = async (userId) => {
     try {
-      await deleteUser(token, userId); // Appel API pour supprimer l'utilisateur
+      await deleteUser(token, userId);
       setLoadingDelete(true);
+      setTimeout(() => {
+        setShowToast({
+          type: "success",
+          visible: true,
+          message: "Utilisateur supprimé avec succès.",
+        });
+      }, 2000); // Simulate a delay for the loading spinner
 
-      setShowToast({
-        type: "success",
-        visible: true,
-        message: "Utilisateur supprimé avec succès.",
-      });
-      setUserData(userData.filter((user) => user.id !== userId)); // Mise à jour de la liste des utilisateurs
-      setShowModal(false); // Fermer la modale
+      setUserData(userData.filter((user) => user.id !== userId));
+      setShowModal(false);
     } catch (error) {
       console.error("Erreur lors de la suppression de l'utilisateur:", error);
       setShowToast({
@@ -74,11 +92,53 @@ function Users() {
         visible: true,
         message: "Erreur lors de la suppression de l'utilisateur.",
       });
+    } finally {
+      setLoadingDelete(false);
+    }
+  };
+
+  const handleAddUser = async () => {
+    const { username, firstName, lastName, email, password } = newUser;
+
+    if (!username || !firstName || !lastName || !email || !password) {
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Veuillez remplir tous les champs obligatoires.",
+      });
+      return;
+    }
+
+    try {
+      const res = await createUser(token, newUser);
+      setUserData([...userData, res.user]);
+      setShowToast({
+        type: "success",
+        visible: true,
+        message: "Utilisateur ajouté avec succès.",
+      });
+      setShowAddModal(false);
+      setNewUser({
+        username: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        position: "",
+        role: "user",
+        password: "",
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'ajout:", error);
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Erreur lors de l'ajout de l'utilisateur.",
+      });
     }
   };
 
   const toggleModal = (user) => {
-    setUserToDelete(user); // Affecte l'utilisateur sélectionné pour suppression
+    setUserToDelete(user);
     setShowModal(!showModal);
   };
 
@@ -96,8 +156,6 @@ function Users() {
               showToast.type === "success" ? "bg-success" : "bg-danger"
             }`}
             role="alert"
-            aria-live="assertive"
-            aria-atomic="true"
           >
             <div className="toast-header text-white">
               <strong className="me-auto">
@@ -118,10 +176,16 @@ function Users() {
 
       <MDBCard className="shadow border-0 bg-light">
         <MDBCardBody>
-          <MDBCardTitle className="text-primary mb-4">
-            <MDBIcon icon="users-cog" className="me-2" />
-            Gestion des Profils utilisateurs
-          </MDBCardTitle>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <MDBCardTitle className="text-primary mb-0">
+              <MDBIcon icon="users-cog" className="me-2" />
+              Gestion des Profils utilisateurs
+            </MDBCardTitle>
+            <MDBBtn color="success" onClick={() => setShowAddModal(true)}>
+              <MDBIcon icon="plus" className="me-2" />
+              Ajouter un utilisateur
+            </MDBBtn>
+          </div>
 
           <MDBTable hover responsive>
             <MDBTableHead light>
@@ -145,15 +209,25 @@ function Users() {
                   </td>
                   <td>{user.email}</td>
                   <td>{user.position || "—"}</td>
-                  {user.role === "admin" ? (
-                    <td className="text-danger">Administrateur</td>
-                  ) : user.role === "user" ? (
-                    <td className="text-success">Utilisateur</td>
-                  ) : user.role === "superAdmin" ? (
-                    <td className="text-warning">Super Administrateur</td>
-                  ) : (
-                    <td className="text-secondary">Invité</td>
-                  )}
+                  <td
+                    className={
+                      user.role === "admin"
+                        ? "text-danger"
+                        : user.role === "user"
+                        ? "text-success"
+                        : user.role === "superAdmin"
+                        ? "text-warning"
+                        : "text-secondary"
+                    }
+                  >
+                    {user.role === "admin"
+                      ? "Administrateur"
+                      : user.role === "user"
+                      ? "Utilisateur"
+                      : user.role === "superAdmin"
+                      ? "Super Administrateur"
+                      : "Invité"}
+                  </td>
                   <td>
                     <div className="d-flex gap-2">
                       <Link to={`/admin/user-details/${user.id}`}>
@@ -164,7 +238,10 @@ function Users() {
                       <MDBBtn
                         color="danger"
                         size="sm"
-                        onClick={() => toggleModal(user)} // Ouvre la modale pour confirmer la suppression
+                        onClick={() => {
+                          setUserToDelete(user);
+                          toggleModal(user);
+                        }}
                       >
                         <MDBIcon icon="trash" />
                       </MDBBtn>
@@ -177,7 +254,7 @@ function Users() {
         </MDBCardBody>
       </MDBCard>
 
-      {/* Modale de confirmation de suppression */}
+      {/* Modal de suppression */}
       <MDBModal open={showModal} onClose={setShowModal}>
         <MDBModalDialog>
           <MDBModalContent>
@@ -194,17 +271,12 @@ function Users() {
               est irréversible.
             </MDBModalBody>
             <MDBModalFooter>
-              <MDBBtn
-                color="secondary"
-                style={{ textTransform: "none" }}
-                onClick={() => setShowModal(false)}
-              >
+              <MDBBtn color="secondary" onClick={() => setShowModal(false)}>
                 Annuler
               </MDBBtn>
               <MDBBtn
                 color="danger"
-                onClick={() => handleDeleteUser(userToDelete.id)} // Appel à la suppression de l'utilisateur
-                style={{ textTransform: "none" }}
+                onClick={() => handleDeleteUser(userToDelete.id)}
                 disabled={loadingDelete}
               >
                 {loadingDelete ? (
@@ -218,6 +290,119 @@ function Users() {
                 ) : (
                   "Supprimer"
                 )}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+
+      {/* Modal d'ajout utilisateur */}
+      <MDBModal open={showAddModal} onClose={() => setShowAddModal(false)}>
+        <MDBModalDialog>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Ajouter un utilisateur</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={() => setShowAddModal(false)}
+              />
+            </MDBModalHeader>
+            <MDBModalBody>
+              <form>
+                <div className="mb-3">
+                  <label>Nom d'utilisateur</label>
+                  <input
+                    className="form-control"
+                    value={newUser.username}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, username: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="mb-3">
+                  <label>Prénom</label>
+                  <input
+                    className="form-control"
+                    value={newUser.firstName}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, firstName: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="mb-3">
+                  <label>Nom</label>
+                  <input
+                    className="form-control"
+                    value={newUser.lastName}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, lastName: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="mb-3">
+                  <label>Email</label>
+                  <input
+                    className="form-control"
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, email: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="mb-3">
+                  <label>Mot de passe</label>
+                  <div className="input-group">
+                    <input
+                      className="form-control"
+                      type={showPassword ? "text" : "password"}
+                      value={newUser.password}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, password: e.target.value })
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                    >
+                      <MDBIcon icon={showPassword ? "eye-slash" : "eye"} />
+                    </button>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label>Poste</label>
+                  <input
+                    className="form-control"
+                    value={newUser.position}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, position: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="mb-3">
+                  <label>Rôle</label>
+                  <select
+                    className="form-select"
+                    value={newUser.role}
+                    onChange={(e) =>
+                      setNewUser({ ...newUser, role: e.target.value })
+                    }
+                  >
+                    <option value="user">Utilisateur</option>
+                    <option value="admin">Administrateur</option>
+                  </select>
+                </div>
+              </form>
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn color="secondary" onClick={() => setShowAddModal(false)}>
+                Annuler
+              </MDBBtn>
+              <MDBBtn color="success" onClick={handleAddUser}>
+                Ajouter
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>

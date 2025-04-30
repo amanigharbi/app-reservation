@@ -5,6 +5,8 @@ const router = express.Router();
 const { authenticate } = require("../middlewares/auth.middleware");
 const { db } = require("../config/firebase.config");
 const app = express();
+const bcrypt = require("bcrypt");
+const admin = require("firebase-admin"); // pour Firebase Auth
 
 // Autoriser les requêtes provenant de localhost:3000
 app.use(
@@ -760,6 +762,63 @@ router.delete("/profile/:id", authenticate, async (req, res) => {
   } catch (error) {
     console.error("Erreur lors de la suppression de l'utilisateur:", error);
     res.status(500).json({ message: "Erreur serveur lors de la suppression." });
+  }
+});
+
+// Ajouter cette route dans protected.routes.js
+router.post("/profile", authenticate, async (req, res) => {
+  try {
+    const { username, firstName, lastName, email, position, role, password } =
+      req.body;
+
+    if (!username || !firstName || !lastName || !email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Champs obligatoires manquants." });
+    }
+
+    // Vérifie si un utilisateur existe déjà avec cet email dans Firebase Auth
+    let existingUser;
+    try {
+      existingUser = await admin.auth().getUserByEmail(email);
+    } catch (err) {
+      // Si non trouvé, c'est ok, sinon une autre erreur => throw
+      if (err.code !== "auth/user-not-found") throw err;
+    }
+
+    if (existingUser) {
+      return res.status(409).json({ message: "Utilisateur déjà existant." });
+    }
+
+    // Hachage du mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Créer l'utilisateur dans Firebase Auth
+    const firebaseUser = await admin.auth().createUser({
+      email,
+      password,
+      displayName: `${firstName} ${lastName}`,
+    });
+
+    // Ajouter les données supplémentaires dans Firestore
+    const newUser = {
+      uid: firebaseUser.uid,
+      username,
+      firstName,
+      lastName,
+      email,
+      position,
+      role,
+      password: hashedPassword, // stocké de manière sécurisée
+      createdAt: new Date(),
+    };
+
+    await db.collection("users").doc(firebaseUser.uid).set(newUser);
+
+    res.status(201).json({ user: newUser });
+  } catch (error) {
+    console.error("Erreur création utilisateur:", error);
+    res.status(500).json({ message: "Erreur serveur lors de la création." });
   }
 });
 
