@@ -436,13 +436,7 @@ function Profil() {
                   }
                   className="mb-3"
                 />
-                {/* <MDBInput
-                  label="Lien de l'image (CDN)"
-                  name="photoURL"
-                  value={editData.photoURL || ""}
-                  onChange={(e) => setEditData({ ...editData, photoURL: e.target.value })}
-                  className="mb-3"
-                /> */}
+          
                 <div className="mb-3">
                   <label className="form-label">Choisir une image</label>
                   <input

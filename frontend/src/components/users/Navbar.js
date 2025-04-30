@@ -48,6 +48,7 @@ function Navbar() {
 
   const handleLogout = async () => {
     try {
+      localStorage.clear();
       // Affichage du toast de succès pour la déconnexion
       setShowToast({
         type: "success",

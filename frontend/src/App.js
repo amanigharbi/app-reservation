@@ -10,6 +10,8 @@ import MesReservations from "./components/users/MesReservations";
 import Reserver from "./components/users/Reserver";
 import UpdateReservation from "./components/users/UpdateReservation";
 import Profil from "./components/users/Profil";
+import ProfilAdmin from "./components/admin/ProfilAdmin";
+
 import "mdb-react-ui-kit/dist/css/mdb.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 //partie admin
@@ -39,6 +41,7 @@ const App = () => {
           <Route index element={<DashboardAdmin />} />
           <Route path="reservations" element={<Reservations />} />
           <Route path="reservation/:id" element={<ReservationDetail />} />
+          <Route path="profilAdmin" element={<ProfilAdmin />} />
 
           <Route path="espaces" element={<Espaces />} />
           <Route path="users" element={<Users />} />
