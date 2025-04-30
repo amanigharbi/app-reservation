@@ -19,8 +19,8 @@ import {
   MDBModalFooter,
   MDBBadge,
 } from "mdb-react-ui-kit";
-// eslint-disable-next-line
-import html2pdf from "html2pdf.js";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import "../styles/Pages.css";
 import UpdateReservation from "./UpdateReservation";
 import Navbar from "./Navbar";
@@ -187,29 +187,55 @@ function MesReservations() {
   };
 
   const handleExportPDF = () => {
-    const element = document.getElementById("reservations-table");
+    const doc = new jsPDF();
 
-    // Option d'exportation avec le mode de paiement et le montant payé
-    const opt = {
-      margin: 0.3,
-      filename: "mes_reservations.pdf",
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: {
-        unit: "in",
-        format: "letter",
-        orientation: "portrait",
-      },
-    };
+    doc.setFontSize(14);
+    doc.text("Mes Réservations", 14, 15);
 
-    html2pdf().set(opt).from(element).save();
+    const headers = [
+      [
+        "Code",
+        "Date",
+        "Durée",
+        "Service",
+        "Montant",
+        "Payé",
+        "Méthode",
+        "Participants",
+        "Espace",
+        "Status",
+      ],
+    ];
 
-    // Afficher un message de réussite après l'exportation
+    const rows = reservations.map((res) => [
+      res.code_reservation,
+      new Date(res.date).toLocaleDateString("fr-FR"),
+      formatDuree(res.duree),
+      res.service,
+      `${res.spaceMontant} €`,
+      `${res.montant} €`,
+      getMethodePaiement(res.paiements, res),
+      res.participants,
+      `${res.spaceName} (${res.spaceLocation})`,
+      res.status,
+    ]);
+
+    autoTable(doc, {
+      startY: 25,
+      head: headers,
+      body: rows,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [52, 152, 219] },
+    });
+
+    doc.save("mes_reservations.pdf");
+
     setShowToast({
       type: "success",
       visible: true,
       message: "Export PDF effectué !",
     });
+
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
 
