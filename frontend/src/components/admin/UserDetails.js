@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchProfileUser } from "../../services/profile.api";
+import {
+  fetchProfileUser,
+  updateRole,
+  deleteUser,
+} from "../../services/profile.api";
 import {
   MDBContainer,
   MDBCard,
@@ -10,6 +14,13 @@ import {
   MDBIcon,
   MDBRow,
   MDBCol,
+  MDBModal,
+  MDBModalBody,
+  MDBModalFooter,
+  MDBModalHeader,
+  MDBModalDialog,
+  MDBModalContent,
+  MDBModalTitle,
 } from "mdb-react-ui-kit";
 
 const defaultImage = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -19,7 +30,14 @@ function UserDetails() {
   const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showToast, setShowToast] = useState({
+    visible: false,
+    message: "",
+    type: "",
+  });
+  const [showModal, setShowModal] = useState(false); // Étape 1 : état pour gérer la modale
   const token = localStorage.getItem("token");
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
   useEffect(() => {
     const loadUserDetails = async () => {
@@ -38,6 +56,33 @@ function UserDetails() {
 
     if (userId && token) loadUserDetails();
   }, [userId, token]);
+
+  const handleDelete = async () => {
+    try {
+      setLoadingDelete(true);
+
+      await deleteUser(token, userId); // Appel de la méthode deleteUser
+      setShowToast({
+        type: "success",
+        visible: true,
+        message: "Utilisateur supprimé avec succès.",
+      });
+
+      setTimeout(() => {
+        navigate("/admin/users"); // Rediriger après la suppression
+      }, 2000);
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'utilisateur:", error);
+      setShowToast({
+        type: "error",
+        visible: true,
+        message: "Erreur lors de la suppression de l'utilisateur.",
+      });
+    }
+    setShowModal(false); // Fermer la modale après la suppression
+  };
+
+  const toggleModal = () => setShowModal(!showModal); // Fonction pour ouvrir/fermer la modale
 
   if (loading) return <div className="text-center py-5">Chargement...</div>;
 
@@ -66,7 +111,6 @@ function UserDetails() {
 
           {/* Profil utilisateur */}
           <div className="d-flex flex-column flex-md-row align-items-start gap-4">
-            {/* Image avec fallback */}
             <img
               src={userDetails.photoURL || defaultImage}
               alt="Photo de profil"
@@ -81,8 +125,6 @@ function UserDetails() {
                 border: "2px solid #ddd",
               }}
             />
-
-            {/* Infos utilisateur */}
             <div className="w-100">
               <MDBRow>
                 <MDBCol md="6" className="mb-3">
@@ -186,7 +228,11 @@ function UserDetails() {
 
           {/* Actions */}
           <div className="mt-5 d-flex gap-3">
-            <MDBBtn color="danger" style={{ textTransform: "none" }}>
+            <MDBBtn
+              color="danger"
+              style={{ textTransform: "none" }}
+              onClick={toggleModal}
+            >
               Supprimer l'utilisateur
             </MDBBtn>
             <MDBBtn color="warning" style={{ textTransform: "none" }}>
@@ -195,6 +241,99 @@ function UserDetails() {
           </div>
         </MDBCardBody>
       </MDBCard>
+
+      {/* ✅ TOAST SUCCÈS & ERREUR */}
+      {showToast.visible && (
+        <div
+          className="position-fixed top-0 end-0 p-3"
+          style={{ zIndex: 9999 }}
+        >
+          <div
+            className={`toast show fade text-white ${
+              showToast.type === "success" ? "bg-success" : "bg-danger"
+            }`}
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+          >
+            <div
+              className={`toast-header ${
+                showToast.type === "success" ? "bg-success" : "bg-danger"
+              } text-white`}
+            >
+              <i
+                className={`fas ${
+                  showToast.type === "success" ? "fa-check" : "fa-times"
+                } fa-lg me-2`}
+              ></i>
+              <strong className="me-auto">
+                {showToast.type === "success" ? "Succès" : "Erreur"}
+              </strong>
+              <small>
+                {new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </small>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                onClick={() => setShowToast({ type: "", visible: false })}
+              ></button>
+            </div>
+            <div className="toast-body">
+              {showToast.message || "Une action a été effectuée."}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmation de suppression */}
+      <MDBModal open={showModal} onClose={setShowModal}>
+        <MDBModalDialog>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Confirmer la suppression</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={() => setShowModal(false)}
+              />
+            </MDBModalHeader>
+            <MDBModalBody>
+              Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action
+              est irréversible.
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn
+                color="secondary"
+                style={{ textTransform: "none" }}
+                onClick={() => setShowModal(false)}
+              >
+                Annuler
+              </MDBBtn>
+              <MDBBtn
+                color="danger"
+                onClick={() => handleDelete()}
+                style={{ textTransform: "none" }}
+                disabled={loadingDelete}
+              >
+                {loadingDelete ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    />
+                    Suppression...
+                  </>
+                ) : (
+                  "Supprimer"
+                )}
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
     </MDBContainer>
   );
 }

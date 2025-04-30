@@ -711,4 +711,56 @@ router.get("/profile/:id", authenticate, async (req, res) => {
   }
 });
 
+router.put("/profile/:id", authenticate, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { role } = req.body;
+    console.log("role", role);
+
+    if (!role) {
+      return res.status(400).json({ message: "Informations incomplètes." });
+    }
+
+    const UserRef = db.collection("users").doc(userId);
+    const ruserSnapshot = await UserRef.get();
+
+    if (!ruserSnapshot.exists) {
+      return res.status(404).json({ message: "Utilisateur introuvable." });
+    }
+
+    // Correction ici : utiliser ruserSnapshot
+    const userData = ruserSnapshot.data();
+
+    // Mettre à jour le rôle de l'utilisateur
+    await UserRef.update({
+      role,
+    });
+
+    res.json({ message: "Rôle de l'utilisateur mis à jour avec succès." });
+  } catch (error) {
+    console.error("Erreur maj rôle utilisateur:", error);
+    res.status(500).json({ message: "Erreur serveur mise à jour." });
+  }
+});
+// Route pour supprimer un utilisateur
+router.delete("/profile/:id", authenticate, async (req, res) => {
+  try {
+    const userId = req.params.id; // On récupère l'ID de l'utilisateur dans l'URL
+    console.log("Suppression de l'utilisateur avec ID: ", userId); // Debug pour voir l'ID
+    const UserRef = db.collection("users").doc(userId);
+    const ruserSnapshot = await UserRef.get();
+
+    if (!ruserSnapshot.exists) {
+      return res.status(404).json({ message: "Utilisateur introuvable." });
+    }
+
+    // Supprimer l'utilisateur
+    await UserRef.delete();
+    res.json({ message: "Utilisateur supprimé avec succès." });
+  } catch (error) {
+    console.error("Erreur lors de la suppression de l'utilisateur:", error);
+    res.status(500).json({ message: "Erreur serveur lors de la suppression." });
+  }
+});
+
 module.exports = router;

@@ -131,7 +131,11 @@ const ReservationDetail = () => {
       await updateReservation(token, id, {
         status: newStatus,
       });
-
+      setShowToast({
+        type: "success",
+        visible: true,
+        message: "Statut mis à jour avec succès",
+      });
       setReservation((prev) => ({
         ...prev,
         status: newStatus,
@@ -224,14 +228,12 @@ const ReservationDetail = () => {
           </div>
         </div>
       )}
-
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">
           Réservation {reservation.code_reservation}
         </h2>
         {renderStatusBadge(status)}
       </div>
-
       {/* Infos principales */}
       <div className="grid md:grid-cols-2 gap-4 bg-white shadow rounded-xl p-4">
         <p>
@@ -274,7 +276,6 @@ const ReservationDetail = () => {
           {reservation.commentaires || "Aucun"}
         </p>
       </div>
-
       {/* Actions */}
       <div className="flex gap-3">
         {status === "En attente" && (
@@ -320,7 +321,6 @@ const ReservationDetail = () => {
           <Trash2 size={18} /> Supprimer
         </button>
       </div>
-
       {/* Modifications */}
       <div>
         <h3 className="text-xl font-semibold mb-2">Modifications</h3>
@@ -351,7 +351,6 @@ const ReservationDetail = () => {
           <p className="text-gray-500">Aucune modification enregistrée.</p>
         )}
       </div>
-
       {/* Paiements */}
       <div>
         <h3 className="text-xl font-semibold mb-2">Paiements</h3>
@@ -379,6 +378,7 @@ const ReservationDetail = () => {
           <p className="text-gray-500">Aucun paiement enregistré.</p>
         )}
       </div>
+      MDBModalDialog
       {/* Modal */}
       <MDBModal open={showModal} onClose={setShowModal}>
         <MDBModalDialog>

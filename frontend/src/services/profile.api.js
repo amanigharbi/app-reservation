@@ -37,3 +37,17 @@ export const fetchProfileUser = async (token, userId) => {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
+export const updateRole = async (token, id, data) => {
+  return await axios.put(`${API_URL}/api/protected/profile/${id}`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+
+
+export const deleteUser = async (token, userId) => {
+  return await axios.delete(`${API_URL}/api/protected/profile/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
