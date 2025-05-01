@@ -464,47 +464,6 @@ router.post("/reservations", authenticate, async (req, res) => {
   }
 });
 
-// Backend (exemple en Express.js)
-router.get("/spaces", async (req, res) => {
-  // Récupération des espaces disponibles dans la base de données
-  try {
-    const spacesSnapshot = await db.collection("spaces").get();
-    const spaces = spacesSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    res.json({ spaces });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des espaces :", error);
-    res
-      .status(500)
-      .json({ message: "Erreur serveur lors du chargement des espaces." });
-  }
-});
-// Récupérer les détails d'un espace spécifique
-router.get("/spaces/:id", authenticate, async (req, res) => {
-  try {
-    const spaceId = req.params.id;
-    const spaceRef = db.collection("spaces").where("id", "==", spaceId);
-    const spaceSnap = await spaceRef.get();
-    if (!spaceSnap.exists) {
-      return res.status(404).json({ message: "Espace introuvable." });
-    }
-    const spaceData = spaceSnap.data();
-
-    res.json({
-      ...spaceData,
-      id: spaceId,
-    });
-  } catch (error) {
-    console.error("Erreur récupération d'espace:", error);
-    res
-      .status(500)
-      .json({ message: "Erreur serveur lors de la récupération." });
-  }
-});
-
 // admin
 
 router.get("/dashboard-admin", authenticate, async (req, res) => {
@@ -823,4 +782,140 @@ router.post("/profile", authenticate, async (req, res) => {
   }
 });
 
+// Backend (exemple en Express.js)
+router.get("/spaces", async (req, res) => {
+  // Récupération des espaces disponibles dans la base de données
+  try {
+    const spacesSnapshot = await db.collection("spaces").get();
+    const spaces = spacesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json({ spaces });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des espaces :", error);
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors du chargement des espaces." });
+  }
+});
+// Récupérer les détails d'un espace spécifique
+router.get("/spaces/:id", authenticate, async (req, res) => {
+  try {
+    const spaceId = req.params.id;
+    const spaceRef = db.collection("spaces").where("id", "==", spaceId);
+    const spaceSnap = await spaceRef.get();
+    if (!spaceSnap.exists) {
+      return res.status(404).json({ message: "Espace introuvable." });
+    }
+    const spaceData = spaceSnap.data();
+
+    res.json({
+      ...spaceData,
+      id: spaceId,
+    });
+  } catch (error) {
+    console.error("Erreur récupération d'espace:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors de la récupération." });
+  }
+});
+
+router.post("/space", authenticate, async (req, res) => {
+  try {
+    const {
+      available,
+      availableFrom,
+      availableTo,
+      capacity,
+      location,
+      montant,
+      name,
+    } = req.body;
+
+    if (
+      !available ||
+      !availableFrom ||
+      !availableTo ||
+      !capacity ||
+      !location ||
+      !montant ||
+      !name
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Champs obligatoires manquants." });
+    }
+
+    // Ajouter les données supplémentaires dans Firestore
+    const newSpace = {
+      available,
+      availableFrom,
+      availableTo,
+      capacity,
+      location,
+      montant,
+      name,
+    };
+
+    await db.collection("spaces").doc().set(newSpace);
+
+    res.status(201).json({ newSpace });
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de l'espace:", error);
+    res.status(500).json({ message: "Erreur serveur lors de la création." });
+  }
+});
+
+router.put("/space/:id", authenticate, async (req, res) => {
+  try {
+    const spaceId = req.params.id;
+
+    const updateData = req.body;
+
+    if (!updateData) {
+      return res.status(400).json({ message: "Informations incomplètes." });
+    }
+
+    const spaceRef = db.collection("spaces").doc(spaceId);
+    const spaceSnap = await spaceRef.get();
+
+    if (!spaceSnap.exists) {
+      return res.status(404).json({ message: "Espace introuvable." });
+    }
+
+    const spaceData = spaceSnap.data();
+
+    await spaceRef.update({
+      updateData,
+    });
+
+    res.json({ message: "Espace mis à jour avec succès." });
+  } catch (error) {
+    console.error("Erreur maj de l'Espace:", error);
+    res.status(500).json({ message: "Erreur serveur mise à jour." });
+  }
+});
+router.delete("/space/:id", authenticate, async (req, res) => {
+  try {
+    const spaceId = req.params.id;
+
+    const spaceRef = db.collection("spaces").doc(spaceId);
+    const spaceSnap = await spaceRef.get();
+
+    if (!spaceSnap.exists) {
+      return res.status(404).json({ message: "Espace introuvable." });
+    }
+
+    const spaceData = spaceSnap.data();
+
+    await spaceRef.delete();
+    res.json({ message: "Espace supprimé avec succès." });
+  } catch (error) {
+    console.error("Erreur lors de la suppression de l'espace :", error);
+    res.status(500).json({ message: "Erreur serveur lors de la suppression." });
+  }
+});
 module.exports = router;

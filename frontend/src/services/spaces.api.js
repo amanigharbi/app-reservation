@@ -7,14 +7,23 @@ export const fetchSpaces = async () => {
   return await axios.get(`${API_URL}/api/protected/spaces`);
 };
 
+export const fetchSpacesById = async (token, id) => {
+  const response = await axios.get(`${API_URL}/api/protected/spaces/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
 export const createSpace = async (spaceData) => {
-  return await axios.post(`${API_URL}/api/protected/spaces`, spaceData);
+  return await axios.post(`${API_URL}/api/protected/space`, spaceData);
 };
 
 export const updateSpace = async (id, spaceData) => {
-  return await axios.put(`${API_URL}/api/protected/spaces/${id}`, spaceData);
+  return await axios.put(`${API_URL}/api/protected/space/${id}`, spaceData);
 };
 
 export const deleteSpace = async (id) => {
-  return await axios.delete(`${API_URL}/api/protected/spaces/${id}`);
+  return await axios.delete(`${API_URL}/api/protected/space/${id}`);
 };
