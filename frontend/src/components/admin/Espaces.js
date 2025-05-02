@@ -274,11 +274,11 @@ function Espaces() {
                   </td>
                   <td>
                     <div className="d-flex gap-2">
-                      {/* <Link to={`/admin/user-details/${user.id}`}> */}
-                      <MDBBtn color="primary" size="sm">
-                        <MDBIcon icon="eye" />
-                      </MDBBtn>
-                      {/* </Link> */}
+                      <Link to={`/admin/espace-details/${space.id}`}>
+                        <MDBBtn color="primary" size="sm">
+                          <MDBIcon icon="eye" />
+                        </MDBBtn>
+                      </Link>
                       <MDBBtn
                         color="warning"
                         size="sm"

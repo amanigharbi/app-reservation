@@ -13,11 +13,14 @@ export const fetchSpaces = async (token) => {
 };
 
 export const fetchSpacesById = async (token, id) => {
+  console.log("idd",id)
   const response = await axios.get(`${API_URL}/api/protected/spaces/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
+  console.log("response ",response.data)
+
   return response.data;
 };
 export const createSpace = async (token, newSpace) => {

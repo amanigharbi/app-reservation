@@ -21,6 +21,7 @@ import DashboardAdmin from "./components/admin/Dashboard";
 import Reservations from "./components/admin/Reservations";
 import ReservationDetail from "./components/admin/ReservationDetails";
 import Espaces from "./components/admin/Espaces";
+import EspaceDetails from "./components/admin/EspaceDetails";
 import Users from "./components/admin/Users";
 import UserDetails from "./components/admin/UserDetails";
 
@@ -46,6 +47,8 @@ const App = () => {
           <Route path="profilAdmin" element={<ProfilAdmin />} />
 
           <Route path="espaces" element={<Espaces />} />
+          <Route path="espace-details/:spaceId" element={<EspaceDetails />} />
+
           <Route path="users" element={<Users />} />
           <Route path="user-details/:userId" element={<UserDetails />} />
         </Route>

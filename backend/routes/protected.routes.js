@@ -804,24 +804,25 @@ router.get("/spaces", async (req, res) => {
 router.get("/spaces/:id", authenticate, async (req, res) => {
   try {
     const spaceId = req.params.id;
-    const spaceRef = db.collection("spaces").where("id", "==", spaceId);
-    const spaceSnap = await spaceRef.get();
-    if (!spaceSnap.exists) {
+    const spaceRef = db.collection("spaces").doc(spaceId);
+    const spaceDoc = await spaceRef.get();
+
+    if (!spaceDoc.exists) {
       return res.status(404).json({ message: "Espace introuvable." });
     }
-    const spaceData = spaceSnap.data();
+
+    const spaceData = spaceDoc.data();
 
     res.json({
       ...spaceData,
-      id: spaceId,
+      id: spaceDoc.id,
     });
   } catch (error) {
     console.error("Erreur récupération d'espace:", error);
-    res
-      .status(500)
-      .json({ message: "Erreur serveur lors de la récupération." });
+    res.status(500).json({ message: "Erreur serveur lors de la récupération." });
   }
 });
+
 
 router.post("/space", authenticate, async (req, res) => {
   try {
