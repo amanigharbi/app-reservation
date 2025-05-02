@@ -27,7 +27,7 @@ function SpaceTable({ spaces, onDelete }) {
                   {space.availableFrom} - {space.availableTo}
                 </td>
                 <td className="p-2">
-                  {space.available  === "true" ? (
+                  {space.available ? (
                     <MDBBadge color="success" className="ms-2">
                       Disponible
                     </MDBBadge>

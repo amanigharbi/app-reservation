@@ -3,8 +3,13 @@ import axios from "axios";
 const API_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5000/api/protected";
 
-export const fetchSpaces = async () => {
-  return await axios.get(`${API_URL}/api/protected/spaces`);
+export const fetchSpaces = async (token) => {
+  const response = await axios.get(`${API_URL}/api/protected/spaces`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
 };
 
 export const fetchSpacesById = async (token, id) => {
@@ -15,9 +20,23 @@ export const fetchSpacesById = async (token, id) => {
   });
   return response.data;
 };
-
-export const createSpace = async (spaceData) => {
-  return await axios.post(`${API_URL}/api/protected/space`, spaceData);
+export const createSpace = async (token, newSpace) => {
+  try {
+    console.log("Données envoyées : ", newSpace);
+    const response = await axios.post(
+      `${API_URL}/api/protected/space`,
+      newSpace,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la requête API:", error.response.data);
+    throw error;
+  }
 };
 
 export const updateSpace = async (id, spaceData) => {

@@ -6,7 +6,7 @@ import {
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
-import { MDBBadge } from "mdb-react-ui-kit";
+import { MDBBadge, MDBIcon, MDBCardTitle } from "mdb-react-ui-kit";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse"; // Import papaparse for CSV export
@@ -304,7 +304,7 @@ function Reservations() {
   const filteredSortedList = getFilteredSortedList(activeList);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-2 bg-gray-50 min-h-screen">
       {/* ✅ TOAST SUCCÈS & ERREUR */}
       {showToast.visible && (
         <div
@@ -351,9 +351,10 @@ function Reservations() {
         </div>
       )}
 
-      <h1 className="text-2xl font-bold mb-6 text-center text-primary">
-        Réservations
-      </h1>
+      <MDBCardTitle className="text-primary mb-4">
+        <MDBIcon icon="calendar" className="me-2" />
+        Gestion des réservations
+      </MDBCardTitle>
 
       {/* Onglets */}
       <div className="flex border-b mb-4">

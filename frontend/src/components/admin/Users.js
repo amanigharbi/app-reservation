@@ -208,10 +208,7 @@ function Users() {
               Gestion des Profils utilisateurs
             </MDBCardTitle>
 
-            <MDBBtn color="success" onClick={() => setShowAddModal(true)}>
-              <MDBIcon icon="plus" className="me-2" />
-              Ajouter un utilisateur
-            </MDBBtn>
+           
           </div>
           {/* Recherche */}
 
