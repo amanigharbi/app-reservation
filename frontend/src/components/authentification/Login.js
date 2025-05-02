@@ -94,7 +94,6 @@ function Login() {
         }
       );
 
-      console.log("Données utilisateur récupérées:", response.data);
       setUser(response.data.user);
 
       if (response.data.user?.role === "user") {
@@ -102,7 +101,6 @@ function Login() {
         navigate("/dashboard");
       } else if (response.data.user?.role === "admin") {
         setSuccessMessage("Connexion réussie.");
-        console.log("Admin connecté:", user.email);
 
         localStorage.setItem("token", token);
 
@@ -209,7 +207,6 @@ function Login() {
             <MDBInput
               wrapperClass="mb-4"
               label="Mot de passe"
-              id="formControlLg"
               type={passwordVisible ? "text" : "password"}
               size="lg"
               value={password}

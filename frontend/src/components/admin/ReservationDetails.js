@@ -51,7 +51,6 @@ const ReservationDetail = () => {
 
   // Supprimer une réservation
   const handleConfirmDelete = async () => {
-    console.log("handleConfirmDelete", id);
     setLoadingDelete(true);
     try {
       const token = localStorage.getItem("token");
@@ -111,7 +110,6 @@ const ReservationDetail = () => {
 
   const handleAction = async (action) => {
     const token = localStorage.getItem("token");
-    console.log("handleAction", action);
     try {
       let newStatus = null;
       if (action === "confirmer") {

@@ -275,7 +275,6 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
         console.error("Pas d'ID de réservation, impossible d'envoyer le PUT !");
         return;
       }
-      console.log("Reservation envoyée au PUT:", reservation);
 
       await axios.put(
         process.env.REACT_APP_API_URL +

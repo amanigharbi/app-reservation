@@ -42,7 +42,6 @@ function Profil() {
           },
         }
       );
-      console.log("Données utilisateur récupérées:", response.data);
       setUser(response.data.user);
       setEditData(response.data.user);
     } catch (error) {

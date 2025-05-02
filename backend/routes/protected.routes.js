@@ -676,7 +676,6 @@ router.put("/profile/:id", authenticate, async (req, res) => {
   try {
     const userId = req.params.id;
     const { role } = req.body;
-    console.log("role", role);
 
     if (!role) {
       return res.status(400).json({ message: "Informations incomplètes." });
@@ -707,7 +706,6 @@ router.put("/profile/:id", authenticate, async (req, res) => {
 router.delete("/profile/:id", authenticate, async (req, res) => {
   try {
     const userId = req.params.id; // On récupère l'ID de l'utilisateur dans l'URL
-    console.log("Suppression de l'utilisateur avec ID: ", userId); // Debug pour voir l'ID
     const UserRef = db.collection("users").doc(userId);
     const ruserSnapshot = await UserRef.get();
 

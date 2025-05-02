@@ -280,7 +280,6 @@ function ReservationForm({ space }) {
           createdAt: new Date().toISOString(),
         };
 
-        console.log("Données de réservation:", reservationData);
         const response = await axios.post(
           process.env.REACT_APP_API_URL + "/api/protected/reservations",
           reservationData,

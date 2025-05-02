@@ -116,7 +116,6 @@ function Espaces() {
 
     try {
       const res = await createSpace(token, newSpace);
-      console.log("Données envoyées au backend : ", newSpace);
 
       setSpaces([...spaces, res.newSpace]);
       showToastWithTimeout({
