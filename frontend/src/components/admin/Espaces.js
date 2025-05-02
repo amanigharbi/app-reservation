@@ -16,6 +16,7 @@ import {
   fetchSpaces,
   createSpace,
   updateSpace,
+  deleteSpace,
 } from "../../services/spaces.api";
 import { Link } from "react-router-dom";
 import { Modal } from "react-bootstrap";
@@ -42,6 +43,11 @@ function Espaces() {
   const [inputErrors, setInputErrors] = useState({});
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSpace, setEditingSpace] = useState(null);
+
+  const [showModal, setShowModal] = useState(false);
+  const [spaceToDelete, setSpaceToDelete] = useState(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
   const showToastWithTimeout = ({ type, message }) => {
     setShowToast({ type, visible: true, message });
     setTimeout(() => {
@@ -62,7 +68,7 @@ function Espaces() {
     };
 
     if (token) getSpaces();
-  }, [token]);
+  }, [token, spaces]);
 
   const handleAddSpace = async () => {
     let errors = {};
@@ -157,6 +163,31 @@ function Espaces() {
         type: "error",
         message: "Échec de la mise à jour.",
       });
+    }
+  };
+  const toggleModal = (space) => {
+    setSpaceToDelete(space);
+    setShowModal(!showModal);
+  };
+  const handleDeleteSpace = async (spaceId) => {
+    try {
+      await deleteSpace(token, spaceId);
+      setLoadingDelete(true);
+      showToastWithTimeout({
+        type: "success",
+        message: "Espace supprimé avec succès.",
+      });
+
+      setSpaces(spaces);
+      setShowModal(false);
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'espace:", error);
+      showToastWithTimeout({
+        type: "error",
+        message: "Erreur lors de la suppression de l'espace.",
+      });
+    } finally {
+      setLoadingDelete(false);
     }
   };
   if (loading) {
@@ -258,10 +289,10 @@ function Espaces() {
                       <MDBBtn
                         color="danger"
                         size="sm"
-                        // onClick={() => {
-                        //   setUserToDelete(user);
-                        //   toggleModal(user);
-                        // }}
+                        onClick={() => {
+                          setSpaceToDelete(space);
+                          toggleModal(space);
+                        }}
                       >
                         <MDBIcon icon="trash" />
                       </MDBBtn>
@@ -504,6 +535,47 @@ function Espaces() {
                 style={{ textTransform: "none" }}
               >
                 Ajouter
+              </MDBBtn>
+            </MDBModalFooter>
+          </MDBModalContent>
+        </MDBModalDialog>
+      </MDBModal>
+      {/* Modal de suppression */}
+      <MDBModal open={showModal} onClose={setShowModal}>
+        <MDBModalDialog>
+          <MDBModalContent>
+            <MDBModalHeader>
+              <MDBModalTitle>Confirmer la suppression</MDBModalTitle>
+              <MDBBtn
+                className="btn-close"
+                color="none"
+                onClick={() => setShowModal(false)}
+              />
+            </MDBModalHeader>
+            <MDBModalBody>
+              Êtes-vous sûr de vouloir supprimer l'espace ? Cette action est
+              irréversible.
+            </MDBModalBody>
+            <MDBModalFooter>
+              <MDBBtn color="secondary" onClick={() => setShowModal(false)}>
+                Annuler
+              </MDBBtn>
+              <MDBBtn
+                color="danger"
+                onClick={() => handleDeleteSpace(spaceToDelete.id)}
+                disabled={loadingDelete}
+              >
+                {loadingDelete ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    />
+                    Suppression...
+                  </>
+                ) : (
+                  "Supprimer"
+                )}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>

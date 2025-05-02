@@ -56,6 +56,8 @@ export const updateSpace = async (token, id, spaceData) => {
   }
 };
 
-export const deleteSpace = async (id) => {
-  return await axios.delete(`${API_URL}/api/protected/space/${id}`);
+export const deleteSpace = async (token, id) => {
+  return await axios.delete(`${API_URL}/api/protected/space/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 };
