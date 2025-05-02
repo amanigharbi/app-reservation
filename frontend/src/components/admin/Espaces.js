@@ -12,7 +12,13 @@ import {
   MDBModalDialog,
   MDBModal,
 } from "mdb-react-ui-kit";
-import { fetchSpaces, createSpace } from "../../services/spaces.api";
+import {
+  fetchSpaces,
+  createSpace,
+  updateSpace,
+} from "../../services/spaces.api";
+import { Link } from "react-router-dom";
+import { Modal } from "react-bootstrap";
 
 function Espaces() {
   const [spaces, setSpaces] = useState([]);
@@ -34,7 +40,8 @@ function Espaces() {
     message: "",
   });
   const [inputErrors, setInputErrors] = useState({});
-
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSpace, setEditingSpace] = useState(null);
   const showToastWithTimeout = ({ type, message }) => {
     setShowToast({ type, visible: true, message });
     setTimeout(() => {
@@ -59,12 +66,12 @@ function Espaces() {
 
   const handleAddSpace = async () => {
     let errors = {};
-  
+
     // Validation des champs nécessaires
     ["name", "location", "montant", "capacity"].forEach((field) => {
       if (!newSpace[field]) errors[field] = "Ce champ est requis.";
     });
-  
+
     // Si disponible est vrai, alors vérifier les champs availableFrom et availableTo
     if (newSpace.available) {
       if (!newSpace.availableFrom || !newSpace.availableTo) {
@@ -74,20 +81,22 @@ function Espaces() {
         // Comparaison des heures
         const from = newSpace.availableFrom;
         const to = newSpace.availableTo;
-  
+
         const [fromHour, fromMinute] = from.split(":").map(Number);
         const [toHour, toMinute] = to.split(":").map(Number);
-  
+
         const fromTotal = fromHour * 60 + fromMinute;
         const toTotal = toHour * 60 + toMinute;
-  
+
         if (fromTotal >= toTotal) {
-          errors["availableFrom"] = "L'heure de début doit être inférieure à l'heure de fin.";
-          errors["availableTo"] = "L'heure de fin doit être supérieure à l'heure de début.";
+          errors["availableFrom"] =
+            "L'heure de début doit être inférieure à l'heure de fin.";
+          errors["availableTo"] =
+            "L'heure de fin doit être supérieure à l'heure de début.";
         }
       }
     }
-  
+
     if (Object.keys(errors).length > 0) {
       setInputErrors(errors);
       showToastWithTimeout({
@@ -96,19 +105,19 @@ function Espaces() {
       });
       return;
     }
-  
+
     setInputErrors({});
-  
+
     try {
       const res = await createSpace(token, newSpace);
       console.log("Données envoyées au backend : ", newSpace);
-  
+
       setSpaces([...spaces, res.newSpace]);
       showToastWithTimeout({
         type: "success",
         message: "Espace ajouté avec succès.",
       });
-  
+
       setShowAddModal(false);
       setNewSpace({
         name: "",
@@ -127,8 +136,29 @@ function Espaces() {
       });
     }
   };
-  
+  const handleEdit = (space) => {
+    setEditingSpace(space);
+    setShowEditModal(true);
+  };
 
+  const handleUpdateSpace = async () => {
+    try {
+      await updateSpace(token, editingSpace.id, editingSpace);
+      setSpaces((prevSpaces) =>
+        prevSpaces.map((space) =>
+          space.id === editingSpace.id ? editingSpace : space
+        )
+      );
+      showToastWithTimeout({ type: "success", message: "Espace mis à jour." });
+      setShowEditModal(false);
+      // Recharger ou mettre à jour ta liste
+    } catch (error) {
+      showToastWithTimeout({
+        type: "error",
+        message: "Échec de la mise à jour.",
+      });
+    }
+  };
   if (loading) {
     return <div className="text-center mt-10 text-gray-500">Chargement...</div>;
   }
@@ -168,7 +198,11 @@ function Espaces() {
           <MDBIcon icon="building" className="me-2" />
           Gestion des espaces
         </MDBCardTitle>
-        <MDBBtn color="success" onClick={() => setShowAddModal(true)}>
+        <MDBBtn
+          color="success"
+          onClick={() => setShowAddModal(true)}
+          style={{ textTransform: "none" }}
+        >
           <MDBIcon icon="plus" className="me-2" />
           Ajouter un espace
         </MDBBtn>
@@ -184,6 +218,7 @@ function Espaces() {
               <th className="px-6 py-3 text-left">Montant (€)</th>
               <th className="px-6 py-3 text-left">Disponibilité</th>
               <th className="px-6 py-3 text-left">Statut</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -206,6 +241,32 @@ function Espaces() {
                       <MDBBadge color="danger">Non disponible</MDBBadge>
                     )}
                   </td>
+                  <td>
+                    <div className="d-flex gap-2">
+                      {/* <Link to={`/admin/user-details/${user.id}`}> */}
+                      <MDBBtn color="primary" size="sm">
+                        <MDBIcon icon="eye" />
+                      </MDBBtn>
+                      {/* </Link> */}
+                      <MDBBtn
+                        color="warning"
+                        size="sm"
+                        onClick={() => handleEdit(space)}
+                      >
+                        <MDBIcon icon="pen" />
+                      </MDBBtn>
+                      <MDBBtn
+                        color="danger"
+                        size="sm"
+                        // onClick={() => {
+                        //   setUserToDelete(user);
+                        //   toggleModal(user);
+                        // }}
+                      >
+                        <MDBIcon icon="trash" />
+                      </MDBBtn>
+                    </div>
+                  </td>
                 </tr>
               ))
             ) : (
@@ -218,6 +279,104 @@ function Espaces() {
           </tbody>
         </table>
       </div>
+      <Modal
+        show={showEditModal}
+        onHide={() => setShowEditModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Modifier l'espace</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {["name", "location", "montant", "capacity"].map((field) => (
+            <div key={field} className="mb-3">
+              <label>
+                {field === "name"
+                  ? "Nom de l'espace"
+                  : field === "location"
+                  ? "Adresse de l'espace"
+                  : field === "montant"
+                  ? "Prix de l'espace"
+                  : "Capacité de l'espace"}
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                value={editingSpace?.[field] || ""}
+                onChange={(e) =>
+                  setEditingSpace({ ...editingSpace, [field]: e.target.value })
+                }
+              />
+            </div>
+          ))}
+
+          <div className="mb-3">
+            <label>Disponibilité</label>
+            <select
+              className="form-select"
+              value={editingSpace?.available ? "true" : "false"}
+              onChange={(e) =>
+                setEditingSpace({
+                  ...editingSpace,
+                  available: e.target.value === "true",
+                })
+              }
+            >
+              <option value="true">Disponible</option>
+              <option value="false">Non disponible</option>
+            </select>
+          </div>
+
+          {editingSpace?.available && (
+            <>
+              <div className="mb-3">
+                <label>Disponible à partir de</label>
+                <input
+                  type="time"
+                  className="form-control"
+                  value={editingSpace?.availableFrom || ""}
+                  onChange={(e) =>
+                    setEditingSpace({
+                      ...editingSpace,
+                      availableFrom: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="mb-3">
+                <label>Jusqu'à</label>
+                <input
+                  type="time"
+                  className="form-control"
+                  value={editingSpace?.availableTo || ""}
+                  onChange={(e) =>
+                    setEditingSpace({
+                      ...editingSpace,
+                      availableTo: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <MDBBtn
+            color="secondary"
+            onClick={() => setShowEditModal(false)}
+            style={{ textTransform: "none" }}
+          >
+            Annuler
+          </MDBBtn>
+          <MDBBtn
+            color="primary"
+            onClick={handleUpdateSpace}
+            style={{ textTransform: "none" }}
+          >
+            Sauvegarder
+          </MDBBtn>
+        </Modal.Footer>
+      </Modal>
 
       {/* Modal Ajout */}
       <MDBModal open={showAddModal} onClose={() => setShowAddModal(false)}>
@@ -234,12 +393,15 @@ function Espaces() {
 
             <MDBModalBody>
               <form>
-                {/* Champs de base */}
-                {["name", "location", "montant", "capacity"].map((name) => (
+                {/* Champs de base avec libellés personnalisés */}
+                {[
+                  { name: "name", label: "Nom de l'espace" },
+                  { name: "location", label: "Adresse de l'espace" },
+                  { name: "montant", label: "Prix de l'espace" },
+                  { name: "capacity", label: "Capacité de l'espace" },
+                ].map(({ name, label }) => (
                   <div className="mb-3" key={name}>
-                    <label>
-                      {name.charAt(0).toUpperCase() + name.slice(1)}
-                    </label>
+                    <label>{label}</label>
                     <input
                       type="text"
                       className={`form-control ${
@@ -329,10 +491,18 @@ function Espaces() {
             </MDBModalBody>
 
             <MDBModalFooter>
-              <MDBBtn color="secondary" onClick={() => setShowAddModal(false)}>
+              <MDBBtn
+                color="secondary"
+                onClick={() => setShowAddModal(false)}
+                style={{ textTransform: "none" }}
+              >
                 Annuler
               </MDBBtn>
-              <MDBBtn color="success" onClick={handleAddSpace}>
+              <MDBBtn
+                color="success"
+                onClick={handleAddSpace}
+                style={{ textTransform: "none" }}
+              >
                 Ajouter
               </MDBBtn>
             </MDBModalFooter>

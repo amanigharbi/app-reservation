@@ -208,7 +208,14 @@ function Users() {
               Gestion des Profils utilisateurs
             </MDBCardTitle>
 
-           
+            <MDBBtn
+              color="success"
+              onClick={() => setShowAddModal(true)}
+              style={{ textTransform: "none" }}
+            >
+              <MDBIcon icon="plus" className="me-2" />
+              Ajouter un utilisateur
+            </MDBBtn>
           </div>
           {/* Recherche */}
 
@@ -220,7 +227,6 @@ function Users() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          
           </div>
           <MDBTable hover responsive>
             <MDBTableHead light>
@@ -424,10 +430,18 @@ function Users() {
               </form>
             </MDBModalBody>
             <MDBModalFooter>
-              <MDBBtn color="secondary" onClick={() => setShowAddModal(false)}>
+              <MDBBtn
+                color="secondary"
+                onClick={() => setShowAddModal(false)}
+                style={{ textTransform: "none" }}
+              >
                 Annuler
               </MDBBtn>
-              <MDBBtn color="success" onClick={handleAddUser}>
+              <MDBBtn
+                color="success"
+                onClick={handleAddUser}
+                style={{ textTransform: "none" }}
+              >
                 Ajouter
               </MDBBtn>
             </MDBModalFooter>

@@ -22,7 +22,6 @@ export const fetchSpacesById = async (token, id) => {
 };
 export const createSpace = async (token, newSpace) => {
   try {
-    console.log("Données envoyées : ", newSpace);
     const response = await axios.post(
       `${API_URL}/api/protected/space`,
       newSpace,
@@ -39,8 +38,22 @@ export const createSpace = async (token, newSpace) => {
   }
 };
 
-export const updateSpace = async (id, spaceData) => {
-  return await axios.put(`${API_URL}/api/protected/space/${id}`, spaceData);
+export const updateSpace = async (token, id, spaceData) => {
+  try {
+    const response = await axios.put(
+      `${API_URL}/api/protected/space/${id}`,
+      spaceData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Erreur lors de la requête API:", error.response.data);
+    throw error;
+  }
 };
 
 export const deleteSpace = async (id) => {

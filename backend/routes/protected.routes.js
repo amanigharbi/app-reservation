@@ -891,91 +891,12 @@ router.post("/space", authenticate, async (req, res) => {
   }
 });
 
-router.post("/space", authenticate, async (req, res) => {
-  try {
-    const {
-      available,
-      availableFrom,
-      availableTo,
-      capacity,
-      location,
-      montant,
-      name,
-    } = req.body;
-    console.log("avaaaaible ", available);
-    // Vérification des champs obligatoires
-    if (!available) {
-      // Si available est false, ne pas vérifier availableFrom et availableTo
-      if (!capacity || !location || !montant || !name) {
-        return res
-          .status(400)
-          .json({ message: "Champs obligatoires manquants." });
-      }
-    } else {
-      // Si available est true, alors vérifier tous les champs
-      if (
-        !availableFrom ||
-        !availableTo ||
-        !capacity ||
-        !location ||
-        !montant ||
-        !name
-      ) {
-        return res
-          .status(400)
-          .json({ message: "Champs obligatoires manquants." });
-      }
-    }
-
-    // Vérification des types et formats des champs
-    if (typeof available !== "boolean") {
-      return res
-        .status(400)
-        .json({ message: "'available' doit être un booléen." });
-    }
-    if (isNaN(montant) || montant <= 0) {
-      return res
-        .status(400)
-        .json({ message: "'montant' doit être un nombre positif." });
-    }
-    const timePattern = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
-    if (
-      available &&
-      (!timePattern.test(availableFrom) || !timePattern.test(availableTo))
-    ) {
-      return res.status(400).json({
-        message:
-          "'availableFrom' et 'availableTo' doivent être au format HH:MM.",
-      });
-    }
-
-    // Création de l'objet à insérer dans Firestore
-    const newSpace = {
-      available,
-      availableFrom,
-      availableTo,
-      capacity,
-      location,
-      montant,
-      name,
-    };
-
-    await db.collection("spaces").doc().set(newSpace);
-
-    res.status(201).json({ newSpace });
-  } catch (error) {
-    console.error("Erreur lors de l'ajout de l'espace:", error);
-    res.status(500).json({ message: "Erreur serveur lors de la création." });
-  }
-});
-
 router.put("/space/:id", authenticate, async (req, res) => {
   try {
     const spaceId = req.params.id;
-
     const updateData = req.body;
 
-    if (!updateData) {
+    if (!updateData || Object.keys(updateData).length === 0) {
       return res.status(400).json({ message: "Informations incomplètes." });
     }
 
@@ -986,18 +907,15 @@ router.put("/space/:id", authenticate, async (req, res) => {
       return res.status(404).json({ message: "Espace introuvable." });
     }
 
-    const spaceData = spaceSnap.data();
-
-    await spaceRef.update({
-      updateData,
-    });
+    await spaceRef.update(updateData);
 
     res.json({ message: "Espace mis à jour avec succès." });
   } catch (error) {
-    console.error("Erreur maj de l'Espace:", error);
+    console.error("Erreur maj de l'espace:", error);
     res.status(500).json({ message: "Erreur serveur mise à jour." });
   }
 });
+
 router.delete("/space/:id", authenticate, async (req, res) => {
   try {
     const spaceId = req.params.id;
