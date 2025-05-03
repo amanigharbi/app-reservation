@@ -19,7 +19,7 @@ import { UserContext } from "../../contexts/UserContext";
 
 import { auth } from "../../firebase";
 import { useNavigate, Link } from "react-router-dom";
-import { verifyToken } from "../../api/auth.api";
+import { verifyToken } from "../../services/auth.api";
 import logo from "../../images/logo.png";
 import "../styles/Pages.css";
 import "mdb-react-ui-kit/dist/css/mdb.min.css";

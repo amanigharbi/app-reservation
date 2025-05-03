@@ -29,7 +29,7 @@ function Reserver() {
         );
         // Filtrer uniquement les espaces disponibles
         const spacesAvailable = response.data.spaces.filter(
-          (space) => space.available === "true"
+          (space) => space.available === true
         );
         setAvailableSpaces(spacesAvailable);
       } catch (error) {
@@ -90,7 +90,8 @@ function Reserver() {
                         🕒 {space.availableFrom} - {space.availableTo}
                         <br />
                         👥 Capacité :{" "}
-                        {space.capacity ? space.capacity : "Non spécifiée"} personnes
+                        {space.capacity ? space.capacity : "Non spécifiée"}{" "}
+                        personnes
                         <br />
                         💰{" "}
                         {space.montant

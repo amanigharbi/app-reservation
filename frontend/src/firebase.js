@@ -1,9 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore"; // Importer Firestore pour ajouter des documents
+import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Configuration de Firebase
+// Firebase configuration using environment variables
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -13,13 +13,13 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
-// Initialiser l'application Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Obtenir l'instance de l'authentification et de Firestore
+// Services
 const auth = getAuth(app);
 const db = getFirestore(app);
-export const storage = getStorage();
+const storage = getStorage(app);
 
-// Exporter les instances pour les utiliser ailleurs dans ton application
-export { auth, db, createUserWithEmailAndPassword, setDoc, doc };
+// Export Firebase utilities
+export { auth, db, storage, createUserWithEmailAndPassword, setDoc, doc };
