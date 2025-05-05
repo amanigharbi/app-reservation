@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import {
   fetchReservations,
   updateReservation,
@@ -9,7 +9,7 @@ import moment from "moment";
 import { MDBBadge, MDBIcon, MDBCardTitle } from "mdb-react-ui-kit";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import Papa from "papaparse"; // Import papaparse for CSV export
+import Papa from "papaparse"; 
 
 function Reservations() {
   const [reservations, setReservations] = useState([]);
@@ -268,7 +268,7 @@ function Reservations() {
         </thead>
         <tbody>
           {list.map((res) => (
-            <tr key={res._id} className="border-b hover:bg-gray-50">
+            <tr key={res.id} className="border-b hover:bg-gray-50">
               <td className="px-6 py-4">
                 {res.utilisateur?.firstName} {res.utilisateur?.lastName}
               </td>

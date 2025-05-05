@@ -2,7 +2,8 @@ const { admin } = require("../config/firebase.config");
 
 exports.authenticate = async (req, res, next) => {
   // Récupérer le token depuis l'en-tête Authorization
-  const token = req.headers.authorization?.split(" ")[1];
+  const token = req.headers.authorization?.split("Bearer ")[1];
+  if (!token) return res.status(401).send("Unauthorized");
 
   // Vérifier si le token est présent
   if (!token) {

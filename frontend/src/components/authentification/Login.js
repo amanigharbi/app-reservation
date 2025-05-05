@@ -84,7 +84,6 @@ function Login() {
         );
       }
 
-      console.warn(process.env.REACT_APP_API_URL + "/api/protected/profile");
       // Récupération des données utilisateur
       const response = await axios.get(
         process.env.REACT_APP_API_URL + "/api/protected/profile",
