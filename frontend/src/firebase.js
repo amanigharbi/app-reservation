@@ -20,6 +20,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+console.log('Firebase config:', firebaseConfig);
 
 // Export Firebase utilities
 export { auth, db, storage, createUserWithEmailAndPassword, setDoc, doc };

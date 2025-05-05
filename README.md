@@ -59,6 +59,7 @@ app-reservation/
 │ │ ├── images/ # images utilisés dans l'application
 │ │ └── App.js # Configuration des routes
 │ │ └── Firebase.js # Configuration de firebase
+│ │ └── .env #fichier d'environnement (config) (j'ai importé .env.exemple il faut mettre les valeur de config de firebase)
 │
 ├── README.md
 └── LICENSE
@@ -193,9 +194,6 @@ reservations/
 
 - Affichage de la liste des espaces diponibles
   ![espace ](./frontend/src/images/screenshots/user/ListeEspaceDispo.png)
-- Possibilité de supprimer une réservation
-
-![reservation ](./frontend/src/images/screenshots/user/MesReservations.png)
 
 - Etape 1 : remplir les informations qui concerne la réservation + choix de crénaux (si crénaux réservés seront désactivés) avec les vérification nécessaires
 

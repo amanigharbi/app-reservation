@@ -20,7 +20,10 @@ import {
 } from "../../services/spaces.api";
 import { Link } from "react-router-dom";
 import { Modal } from "react-bootstrap";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
+import Papa from "papaparse";
 function Espaces() {
   const [spaces, setSpaces] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,13 +50,90 @@ function Espaces() {
   const [showModal, setShowModal] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const showToastWithTimeout = ({ type, message }) => {
     setShowToast({ type, visible: true, message });
     setTimeout(() => {
       setShowToast({ type: "", visible: false, message: "" });
     }, 2000);
   };
+  const handleExportCSV = () => {
+    const csvData = (spaces || []).map((space, index) => ({
+      "#": index + 1,
+      Nom: space.name,
+      Localisation: space.location,
+      Capacité: space.capacity,
+      Montant: `${space.montant} €`,
+      Disponibilité: space.available
+        ? `${space.availableFrom} - ${space.availableTo}`
+        : "Non disponible",
+    }));
+
+    const csv = Papa.unparse(csvData);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "espaces.csv";
+    link.click();
+
+    setShowToast({
+      type: "success",
+      visible: true,
+      message: "Export CSV des espaces effectué !",
+    });
+
+    setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(12);
+    doc.text("Liste des Espaces", 14, 16);
+
+    const rows = (spaces || []).map((space, index) => [
+      index + 1,
+      space.name,
+      space.location,
+      space.capacity,
+      `${space.montant} €`,
+      space.available
+        ? `${space.availableFrom} - ${space.availableTo}`
+        : "Non disponible",
+    ]);
+
+    autoTable(doc, {
+      head: [
+        ["#", "Nom", "Localisation", "Capacité", "Montant", "Disponibilité"],
+      ],
+      body: rows,
+      startY: 20,
+    });
+
+    doc.save("espaces.pdf");
+
+    setShowToast({
+      type: "success",
+      visible: true,
+      message: "Export PDF des espaces effectué !",
+    });
+
+    setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
+  };
+  const filteredSpaces = spaces.filter((space) => {
+    // Filtrer par recherche (nom ou localisation)
+    const searchMatch =
+      space.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      space.location.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Filtrer par statut
+    const statusMatch =
+      statusFilter === "all" ||
+      (statusFilter === "available" && space.available) ||
+      (statusFilter === "unavailable" && !space.available);
+
+    return searchMatch && statusMatch;
+  });
 
   useEffect(() => {
     const getSpaces = async () => {
@@ -237,6 +317,32 @@ function Espaces() {
           Ajouter un espace
         </MDBBtn>
       </div>
+      <div className="flex flex-wrap gap-4 mb-4 items-center">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Rechercher par nom ou localisation"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <select
+          className="form-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="all">Tous les statuts</option>
+          <option value="available">Disponible</option>
+          <option value="unavailable">Non disponible</option>
+        </select>{" "}
+        <MDBBtn color="success" onClick={handleExportCSV}>
+          <MDBIcon icon="file-csv" className="me-2" />
+          Exporter CSV
+        </MDBBtn>
+        <MDBBtn color="danger" onClick={handleExportPDF}>
+          <MDBIcon icon="file-pdf" className="me-2" />
+          Exporter PDF
+        </MDBBtn>
+      </div>
 
       <div className="overflow-auto bg-white shadow-md rounded-lg">
         <table className="min-w-full text-sm text-gray-700">
@@ -252,8 +358,8 @@ function Espaces() {
             </tr>
           </thead>
           <tbody>
-            {spaces.length > 0 ? (
-              spaces.map((space, index) => (
+            {filteredSpaces.length > 0 ? (
+              filteredSpaces.map((space, index) => (
                 <tr key={index} className="border-b hover:bg-gray-50">
                   <td className="px-6 py-4">{space.name}</td>
                   <td className="px-6 py-4">{space.location}</td>
