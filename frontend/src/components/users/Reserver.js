@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   MDBContainer,
@@ -19,7 +18,6 @@ function Reserver() {
   const [availableSpaces, setAvailableSpaces] = useState([]);
   const [step, setStep] = useState(1);
   const [selectedSpace, setSelectedSpace] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAvailableSpaces = async () => {

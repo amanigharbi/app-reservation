@@ -1,12 +1,8 @@
 import axios from "axios";
 
 // Vérification de l'URL API dans les variables d'environnement
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000"; // Valeur par défaut pour le développement
-const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL,
-  timeout: 5000,
-  headers: { 'Content-Type': 'application/json' }
-})
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000"; 
+
 // Vérifier un token Firebase côté backend
 export const verifyToken = async (token) => {
   try {
