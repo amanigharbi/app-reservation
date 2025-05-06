@@ -25,12 +25,7 @@ import "../styles/Pages.css";
 import "mdb-react-ui-kit/dist/css/mdb.min.css";
 
 function Login() {
-  const getToken = () => localStorage.getItem("token");
-  const [showToast, setShowToast] = useState({
-    type: "",
-    visible: false,
-    message: "",
-  });
+// eslint-disable-next-line
   const { userGet, setUser } = useContext(UserContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

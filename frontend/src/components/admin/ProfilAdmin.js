@@ -55,7 +55,7 @@
       };
 
       if (token) loadProfilAdmin();
-    }, [token]);
+    }, [token,setUser]);
 
     const handleFileChange = async (e) => {
       const file = e.target.files[0];

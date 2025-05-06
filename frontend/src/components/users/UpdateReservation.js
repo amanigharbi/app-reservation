@@ -33,7 +33,8 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
   const [error, setError] = useState("");
   const [showModificationHistory, setShowModificationHistory] = useState(false); // Etat pour l'historique
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [setReservationToCancel] = useState(null);
+  // eslint-disable-next-line
+  const [reservationToCancel, setReservationToCancel] = useState(null);
   const [setShowModal] = useState(false);
   const checkConflict = async () => {
     try {
@@ -46,9 +47,9 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
           },
         }
       );
-  
+
       const reservations = response.data.reservations;
-  
+
       // Filtrer sur la même date + même espace + exclure cette réservation elle-même
       const conflicts = reservations.filter((res) => {
         if (
@@ -58,7 +59,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
         ) {
           return false;
         }
-  
+
         const [start1, end1] = [
           parseTime(reservation.heure_arrivee),
           parseTime(reservation.heure_depart),
@@ -67,16 +68,16 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
           parseTime(res.heure_arrivee),
           parseTime(res.heure_depart),
         ];
-  
+
         // Conflit si chevauchement
         return start1 < end2 && end1 > start2;
       });
-  
+
       if (conflicts.length > 0) {
         setError("Le créneau sélectionné est déjà réservé pour cette date.");
         return true; // conflit détecté
       }
-  
+
       setError(""); // pas d'erreur
       return false;
     } catch (err) {
@@ -84,12 +85,12 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       return false;
     }
   };
-  
+
   const parseTime = (time) => {
     const [h, m] = time.split(":").map(Number);
     return h * 60 + m;
   };
-  
+
   useEffect(() => {
     const fetchReservation = async () => {
       try {
@@ -122,7 +123,14 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
   }, [reservationId]);
 
   useEffect(() => {
-    if (reservation && reservation.heure_arrivee && reservation.heure_depart) {
+    if (
+      reservation &&
+      reservation.heure_arrivee &&
+      reservation.heure_depart &&
+      reservation.dureeInitiale !== undefined &&
+      reservation.spaceMontant !== undefined &&
+      reservation.montantDejaPaye !== undefined
+    ) {
       const [h1, m1] = reservation.heure_arrivee.split(":").map(Number);
       const [h2, m2] = reservation.heure_depart.split(":").map(Number);
   
@@ -153,8 +161,16 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
   
       setError("");
     }
-  }, [reservation]);
-    
+    // eslint-disable-next-line
+  }, [
+    reservation?.heure_arrivee,
+    // eslint-disable-next-line
+    reservation?.heure_depart,
+    reservation?.dureeInitiale,
+    reservation?.spaceMontant,
+    reservation?.montantDejaPaye,
+  ]);
+  
 
   const formatDuree = (heuresDecimales) => {
     const totalMinutes = Math.round(parseFloat(heuresDecimales) * 60);
@@ -234,7 +250,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
   const handleSubmit = async () => {
     const hasConflict = await checkConflict();
     if (hasConflict) return;
-  
+
     if (reservation.montantSupplementaire > 0) {
       setShowPaymentModal(true);
     } else if (reservation.montantRemboursable > 0) {
@@ -243,7 +259,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       saveReservation();
     }
   };
-  
+
   const handlePaymentSuccess = (paymentResult) => {
     setShowPaymentModal(false);
     saveReservation({ ...paymentResult, type: "paiement" });

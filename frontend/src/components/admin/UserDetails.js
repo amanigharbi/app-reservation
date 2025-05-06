@@ -149,7 +149,7 @@ function UserDetails() {
           <div className="d-flex flex-column flex-md-row align-items-start gap-4">
             <img
               src={userDetails.photoURL || defaultImage}
-              alt="Photo de profil"
+              alt="non dispo"
               className="img-fluid rounded shadow"
               onError={(e) => {
                 e.target.onerror = null;

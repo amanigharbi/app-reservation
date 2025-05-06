@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserContext } from "../../contexts/UserContext";
@@ -28,9 +28,12 @@ function Profil() {
     message: "",
   });
   const navigate = useNavigate();
-  const getToken = () => localStorage.getItem("token");
-  // Récupérer les données de l'utilisateur depuis l'API backend
-  const fetchUserData = async () => {
+  const getToken = useCallback(() => {
+    return localStorage.getItem("token");
+  }, []); // Récupérer les données de l'utilisateur depuis l'API backend
+
+  // Charger les données de l'utilisateur au début
+  const fetchUserData = useCallback(async () => {
     const token = getToken();
 
     try {
@@ -54,7 +57,10 @@ function Profil() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setUser, setEditData, setShowToast, setLoading, getToken]);
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -70,7 +76,7 @@ function Profil() {
 
       try {
         const response = await axios.post(
-          process.env.REACT_APP_API_URL +"/api/protected/upload",
+          process.env.REACT_APP_API_URL + "/api/protected/upload",
           formData,
           {
             headers: {
@@ -104,7 +110,7 @@ function Profil() {
 
     try {
       const response = await axios.put(
-        process.env.REACT_APP_API_URL +"/api/protected/profile",
+        process.env.REACT_APP_API_URL + "/api/protected/profile",
         editData,
         {
           headers: {
@@ -130,11 +136,6 @@ function Profil() {
       });
     }
   };
-
-  // Charger les données de l'utilisateur au début
-  useEffect(() => {
-    fetchUserData();
-  }, []);
 
   if (loading) {
     return (
@@ -435,7 +436,7 @@ function Profil() {
                   }
                   className="mb-3"
                 />
-          
+
                 <div className="mb-3">
                   <label className="form-label">Choisir une image</label>
                   <input

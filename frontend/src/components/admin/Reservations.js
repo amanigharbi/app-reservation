@@ -59,7 +59,7 @@ function Reservations() {
 
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
-      case "annulation_demandée":
+      case "annulation demandée":
         return <MDBBadge color="warning">A annulée</MDBBadge>;
       case "confirmée":
       case "acceptée":

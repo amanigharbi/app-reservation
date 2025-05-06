@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   MDBContainer,
   MDBRow,
@@ -8,8 +8,6 @@ import {
   MDBIcon,
   MDBCardText,
   MDBBadge,
-  MDBListGroup,
-  MDBListGroupItem,
 } from "mdb-react-ui-kit";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -23,6 +21,7 @@ function ReservationForm({ space }) {
     message: "",
   });
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line
   const [spaceDetails, setSpaceDetails] = useState(space || {});
 
   const [reservationDetails, setReservationDetails] = useState({
@@ -52,47 +51,30 @@ function ReservationForm({ space }) {
     cvv: "",
   });
   const navigate = useNavigate();
+  // eslint-disable-next-line
   const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedStartSlot, setSelectedStartSlot] = useState(null);
   const [selectedEndSlot, setSelectedEndSlot] = useState(null);
+  // eslint-disable-next-line
   const [bookedSlots, setBookedSlots] = useState([]);
-  const [reservedTimeSlots, setReservedTimeSlots] = useState([]);
+
   const [reservedSlots, setReservedSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
-  // Ajoutez cet effet pour charger les créneaux réservés
   useEffect(() => {
     const fetchReservations = async () => {
       if (reservationDetails.date && spaceDetails.id) {
         setLoadingSlots(true);
         try {
           const token = localStorage.getItem("token");
+          const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/protected/reservations`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
-          const response = await axios.get(
-            `${process.env.REACT_APP_API_URL}/api/protected/reservations`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
+          const matching = response.data.reservations.filter(
+            (res) => res.date === reservationDetails.date && res.spaceId === spaceDetails.id && !["annulée", "refusée"].includes(res.status)
           );
 
-          const allReservations = response.data.reservations;
-
-          // ✅ Filtrer uniquement celles correspondant à la date sélectionnée
-          const matchingReservations = allReservations.filter(
-            (res) =>
-              res.date === reservationDetails.date &&
-              res.spaceId === spaceDetails.id &&
-              res.status !== "annulée" &&
-              res.status !== "refusée"
-          );
-
-          const slots = matchingReservations.map((res) => ({
-            start: res.heure_arrivee,
-            end: res.heure_depart,
-          }));
-
-          setReservedSlots(slots);
+          setReservedSlots(matching.map((res) => ({ start: res.heure_arrivee, end: res.heure_depart })));
         } catch (error) {
           console.error("Erreur chargement réservations:", error);
         } finally {
@@ -103,66 +85,36 @@ function ReservationForm({ space }) {
 
     fetchReservations();
   }, [reservationDetails.date, spaceDetails.id]);
-  const isSlotAvailable = (time) => {
-    // Convertir l'heure en minutes pour faciliter la comparaison
-    const [hours, minutes] = time.split(":").map(Number);
-    const slotMinutes = hours * 60 + minutes;
 
-    // Vérifier chaque réservation existante
-    return !reservedSlots.some((reservation) => {
-      const [resStartH, resStartM] = reservation.start.split(":").map(Number);
-      const [resEndH, resEndM] = reservation.end.split(":").map(Number);
-      const resStart = resStartH * 60 + resStartM;
-      const resEnd = resEndH * 60 + resEndM;
-
-      return slotMinutes >= resStart && slotMinutes < resEnd + 15;
+  const isSlotAvailable = useCallback((time) => {
+    const [h, m] = time.split(":").map(Number);
+    const t = h * 60 + m;
+    return !reservedSlots.some(({ start, end }) => {
+      const [sh, sm] = start.split(":").map(Number);
+      const [eh, em] = end.split(":").map(Number);
+      const s = sh * 60 + sm, e = eh * 60 + em;
+      return t >= s && t < e + 15;
     });
-  };
-  // Modifiez la fonction generateTimeSlots
-  const generateTimeSlots = () => {
-    const slots = [];
-    const [openHour, openMinute] = spaceDetails.availableFrom
-      .split(":")
-      .map(Number);
-    const [closeHour, closeMinute] = spaceDetails.availableTo
-      .split(":")
-      .map(Number);
+  }, [reservedSlots]);
 
-    let currentHour = openHour;
-    let currentMinute = openMinute;
-
-    while (
-      currentHour < closeHour ||
-      (currentHour === closeHour && currentMinute < closeMinute)
-    ) {
-      const time = `${currentHour.toString().padStart(2, "0")}:${currentMinute
-        .toString()
-        .padStart(2, "0")}`;
-
-      // ❗ Correction ici : on utilise isSlotAvailable(time) qui utilise reservedSlots
-      slots.push({
-        time,
-        available: isSlotAvailable(time),
-      });
-
-      currentMinute += 15;
-      if (currentMinute >= 60) {
-        currentHour += 1;
-        currentMinute -= 60;
-      }
+  const generateTimeSlots = useCallback(() => {
+    if (!spaceDetails.availableFrom || !spaceDetails.availableTo) return [];
+    const [oh, om] = spaceDetails.availableFrom.split(":").map(Number);
+    const [ch, cm] = spaceDetails.availableTo.split(":").map(Number);
+    let h = oh, m = om, slots = [];
+    while (h < ch || (h === ch && m < cm)) {
+      const t = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+      slots.push({ time: t, available: isSlotAvailable(t) });
+      m += 15;
+      if (m >= 60) { h++; m -= 60; }
     }
-
     return slots;
-  };
+  }, [spaceDetails.availableFrom, spaceDetails.availableTo, isSlotAvailable]);
 
-  // Générer les créneaux disponibles lorsque la date ou les réservations changent
   useEffect(() => {
-    if (spaceDetails.availableFrom && spaceDetails.availableTo) {
-      setAvailableSlots(generateTimeSlots());
-    }
-  }, [spaceDetails, bookedSlots, reservationDetails.date]);
+    setAvailableSlots(generateTimeSlots());
+  }, [generateTimeSlots, reservationDetails.date, reservationDetails.heure_arrivee, reservationDetails.heure_depart]);
 
-  // Mettre à jour les heures de réservation lorsqu'un créneau est sélectionné
   useEffect(() => {
     if (selectedStartSlot && selectedEndSlot) {
       setReservationDetails((prev) => ({
@@ -172,7 +124,7 @@ function ReservationForm({ space }) {
       }));
     }
   }, [selectedStartSlot, selectedEndSlot]);
-  // Calcul de la durée
+
   useEffect(() => {
     const { heure_arrivee, heure_depart } = reservationDetails;
     if (heure_arrivee && heure_depart) {
@@ -180,31 +132,22 @@ function ReservationForm({ space }) {
       const [h2, m2] = heure_depart.split(":").map(Number);
       const debut = h1 * 60 + m1;
       const fin = h2 * 60 + m2;
-
       if (fin > debut) {
-        const dureeMinutes = fin - debut;
-        const dureeHeures = (dureeMinutes / 60).toFixed(2);
-        setReservationDetails((prev) => ({
-          ...prev,
-          duree: dureeHeures,
-        }));
+        const dureeHeures = ((fin - debut) / 60).toFixed(2);
+        setReservationDetails((prev) => ({ ...prev, duree: dureeHeures }));
       }
     }
+    // eslint-disable-next-line
   }, [reservationDetails.heure_arrivee, reservationDetails.heure_depart]);
 
-  // Calcul du montant
   useEffect(() => {
-    const duree = parseFloat(reservationDetails.duree);
-    const montantParHeure = parseFloat(spaceDetails?.montant || 0);
-
-    if (!isNaN(duree) && !isNaN(montantParHeure)) {
-      const total = duree * montantParHeure;
-      setReservationDetails((prev) => ({
-        ...prev,
-        montant: total.toFixed(2),
-      }));
+    const d = parseFloat(reservationDetails.duree);
+    const m = parseFloat(spaceDetails?.montant || 0);
+    if (!isNaN(d) && !isNaN(m)) {
+      setReservationDetails((prev) => ({ ...prev, montant: (d * m).toFixed(2) }));
     }
-  }, [reservationDetails.duree, spaceDetails]);
+  }, [reservationDetails.duree, spaceDetails?.montant]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -273,14 +216,13 @@ function ReservationForm({ space }) {
 
         const reservationData = {
           code_reservation: codeReservation,
-
           ...reservationDetails,
           spaceId: spaceDetails.id,
           status: "En attente",
           createdAt: new Date().toISOString(),
         };
 
-        const response = await axios.post(
+        await axios.post(
           process.env.REACT_APP_API_URL + "/api/protected/reservations",
           reservationData,
           {

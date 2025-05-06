@@ -36,7 +36,7 @@ function AdminLayout() {
     if (token) {
       loadProfilAdmin();
     }
-  }, [token]);
+  }, [token,setUser]);
 
   const handleLogout = async () => {
     try {

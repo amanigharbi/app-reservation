@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
@@ -25,7 +25,6 @@ import "../styles/Pages.css";
 import UpdateReservation from "./UpdateReservation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import moment from "moment";
 
 function MesReservations() {
   const [reservations, setReservations] = useState([]);
@@ -37,6 +36,7 @@ function MesReservations() {
     visible: false,
     message: "",
   });
+  // eslint-disable-next-line
   const [loading, setLoading] = useState(false);
   const [rappels, setRappels] = useState([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -54,7 +54,9 @@ function MesReservations() {
   const [loadingDelete, setLoadingDelete] = useState(false);
 
   // Récupérer les réservations
-  const fetchReservations = async () => {
+
+ 
+  const fetchReservations = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
     try {
@@ -69,15 +71,15 @@ function MesReservations() {
       setReservations(response.data.reservations);
     } catch (error) {
       console.error("Erreur lors de la récupération des réservations :", error);
-      if (error.response && error.response.status === 401) {
+      if (error.response?.status === 401) {
         navigate("/login");
       }
     }
-  };
-
+  }, [navigate]); // Include all dependencies used inside the callback
+  
   useEffect(() => {
     fetchReservations();
-  }, []);
+  }, [fetchReservations]); // Now the dependency is stable
 
   // Supprimer une réservation
   const handleConfirmDelete = async (id) => {
@@ -255,17 +257,10 @@ function MesReservations() {
         .includes(searchTerm.toLowerCase()) // pour les montants
   );
 
-  // Séparer les réservations passées et futures
-  const today = moment();
-  const futureReservations = reservations.filter((res) =>
-    moment(res.date).isSameOrAfter(today, "day")
-  );
-  const archivedReservations = reservations.filter((res) =>
-    moment(res.date).isBefore(today, "day")
-  );
+
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
-      case "annulation_demandée":
+      case "annulation demandée":
         return (
           <MDBBadge color="warning" className="ms-2">
             A annulée

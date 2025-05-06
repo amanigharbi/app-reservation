@@ -8,6 +8,7 @@ import axios from "axios";
 import logo from "../../images/logo-3.png";
 
 function Navbar() {
+  // eslint-disable-next-line
   const [userEmail, setUserEmail] = useState(false);
   const { user, setUser } = useContext(UserContext);
   const [error, setError] = useState(null);

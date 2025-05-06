@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   getReservationById,
   updateReservation,
@@ -93,7 +93,7 @@ const ReservationDetail = () => {
     };
 
     fetchReservation();
-  }, [id]);
+  }, [id,token]);
 
   if (loading) return <p>Chargement...</p>;
   if (error) return <p>{error}</p>;
@@ -152,7 +152,7 @@ const ReservationDetail = () => {
       acceptée: { color: "success", text: "Confirmée" },
       annulée: { color: "danger", text: "Annulée" },
       Archivé: { color: "secondary", text: "Archivé" },
-      annulation_demandée: { color: "warning", text: "À annuler" },
+      "annulation demandée": { color: "warning", text: "À annuler" },
       refusée: { color: "danger", text: "Refusée" },
     };
 
