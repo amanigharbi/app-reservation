@@ -10,6 +10,7 @@ import LanguageDropdown from "../LanguageDropdown";
 import { useTranslation } from "react-i18next";
 
 function Navbar() {
+  // eslint-disable-next-line
   const [userEmail, setUserEmail] = useState(false);
   const { user, setUser } = useContext(UserContext);
   const [error, setError] = useState(null);

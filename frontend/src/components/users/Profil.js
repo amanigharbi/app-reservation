@@ -60,7 +60,7 @@ function Profil() {
     } finally {
       setLoading(false);
     }
-  }, [setUser, setEditData, setShowToast, setLoading, getToken]);
+  }, [setUser, setEditData, setShowToast, setLoading, getToken,t]);
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);

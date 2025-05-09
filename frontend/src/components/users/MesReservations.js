@@ -128,7 +128,7 @@ function MesReservations() {
       }));
     });
     setRappels(extractedRappels);
-  }, [reservations]);
+  }, [reservations,t]);
   const formatDuree = (heuresDecimales) => {
     const totalMinutes = Math.round(parseFloat(heuresDecimales) * 60);
     const heures = Math.floor(totalMinutes / 60);

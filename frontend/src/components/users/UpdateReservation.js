@@ -123,7 +123,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
     };
 
     if (reservationId) fetchReservation();
-  }, [reservationId]);
+  }, [reservationId,t]);
 
   useEffect(() => {
     if (

@@ -38,7 +38,7 @@ function Reserver() {
       }
     };
     fetchAvailableSpaces();
-  }, []);
+  }, [t]);
 
   const handleReservation = (space) => {
     setSelectedSpace(space);
