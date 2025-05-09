@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
@@ -25,6 +25,7 @@ import "../styles/Pages.css";
 import UpdateReservation from "./UpdateReservation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import { useTranslation } from "react-i18next";
 
 function MesReservations() {
   const [reservations, setReservations] = useState([]);
@@ -51,11 +52,12 @@ function MesReservations() {
   );
   const navigate = useNavigate();
   useEffect(() => {}, [showModal]);
+  const { t } = useTranslation();
+
   const [loadingDelete, setLoadingDelete] = useState(false);
 
   // Récupérer les réservations
 
- 
   const fetchReservations = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
@@ -76,7 +78,7 @@ function MesReservations() {
       }
     }
   }, [navigate]); // Include all dependencies used inside the callback
-  
+
   useEffect(() => {
     fetchReservations();
   }, [fetchReservations]); // Now the dependency is stable
@@ -100,15 +102,15 @@ function MesReservations() {
       setShowToast({
         type: "success",
         visible: true,
-        message: "Réservation supprimée !",
+        message: t("reservation_deleted"),
       });
       fetchReservations();
     } catch (error) {
-      console.error("Erreur suppression:", error);
+      console.error(t("delete_error"), error);
       setShowToast({
         type: "error",
         visible: true,
-        message: "Erreur lors de la suppression.",
+        message: t("delete_error"),
       });
     } finally {
       setLoadingDelete(false);
@@ -122,7 +124,7 @@ function MesReservations() {
       return reservation.rappels.map((rappel) => ({
         reservationId: reservation.id,
         date: rappel,
-        message: `Rappel pour la réservation ${reservation.code_reservation}`,
+        message: `${t("reminder_of")} ${reservation.code_reservation}`,
       }));
     });
     setRappels(extractedRappels);
@@ -148,15 +150,15 @@ function MesReservations() {
 
   const handleExportCSV = () => {
     const headers = [
-      "Code",
-      "Date",
-      "Durée",
-      "Service",
-      "Espace",
-      "Montant de l'espace",
-      "Montant payé",
-      "Mode de paiement",
-      "Participants",
+      t("code"),
+      t("date"),
+      t("duration"),
+      t("service"),
+      t("space"),
+      t("amount"),
+      t("paid"),
+      t("payment"),
+      t("participants"),
     ];
 
     const rows = reservations.map((res) => [
@@ -182,7 +184,7 @@ function MesReservations() {
     setShowToast({
       type: "success",
       visible: true,
-      message: "Export CSV effectué !",
+      message: t("csv_exported"),
     });
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
@@ -191,20 +193,20 @@ function MesReservations() {
     const doc = new jsPDF();
 
     doc.setFontSize(14);
-    doc.text("Mes Réservations", 14, 15);
+    doc.text(t("my_reservations"), 14, 15);
 
     const headers = [
       [
-        "Code",
-        "Date",
-        "Durée",
-        "Service",
-        "Montant",
-        "Payé",
-        "Méthode",
-        "Participants",
-        "Espace",
-        "Status",
+        t("code"),
+        t("date"),
+        t("duration"),
+        t("service"),
+        t("space"),
+        t("amount"),
+        t("paid"),
+        t("payment"),
+        t("participants"),
+        t("status"),
       ],
     ];
 
@@ -234,7 +236,7 @@ function MesReservations() {
     setShowToast({
       type: "success",
       visible: true,
-      message: "Export PDF effectué !",
+      message: t("pdf_exported"),
     });
 
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
@@ -257,50 +259,49 @@ function MesReservations() {
         .includes(searchTerm.toLowerCase()) // pour les montants
   );
 
-
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
       case "annulation demandée":
         return (
           <MDBBadge color="warning" className="ms-2">
-            A annulée
+            {t("to_cancled")}
           </MDBBadge>
         );
       case "confirmée":
       case "acceptée":
         return (
           <MDBBadge color="success" className="ms-1">
-            Confirmée
+            {t("confirmed")}
           </MDBBadge>
         );
       case "annulée":
         return (
           <MDBBadge color="danger" className="ms-1">
-            Annulée
+            {t("cancled")}{" "}
           </MDBBadge>
         );
       case "en attente":
         return (
           <MDBBadge color="dark" className="ms-1">
-            En attente
+            {t("pending")}{" "}
           </MDBBadge>
         );
       case "refusée":
         return (
           <MDBBadge color="danger" className="ms-1">
-            Refusée
+            {t("refused")}{" "}
           </MDBBadge>
         );
       case "archivé":
         return (
           <MDBBadge color="secondary" className="ms-1">
-            Archivé
+            {t("archived")}{" "}
           </MDBBadge>
         );
       default:
         return (
           <MDBBadge color="light" className="ms-1">
-            Inconnu
+            {t("unknown")}{" "}
           </MDBBadge>
         );
     }
@@ -350,7 +351,7 @@ function MesReservations() {
               ></button>
             </div>
             <div className="toast-body">
-              {showToast.message || "Une action a été effectuée."}
+              {showToast.message || t("default_action_message")}
             </div>
           </div>
         </div>
@@ -359,10 +360,10 @@ function MesReservations() {
       {/* Main Content */}
       <MDBContainer className="py-5 px-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h3 className="text-primary fw-bold">Mes Réservations</h3>
+          <h3 className="text-primary fw-bold"> {t("my_reservations")}</h3>
           <div className="d-flex gap-2">
             <MDBInput
-              label="Rechercher..."
+              label={t("search")}
               size="sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -380,7 +381,7 @@ function MesReservations() {
           <div className="text-center py-5 justify-content-center align-items-center">
             <img
               src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
-              alt="Aucune réservation"
+              alt={t("no_reservation_title")}
               style={{
                 width: "180px",
                 marginBottom: "20px",
@@ -388,14 +389,14 @@ function MesReservations() {
                 marginLeft: "42%",
               }}
             />
-            <h5 className="mt-3 text-muted">Aucune réservation trouvée</h5>
+            <h5 className="mt-3 text-muted">{t("no_reservation_title")}</h5>
             <Link to="/reserver">
               <MDBBtn
                 color="primary"
                 className="mt-3"
                 style={{ textTransform: "none" }}
               >
-                Faire une réservation
+                {t("make_reservation")}{" "}
               </MDBBtn>
             </Link>
           </div>
@@ -410,17 +411,17 @@ function MesReservations() {
                 style={{ fontWeight: "bold", fontSize: "1.0rem" }}
               >
                 <tr>
-                  <th>Code</th>
-                  <th>Date</th>
-                  <th>Durée</th>
-                  <th>Service</th>
-                  <th>Montant</th>
-                  <th>Payé</th>
-                  <th>Méthode</th>
-                  <th>Participants</th>
-                  <th>status</th>
-                  <th>Espace</th>
-                  <th>Actions</th>
+                  <th>{t("code")}</th>
+                  <th>{t("date")}</th>
+                  <th>{t("duration")}</th>
+                  <th>{t("service")}</th>
+                  <th>{t("amount")}</th>
+                  <th>{t("paid")}</th>
+                  <th>{t("method")}</th>
+                  <th>{t("participants")}</th>
+                  <th>{t("status")}</th>
+                  <th>{t("space")}</th>
+                  <th>{t("actions")}</th>
                 </tr>
               </MDBTableHead>
               <MDBTableBody className="text-center">
@@ -482,23 +483,21 @@ function MesReservations() {
         <MDBModalDialog>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Confirmer la suppression</MDBModalTitle>
+              <MDBModalTitle>{t("confirm_delete")}</MDBModalTitle>
               <MDBBtn
                 className="btn-close"
                 color="none"
                 onClick={() => setShowModal(false)}
               />
             </MDBModalHeader>
-            <MDBModalBody>
-              Êtes-vous sûr de vouloir supprimer cette réservation ?
-            </MDBModalBody>
+            <MDBModalBody>{t("confirm_delete_message")} </MDBModalBody>
             <MDBModalFooter>
               <MDBBtn
                 color="secondary"
                 style={{ textTransform: "none" }}
                 onClick={() => setShowModal(false)}
               >
-                Annuler
+                {t("cancel")}
               </MDBBtn>
               <MDBBtn
                 color="danger"
@@ -512,10 +511,10 @@ function MesReservations() {
                       className="spinner-border spinner-border-sm me-2"
                       role="status"
                     />
-                    Suppression...
+                    {t("deleting")}
                   </>
                 ) : (
-                  "Supprimer"
+                  t("delete")
                 )}
               </MDBBtn>
             </MDBModalFooter>
@@ -525,14 +524,14 @@ function MesReservations() {
       {/* Section des rappels */}
       <MDBContainer className="py-5 px-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h3 className="text-primary fw-bold">Mes Rappels</h3>
+          <h3 className="text-primary fw-bold">{t("my_reminders")}</h3>
         </div>
 
         {filteredRappels.length === 0 ? (
           <div className="text-center py-5 justify-content-center align-items-center">
             <img
               src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
-              alt="Aucun rappel"
+              alt={t("no_reminders")}
               style={{
                 width: "180px",
                 marginBottom: "20px",
@@ -540,7 +539,7 @@ function MesReservations() {
                 marginLeft: "42%",
               }}
             />
-            <h5 className="mt-3 text-muted">Aucun rappel trouvé</h5>
+            <h5 className="mt-3 text-muted">{t("no_reminders")}</h5>
           </div>
         ) : (
           <div

@@ -1,13 +1,16 @@
 import React from "react";
 import {  MDBBtn, MDBIcon } from 'mdb-react-ui-kit';
 import "../styles/Pages.css";
+import { useTranslation } from "react-i18next";
 
 function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="footer ">
     <div className="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
       <div className="text-white mb-3 mb-md-0">
-      © 2025 ReserGo. Tous droits réservés.
+      {t("copyright")}
       </div>
 
       <div>

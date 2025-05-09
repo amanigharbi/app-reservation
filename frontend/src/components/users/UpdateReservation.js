@@ -19,8 +19,11 @@ import {
 
 import PaymentModal from "./PaymentModal";
 import RefundModal from "./RefundModal";
+import { useTranslation } from "react-i18next";
 
 function UpdateReservation({ reservationId, onClose, showModal }) {
+  const { t } = useTranslation();
+
   const [reservation, setReservation] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
@@ -74,14 +77,14 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       });
 
       if (conflicts.length > 0) {
-        setError("Le créneau sélectionné est déjà réservé pour cette date.");
+        setError(t("time_msg"));
         return true; // conflit détecté
       }
 
       setError(""); // pas d'erreur
       return false;
     } catch (err) {
-      console.error("Erreur vérification conflit:", err);
+      console.error(t("err"), err);
       return false;
     }
   };
@@ -114,8 +117,8 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
           montantTotal: Number(data.montant) || 0,
         });
       } catch (err) {
-        console.error("Erreur chargement réservation:", err);
-        setError("Erreur lors du chargement de la réservation");
+        console.error(t("error_res"), err);
+        setError(t("error_res"));
       }
     };
 
@@ -133,24 +136,25 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
     ) {
       const [h1, m1] = reservation.heure_arrivee.split(":").map(Number);
       const [h2, m2] = reservation.heure_depart.split(":").map(Number);
-  
+
       if (h2 * 60 + m2 <= h1 * 60 + m1) {
-        setError("L'heure de départ doit être après l'heure d'arrivée");
+        setError(t("msg_err"));
+
         return;
       }
-  
+
       const nouvelleDuree = (h2 * 60 + m2 - (h1 * 60 + m1)) / 60;
       const differenceDuree = nouvelleDuree - reservation.dureeInitiale;
-  
+
       let supplement = 0;
       let remboursement = 0;
-  
+
       if (differenceDuree > 0) {
         supplement = differenceDuree * reservation.spaceMontant;
       } else {
         remboursement = Math.abs(differenceDuree) * reservation.spaceMontant;
       }
-  
+
       setReservation((prev) => ({
         ...prev,
         dureeModifiee: nouvelleDuree,
@@ -158,7 +162,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
         montantRemboursable: remboursement,
         montantTotal: prev.montantDejaPaye + supplement - remboursement,
       }));
-  
+
       setError("");
     }
     // eslint-disable-next-line
@@ -170,7 +174,6 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
     reservation?.spaceMontant,
     reservation?.montantDejaPaye,
   ]);
-  
 
   const formatDuree = (heuresDecimales) => {
     const totalMinutes = Math.round(parseFloat(heuresDecimales) * 60);
@@ -232,15 +235,15 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       setShowToast({
         type: "success",
         visible: true,
-        message: "Réservation mise à jour avec succès !",
+        message: t("success_update"),
       });
       setTimeout(() => onClose(true), 2000);
     } catch (error) {
-      console.error("Erreur mise à jour réservation:", error);
+      console.error(t("error_update"), error);
       setShowToast({
         type: "error",
         visible: true,
-        message: "Erreur lors de la mise à jour.",
+        message: t("error_update"),
       });
     } finally {
       setLoading(false);
@@ -280,7 +283,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
     try {
       const token = localStorage.getItem("token");
       if (!reservationId) {
-        console.error("Pas d'ID de réservation, impossible d'envoyer le PUT !");
+        console.error(t("error_put"));
         return;
       }
 
@@ -314,7 +317,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       setShowToast({
         type: "success",
         visible: true,
-        message: "Demande d'annulation de réservation avec succès.",
+        message: t("success_delete_req"),
       });
 
       setTimeout(() => onClose(true), 2000);
@@ -323,7 +326,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
       setShowToast({
         type: "error",
         visible: true,
-        message: "Erreur lors de la demande de l'annulation.",
+        message: t("error_req_delete"),
       });
     } finally {
       setLoading(false);
@@ -337,7 +340,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
         style={{ height: "80vh" }}
       >
         <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Chargement...</span>
+          <span className="visually-hidden">{t("loading")}</span>
         </div>
       </div>
     );
@@ -349,7 +352,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
         style={{ height: "80vh" }}
       >
         <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Chargement...</span>
+          <span className="visually-hidden">{t("loading")}</span>
         </div>
       </div>
     );
@@ -363,7 +366,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
             <MDBModalHeader className="d-flex align-items-center justify-content-between">
               <div className="d-flex align-items-center">
                 <h5 className="modal-title text-primary fw-bold mb-0 me-3">
-                  Modifier Réservation{" "}
+                  {t("update_res")}{" "}
                 </h5>
                 {/* Badge Status */}
                 {reservation?.status && (
@@ -398,7 +401,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
               <MDBRow className="mb-3">
                 <MDBCol md="6">
                   <MDBInput
-                    label="Date"
+                    label={t("date")}
                     type="date"
                     value={reservation.date}
                     onChange={(e) =>
@@ -408,7 +411,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                 </MDBCol>
                 <MDBCol md="3">
                   <MDBInput
-                    label="Heure arrivée"
+                    label={t("arrival")}
                     type="time"
                     value={reservation.heure_arrivee}
                     onChange={(e) =>
@@ -421,7 +424,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                 </MDBCol>
                 <MDBCol md="3">
                   <MDBInput
-                    label="Heure départ"
+                    label={t("departure")}
                     type="time"
                     value={reservation.heure_depart}
                     onChange={(e) =>
@@ -436,23 +439,23 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
 
               {/* Montant */}
               <MDBCardText>
-                <strong>Durée initiale:</strong>{" "}
+                <strong>{t("initial_dur")}</strong>{" "}
                 {formatDuree(reservation.dureeInitiale)}
               </MDBCardText>
               <MDBCardText>
-                <strong>Nouvelle durée:</strong>{" "}
+                <strong>{t("new_dur")}</strong>{" "}
                 {formatDuree(reservation.dureeModifiee)}
               </MDBCardText>
               <MDBCardText>
-                <strong>Supplément:</strong>{" "}
+                <strong>{t("supp")}</strong>{" "}
                 {reservation.montantSupplementaire.toFixed(2)} €
               </MDBCardText>
               <MDBCardText>
-                <strong>Remboursement:</strong>{" "}
+                <strong>{t("remb")}</strong>{" "}
                 {reservation.montantRemboursable.toFixed(2)} €
               </MDBCardText>
               <MDBCardText>
-                <strong>Total final:</strong>{" "}
+                <strong>{t("final_total")}</strong>{" "}
                 {Number(reservation.montantTotal).toFixed(2)} €
               </MDBCardText>
 
@@ -469,7 +472,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                   ) : (
                     <MDBIcon icon="chevron-down" />
                   )}
-                  Historique des modifications
+                  {t("history_update")}
                 </MDBBtn>
 
                 {showModificationHistory && (
@@ -479,11 +482,11 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                         <table className="table table-sm">
                           <thead>
                             <tr>
-                              <th>Date</th>
-                              <th>Type</th>
-                              <th>Ancienne durée</th>
-                              <th>Nouvelle durée</th>
-                              <th>Montant</th>
+                              <th>{t("date")}</th>
+                              <th>{t("type")}</th>
+                              <th>{t("old_dur")}</th>
+                              <th>{t("new_dur")}</th>
+                              <th>{t("amount")}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -564,9 +567,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                         </table>
                       </div>
                     ) : (
-                      <MDBCardText>
-                        Aucune modification enregistrée.
-                      </MDBCardText>
+                      <MDBCardText>{t("no_update")} </MDBCardText>
                     )}
                   </div>
                 )}
@@ -578,14 +579,14 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                 onClick={handleCancelReservation}
                 style={{ textTransform: "none" }}
               >
-                Annuler la réservation
+                {t("cancel_res")}
               </MDBBtn>
               <MDBBtn
                 color="secondary"
                 onClick={() => onClose(false)}
                 style={{ textTransform: "none" }}
               >
-                Fermer
+                {t("close")}
               </MDBBtn>
               <MDBBtn
                 color="primary"
@@ -593,7 +594,7 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                 disabled={loading}
                 style={{ textTransform: "none" }}
               >
-                {loading ? "Enregistrement..." : "Enregistrer"}
+                {loading ? t("saving") : t("save")}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>
@@ -607,23 +608,21 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
         <MDBModalDialog>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Confirmer l'annulation</MDBModalTitle>
+              <MDBModalTitle>{t("confirm_cancel")}</MDBModalTitle>
               <MDBBtn
                 className="btn-close"
                 color="none"
                 onClick={() => setShowModal(false)}
               />
             </MDBModalHeader>
-            <MDBModalBody>
-              Êtes-vous sûr de vouloir annuler cette réservation ?
-            </MDBModalBody>
+            <MDBModalBody>{t("sure_cancel")}</MDBModalBody>
             <MDBModalFooter>
               <MDBBtn
                 color="secondary"
                 style={{ textTransform: "none" }}
                 onClick={() => setShowModal(false)}
               >
-                Annuler
+                {t("cancel")}
               </MDBBtn>
               <MDBBtn
                 color="danger"
@@ -637,10 +636,10 @@ function UpdateReservation({ reservationId, onClose, showModal }) {
                       className="spinner-border spinner-border-sm me-2"
                       role="status"
                     />
-                    Annulation...
+                    {t("canceling")}{" "}
                   </>
                 ) : (
-                  "Annuler la réservation"
+                  t("cancel_res")
                 )}
               </MDBBtn>
             </MDBModalFooter>

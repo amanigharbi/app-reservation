@@ -17,8 +17,11 @@ import {
 import "../styles/Pages.css";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import { useTranslation } from "react-i18next";
 
 function Profil() {
+  const { t } = useTranslation();
+
   const { user, setUser } = useContext(UserContext);
   const [editData, setEditData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -48,11 +51,11 @@ function Profil() {
       setUser(response.data.user);
       setEditData(response.data.user);
     } catch (error) {
-      console.error("Erreur de récupération des données utilisateur", error);
+      console.error(t("error_user"), error);
       setShowToast({
         type: "error",
         visible: true,
-        message: "Impossible de récupérer les données utilisateur.",
+        message: t("error_user"),
       });
     } finally {
       setLoading(false);
@@ -122,17 +125,17 @@ function Profil() {
       setShowToast({
         type: "success",
         visible: true,
-        message: "Profil mis à jour avec succès!",
+        message: t("success_profile"),
       });
       setTimeout(() => {
         setShowToast({ type: "", visible: false, message: "" }); // Cache le toast après quelques secondes
       }, 3000);
     } catch (error) {
-      console.error("Erreur de mise à jour du profil", error);
+      console.error(t("error_profile"), error);
       setShowToast({
         type: "error",
         visible: true,
-        message: "Erreur lors de la mise à jour.",
+        message: t("error_profile"),
       });
     }
   };
@@ -144,7 +147,7 @@ function Profil() {
         style={{ height: "100vh" }}
       >
         <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Chargement...</span>
+          <span className="visually-hidden">{t("loading")}</span>
         </div>
       </MDBContainer>
     );
@@ -195,13 +198,13 @@ function Profil() {
               ></button>
             </div>
             <div className="toast-body">
-              {showToast.message || "Une action a été effectuée."}
+              {showToast.message || t("default_action_message")}
             </div>
           </div>
         </div>
       )}
       <MDBContainer className="py-5 px-4">
-        <h3 className="text-primary fw-bold mb-4">Mon Profil</h3>
+        <h3 className="text-primary fw-bold mb-4">{t("title_prof")}</h3>
         <MDBRow>
           <MDBCol md="4">
             <MDBCard className="shadow  bg-light border-0 rounded-3">
@@ -211,7 +214,7 @@ function Profil() {
                     src={
                       user?.photoURL ||
                       `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        user?.username || "Utilisateur"
+                        user?.username || t("user")
                       )}&background=3B71CA&color=fff&size=150`
                     }
                     alt="Avatar"
@@ -227,23 +230,24 @@ function Profil() {
                 <h4 className="mb-1">
                   {user?.firstName && user?.lastName
                     ? `${user.firstName} ${user.lastName}`
-                    : user?.username || "Utilisateur"}
+                    : user?.username || t("user")}
                 </h4>
-                <p className="text-muted mb-2">{user?.email || "Email"}</p>
+                <p className="text-muted mb-2">{user?.email || t("email")}</p>
 
                 <p className="text-muted mb-2">
-                  {user?.position || "Poste non défini"}
+                  {user?.position || t("no_poste")}
                 </p>
                 <p className="text-muted mb-4">
-                  {user?.location || "Localisation inconnue"}
+                  {user?.location || t("no_location")}
                 </p>
 
                 <div className="d-flex justify-content-center gap-2 mb-4">
                   <MDBBtn size="sm" color="primary" outline className="px-3">
-                    Suivre
+                    {t("suivi")}
                   </MDBBtn>
                   <MDBBtn size="sm" color="primary" className="px-3">
-                    Message
+                  {t("message")}
+
                   </MDBBtn>
                 </div>
               </MDBCardBody>
@@ -253,7 +257,9 @@ function Profil() {
 
             <MDBCard className="shadow  bg-light border-0 rounded-3">
               <MDBCardBody className="text-center p-4">
-                <h6 className="text-primary fw-bold mb-4 ">Réseaux Sociaux</h6>
+                <h6 className="text-primary fw-bold mb-4 ">{t("social_media")}
+          
+                </h6>
 
                 <div className="text-start">
                   <ul className="list-unstyled mb-0">
@@ -344,10 +350,10 @@ function Profil() {
             <MDBCard className="shadow border-0 bg-light">
               <MDBCardBody>
                 <MDBCardTitle className="text-primary">
-                  Modifier mes informations
+                  {t("update_info")}
                 </MDBCardTitle>
                 <MDBInput
-                  label="Username"
+                  label={t("username")}
                   name="username"
                   value={editData.username || ""}
                   onChange={(e) =>
@@ -356,7 +362,7 @@ function Profil() {
                   className="mb-3"
                 />
                 <MDBInput
-                  label="Prénom"
+                  label={t("first_name")}
                   name="firstName"
                   value={editData.firstName || ""}
                   onChange={(e) =>
@@ -365,7 +371,7 @@ function Profil() {
                   className="mb-3"
                 />
                 <MDBInput
-                  label="Nom"
+                  label={t("last_namem")}
                   name="lastName"
                   value={editData.lastName || ""}
                   onChange={(e) =>
@@ -374,7 +380,7 @@ function Profil() {
                   className="mb-3"
                 />
                 <MDBInput
-                  label="Poste"
+                  label={t("position")}
                   name="position"
                   value={editData.position || ""}
                   onChange={(e) =>
@@ -383,7 +389,7 @@ function Profil() {
                   className="mb-3"
                 />
                 <MDBInput
-                  label="Localisation"
+                  label={t("location")}
                   name="location"
                   value={editData.location || ""}
                   onChange={(e) =>
@@ -392,7 +398,7 @@ function Profil() {
                   className="mb-3"
                 />
                 <MDBInput
-                  label="Site Web"
+                  label={t("website")}
                   name="website"
                   value={editData.website || ""}
                   onChange={(e) =>
@@ -438,7 +444,7 @@ function Profil() {
                 />
 
                 <div className="mb-3">
-                  <label className="form-label">Choisir une image</label>
+                  <label className="form-label">{t("choose")}</label>
                   <input
                     type="file"
                     accept="image/*"
@@ -448,7 +454,7 @@ function Profil() {
                 </div>
 
                 <MDBBtn onClick={handleUpdate} color="primary" className="mt-3">
-                  Mettre à jour
+                  {t("update")}
                 </MDBBtn>
               </MDBCardBody>
             </MDBCard>

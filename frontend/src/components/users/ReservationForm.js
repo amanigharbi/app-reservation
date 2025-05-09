@@ -12,7 +12,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/Pages.css";
+import { useTranslation } from "react-i18next";
+
 function ReservationForm({ space }) {
+  const { t } = useTranslation();
+
   const [etape, setEtape] = useState(1);
   const [nouveauRappel, setNouveauRappel] = useState("");
   const [showToast, setShowToast] = useState({
@@ -66,15 +70,26 @@ function ReservationForm({ space }) {
         setLoadingSlots(true);
         try {
           const token = localStorage.getItem("token");
-          const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/protected/reservations`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          const matching = response.data.reservations.filter(
-            (res) => res.date === reservationDetails.date && res.spaceId === spaceDetails.id && !["annulée", "refusée"].includes(res.status)
+          const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/protected/reservations`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
           );
 
-          setReservedSlots(matching.map((res) => ({ start: res.heure_arrivee, end: res.heure_depart })));
+          const matching = response.data.reservations.filter(
+            (res) =>
+              res.date === reservationDetails.date &&
+              res.spaceId === spaceDetails.id &&
+              !["annulée", "refusée"].includes(res.status)
+          );
+
+          setReservedSlots(
+            matching.map((res) => ({
+              start: res.heure_arrivee,
+              end: res.heure_depart,
+            }))
+          );
         } catch (error) {
           console.error("Erreur chargement réservations:", error);
         } finally {
@@ -86,34 +101,50 @@ function ReservationForm({ space }) {
     fetchReservations();
   }, [reservationDetails.date, spaceDetails.id]);
 
-  const isSlotAvailable = useCallback((time) => {
-    const [h, m] = time.split(":").map(Number);
-    const t = h * 60 + m;
-    return !reservedSlots.some(({ start, end }) => {
-      const [sh, sm] = start.split(":").map(Number);
-      const [eh, em] = end.split(":").map(Number);
-      const s = sh * 60 + sm, e = eh * 60 + em;
-      return t >= s && t < e + 15;
-    });
-  }, [reservedSlots]);
+  const isSlotAvailable = useCallback(
+    (time) => {
+      const [h, m] = time.split(":").map(Number);
+      const t = h * 60 + m;
+      return !reservedSlots.some(({ start, end }) => {
+        const [sh, sm] = start.split(":").map(Number);
+        const [eh, em] = end.split(":").map(Number);
+        const s = sh * 60 + sm,
+          e = eh * 60 + em;
+        return t >= s && t < e + 15;
+      });
+    },
+    [reservedSlots]
+  );
 
   const generateTimeSlots = useCallback(() => {
     if (!spaceDetails.availableFrom || !spaceDetails.availableTo) return [];
     const [oh, om] = spaceDetails.availableFrom.split(":").map(Number);
     const [ch, cm] = spaceDetails.availableTo.split(":").map(Number);
-    let h = oh, m = om, slots = [];
+    let h = oh,
+      m = om,
+      slots = [];
     while (h < ch || (h === ch && m < cm)) {
-      const t = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+      const t = `${h.toString().padStart(2, "0")}:${m
+        .toString()
+        .padStart(2, "0")}`;
       slots.push({ time: t, available: isSlotAvailable(t) });
       m += 15;
-      if (m >= 60) { h++; m -= 60; }
+      if (m >= 60) {
+        h++;
+        m -= 60;
+      }
     }
     return slots;
   }, [spaceDetails.availableFrom, spaceDetails.availableTo, isSlotAvailable]);
 
   useEffect(() => {
     setAvailableSlots(generateTimeSlots());
-  }, [generateTimeSlots, reservationDetails.date, reservationDetails.heure_arrivee, reservationDetails.heure_depart]);
+  }, [
+    generateTimeSlots,
+    reservationDetails.date,
+    reservationDetails.heure_arrivee,
+    reservationDetails.heure_depart,
+  ]);
 
   useEffect(() => {
     if (selectedStartSlot && selectedEndSlot) {
@@ -144,10 +175,12 @@ function ReservationForm({ space }) {
     const d = parseFloat(reservationDetails.duree);
     const m = parseFloat(spaceDetails?.montant || 0);
     if (!isNaN(d) && !isNaN(m)) {
-      setReservationDetails((prev) => ({ ...prev, montant: (d * m).toFixed(2) }));
+      setReservationDetails((prev) => ({
+        ...prev,
+        montant: (d * m).toFixed(2),
+      }));
     }
   }, [reservationDetails.duree, spaceDetails?.montant]);
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -156,49 +189,54 @@ function ReservationForm({ space }) {
 
   const validateForm = () => {
     const newErrors = {};
-
+  
     if (etape === 1) {
       if (!reservationDetails.service)
-        newErrors.service = "Le service est requis";
-      if (!reservationDetails.date) newErrors.date = "La date est requise";
+        newErrors.service = t("service_required");
+      if (!reservationDetails.date) newErrors.date = t("date_required");
       if (!reservationDetails.participants)
-        newErrors.participants = "Le nombre de participants est requis";
-
+        newErrors.participants = t("part_required");
+  
       // Vérification capacité max
       const participants = parseInt(reservationDetails.participants, 10);
       const maxCapacity = parseInt(spaceDetails.capacity || 0, 10);
-
+  
       if (!isNaN(participants) && participants > maxCapacity) {
-        newErrors.participants = `Le nombre de participants dépasse la capacité maximale (${maxCapacity})`;
+        newErrors.participants = `${t("participantsExceeded")} (${maxCapacity})`;
       }
       // Validation des heures
       const { heure_arrivee, heure_depart } = reservationDetails;
       const { availableFrom, availableTo } = spaceDetails || {};
-
+  
       if (heure_arrivee && heure_depart && availableFrom && availableTo) {
         const toMinutes = (time) => {
           const [h, m] = time.split(":").map(Number);
           return h * 60 + m;
         };
-
+  
         const arriveeMin = toMinutes(heure_arrivee);
         const departMin = toMinutes(heure_depart);
         const dispoMin = toMinutes(availableFrom);
         const dispoMax = toMinutes(availableTo);
-
+  
         if (arriveeMin < dispoMin || departMin > dispoMax) {
-          newErrors.heure_arrivee = `L'heure doit être entre ${availableFrom} et ${availableTo}`;
-          newErrors.heure_depart = `L'heure doit être entre ${availableFrom} et ${availableTo}`;
+          newErrors.heure_arrivee = `${t(
+            "heureArriveeDepart_1"
+          )} ${availableFrom} ${t("heureArriveeDepart_2")} ${availableTo}`;
+          newErrors.heure_depart = `${t(
+            "heureArriveeDepart_1"
+          )} ${availableFrom} ${t("heureArriveeDepart_2")} ${availableTo}`;
         }
       }
     }
-
+  
     if (etape === 2 && !reservationDetails.mode_paiement) {
-      newErrors.mode_paiement = "Le mode de paiement est requis";
+      newErrors.mode_paiement = t("pay_required");
     }
-
+  
     return newErrors;
   };
+  
 
   const handleSubmitReservation = async (e) => {
     e.preventDefault();
@@ -235,19 +273,18 @@ function ReservationForm({ space }) {
         setShowToast({
           type: "success",
           visible: true,
-          message: "Réservation créée avec succès!",
+          message: t("success_created"),
         });
 
         setTimeout(() => {
           navigate("/mes-reservations");
         }, 2000);
       } catch (error) {
-        console.error("Erreur création réservation:", error);
+        console.error(t("error_created"), error);
         setShowToast({
           type: "error",
           visible: true,
-          message:
-            error.response?.data?.message || "Erreur lors de la réservation",
+          message: error.response?.data?.message || t("error_created"),
         });
       } finally {
         setLoading(false);
@@ -262,7 +299,7 @@ function ReservationForm({ space }) {
       {loadingSlots ? (
         <div className="text-center py-3">
           <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Chargement...</span>
+            <span className="visually-hidden">{t("loading")}</span>
           </div>
         </div>
       ) : (
@@ -326,20 +363,20 @@ function ReservationForm({ space }) {
       {spaceDetails && (
         <div className="text-center mb-4">
           <h4>
-            <b>Réservation pour l'espace :</b> {spaceDetails.name}
+            <b>{t("title_res_space")} :</b> {spaceDetails.name}
           </h4>
           <MDBCardText>
-            <strong>Lieu :</strong> {spaceDetails.location}
+            <strong>{t("location")} :</strong> {spaceDetails.location}
           </MDBCardText>
           <MDBCardText>
-            <strong>Disponible :</strong> {spaceDetails.availableFrom} -{" "}
+            <strong>{t("dispo")} :</strong> {spaceDetails.availableFrom} -{" "}
             {spaceDetails.availableTo}
           </MDBCardText>
           <MDBCardText>
-            <strong>Tarif :</strong> {spaceDetails.montant} €/heure
+            <strong>{t("tarif")} :</strong> {spaceDetails.montant} {t("eur_h")}
           </MDBCardText>
           <MDBCardText>
-            <strong>Capacité :</strong> {spaceDetails.capacity} personnes
+            <strong>{t("capacity")} :</strong> {spaceDetails.capacity} {t("per")}
           </MDBCardText>
         </div>
       )}
@@ -349,7 +386,7 @@ function ReservationForm({ space }) {
         <MDBRow>
           <MDBCol md="6" className="mb-4">
             <MDBInput
-              label="Service"
+              label={t("service")}
               name="service"
               value={reservationDetails.service}
               onChange={handleChange}
@@ -365,7 +402,7 @@ function ReservationForm({ space }) {
           </MDBCol>
           <MDBCol md="6" className="mb-4">
             <MDBInput
-              label="Participants"
+              label={t("participants")}
               name="participants"
               value={reservationDetails.participants}
               onChange={handleChange}
@@ -381,7 +418,7 @@ function ReservationForm({ space }) {
           </MDBCol>
           <MDBCol md="6" className="mb-4">
             <MDBInput
-              label="Date (YYYY-MM-DD)"
+              label={t("date")}
               name="date"
               value={reservationDetails.date}
               onChange={handleChange}
@@ -401,7 +438,7 @@ function ReservationForm({ space }) {
           </MDBCol>
           <MDBCol md="6" className="mb-4">
             <MDBInput
-              label="Durée (en heures)"
+              label={t("duration") + " "+ t("perH")}
               name="duree"
               value={reservationDetails.duree}
               onChange={handleChange}
@@ -418,42 +455,8 @@ function ReservationForm({ space }) {
             )}
           </MDBCol>
 
-          {/* <MDBCol md="6" className="mb-4">
-            <MDBInput
-              label="Heure d'arrivée"
-              type="time"
-              name="heure_arrivee"
-              value={reservationDetails.heure_arrivee}
-              onChange={handleChange}
-            />
-            {errors.heure_arrivee && (
-              <div
-                className="invalid-feedback d-block"
-                style={{ fontSize: "0.875rem", marginTop: "0.15rem" }}
-              >
-                {errors.heure_arrivee}
-              </div>
-            )}
-          </MDBCol>
-          <MDBCol md="6" className="mb-4">
-            <MDBInput
-              label="Heure de départ"
-              type="time"
-              name="heure_depart"
-              value={reservationDetails.heure_depart}
-              onChange={handleChange}
-            />
-            {errors.heure_depart && (
-              <div
-                className="invalid-feedback d-block"
-                style={{ fontSize: "0.875rem", marginTop: "0.15rem" }}
-              >
-                {errors.heure_depart}
-              </div>
-            )}
-          </MDBCol> */}
           <TimeSlotSelector
-            label="Arrivée"
+            label={t("arrival")}
             value={reservationDetails.heure_arrivee}
             onChange={(time) => {
               setReservationDetails((prev) => ({
@@ -467,7 +470,7 @@ function ReservationForm({ space }) {
           />
 
           <TimeSlotSelector
-            label="Départ"
+            label={t("departure")}
             value={reservationDetails.heure_depart}
             onChange={(time) => {
               setReservationDetails((prev) => ({
@@ -482,7 +485,7 @@ function ReservationForm({ space }) {
           />
           <MDBCol md="12" className="mb-4">
             <MDBInput
-              label="Description"
+              label={t("description")}
               name="description"
               value={reservationDetails.description}
               onChange={handleChange}
@@ -490,7 +493,7 @@ function ReservationForm({ space }) {
           </MDBCol>
           <MDBCol md="12" className="mb-4">
             <MDBInput
-              label="Commentaires"
+              label={t("comments")}
               name="commentaires"
               value={reservationDetails.commentaires}
               onChange={handleChange}
@@ -498,7 +501,7 @@ function ReservationForm({ space }) {
           </MDBCol>
           <MDBCol md="12" className="mb-4">
             <MDBInput
-              label="Ajouter un rappel (ex: 2025-04-20 10:00)"
+              label={t("add_rappel_label")}
               name="nouveau_rappel"
               type="datetime-local"
               value={nouveauRappel}
@@ -518,7 +521,7 @@ function ReservationForm({ space }) {
                 }
               }}
             >
-              Ajouter un rappel
+              {t("add_rappel")}{" "}
             </MDBBtn>
 
             {/* Affichage des rappels sous forme de badges */}
@@ -537,7 +540,7 @@ function ReservationForm({ space }) {
       {etape === 2 && (
         <MDBRow>
           <MDBCol md="12">
-            <label className="form-label">Mode de paiement</label>
+            <label className="form-label">{t("payment")}</label>
             <select
               className="form-select mb-3"
               value={paymentMethod}
@@ -549,15 +552,15 @@ function ReservationForm({ space }) {
                 }));
               }}
             >
-              <option value="carte">Carte de crédit</option>
-              <option value="paypal">PayPal</option>
-              <option value="virement">Virement bancaire</option>
+              <option value="carte">{t("credit")}</option>
+              <option value="paypal">{t("paypal")}</option>
+              <option value="virement">{t("vir")}</option>
             </select>
 
             {paymentMethod === "carte" && (
               <>
                 <MDBInput
-                  label="Numéro de carte"
+                  label={t("number_card")}
                   value={cardDetails.number}
                   onChange={(e) =>
                     setCardDetails({ ...cardDetails, number: e.target.value })
@@ -566,7 +569,7 @@ function ReservationForm({ space }) {
                 />
                 <div className="d-flex mb-3">
                   <MDBInput
-                    label="Date expiration"
+                    label={t("exp_date")}
                     value={cardDetails.expiry}
                     onChange={(e) =>
                       setCardDetails({
@@ -577,7 +580,7 @@ function ReservationForm({ space }) {
                     className="me-2"
                   />
                   <MDBInput
-                    label="CVV"
+                    label={t("cvv")}
                     value={cardDetails.cvv}
                     onChange={(e) =>
                       setCardDetails({ ...cardDetails, cvv: e.target.value })
@@ -588,12 +591,12 @@ function ReservationForm({ space }) {
             )}
 
             <MDBCardText className="mt-3">
-              <strong>Montant à payer :</strong>{" "}
+              <strong>{t("amount_paid")}</strong>{" "}
               {reservationDetails.montant
                 ? `${Number(reservationDetails.montant).toLocaleString(
                     "fr-FR"
                   )} €`
-                : "Non spécifié"}
+                : t("not_specified")}
             </MDBCardText>
           </MDBCol>
         </MDBRow>
@@ -604,45 +607,45 @@ function ReservationForm({ space }) {
         <MDBRow>
           <MDBCol md="12">
             <MDBCardText>
-              <strong>Service :</strong> {reservationDetails.service}
+              <strong>{t("service")} :</strong> {reservationDetails.service}
             </MDBCardText>
             <MDBCardText>
-              <strong>Lieu :</strong> {space.location}
+              <strong>{t("location")} :</strong> {space.location}
             </MDBCardText>
             <MDBCardText>
-              <strong>Date :</strong> {reservationDetails.date}
+              <strong>{t("date")} :</strong> {reservationDetails.date}
             </MDBCardText>
             <MDBCardText>
-              <strong>Durée :</strong> {reservationDetails.duree} h
+              <strong>{t("duration")} :</strong> {reservationDetails.duree} h
             </MDBCardText>
             <MDBCardText>
-              <strong>Participants :</strong> {reservationDetails.participants}
+              <strong>{t("participants")} :</strong> {reservationDetails.participants}
             </MDBCardText>
             <MDBCardText>
-              <strong>Description :</strong>{" "}
-              {reservationDetails.description || "Aucune"}
+              <strong>{t("description")} :</strong>{" "}
+              {reservationDetails.description || t("auc")}
             </MDBCardText>
             <MDBCardText>
-              <strong>Commentaires :</strong>{" "}
-              {reservationDetails.commentaires || "Aucun"}
+              <strong>{t("comments")} :</strong>{" "}
+              {reservationDetails.commentaires || t("auc")}
             </MDBCardText>
             <MDBCardText>
-              <strong>Heure d'arrivée :</strong>{" "}
+              <strong>{t("arrival")} :</strong>{" "}
               {reservationDetails.heure_arrivee}
             </MDBCardText>
             <MDBCardText>
-              <strong>Heure de départ :</strong>{" "}
+              <strong>{t("departure")} :</strong>{" "}
               {reservationDetails.heure_depart}
             </MDBCardText>
             <MDBCardText>
-              <strong>Montant à payer :</strong> {reservationDetails.montant} €
+              <strong>{t("amount_paid")}</strong> {reservationDetails.montant} €
             </MDBCardText>
             <MDBCardText>
-              <strong>Mode de paiement :</strong>{" "}
+              <strong>{t("payment")} :</strong>{" "}
               {reservationDetails.mode_paiement}
             </MDBCardText>
             <MDBCardText>
-              <strong>Rappels :</strong>
+              <strong>{t("remind")} :</strong>
             </MDBCardText>
             <ul>
               {reservationDetails.rappels.length > 0 ? (
@@ -650,7 +653,7 @@ function ReservationForm({ space }) {
                   <li key={i}>{new Date(r).toLocaleString()}</li>
                 ))
               ) : (
-                <li>Aucun</li>
+                <li>{t("auc")}</li>
               )}
             </ul>
           </MDBCol>
@@ -666,7 +669,7 @@ function ReservationForm({ space }) {
             onClick={() => setEtape(etape - 1)}
             disabled={loading}
           >
-            <MDBIcon icon="arrow-left" className="me-2" /> Précédent
+            <MDBIcon icon="arrow-left" className="me-2" /> {t("prev")}
           </MDBBtn>
         )}
         {etape < 3 ? (
@@ -682,7 +685,7 @@ function ReservationForm({ space }) {
             }}
             disabled={loading}
           >
-            Suivant <MDBIcon icon="arrow-right" className="ms-2" />
+            {t("next")} <MDBIcon icon="arrow-right" className="ms-2" />
           </MDBBtn>
         ) : (
           <MDBBtn
@@ -698,11 +701,11 @@ function ReservationForm({ space }) {
                   role="status"
                   aria-hidden="true"
                 ></span>
-                En cours...
+                {t("en_cr")}
               </>
             ) : (
               <>
-                Confirmer la réservation{" "}
+                {t("conf_res")}{" "}
                 <MDBIcon icon="check" className="ms-2" />
               </>
             )}

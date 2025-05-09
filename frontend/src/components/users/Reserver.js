@@ -13,8 +13,11 @@ import {
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import ReservationForm from "./ReservationForm";
+import { useTranslation } from "react-i18next";
 
 function Reserver() {
+    const { t } = useTranslation();
+  
   const [availableSpaces, setAvailableSpaces] = useState([]);
   const [step, setStep] = useState(1);
   const [selectedSpace, setSelectedSpace] = useState(null);
@@ -31,7 +34,7 @@ function Reserver() {
         );
         setAvailableSpaces(spacesAvailable);
       } catch (error) {
-        console.error("Erreur lors de la récupération des espaces:", error);
+        console.error(t("error_fetch_space"), error);
       }
     };
     fetchAvailableSpaces();
@@ -53,7 +56,7 @@ function Reserver() {
             className="text-primary mb-4 text-center"
             style={{ fontWeight: "bold" }}
           >
-            Réserver un Espace
+           {t("reser_space")}
           </h3>
           <MDBRow className="justify-content-center">
             {availableSpaces.length === 0 ? (
@@ -64,11 +67,11 @@ function Reserver() {
               >
                 <img
                   src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
-                  alt="Aucun espace disponible"
+                  alt={t("no_space")}
                   style={{ width: "180px", marginBottom: "20px", opacity: 0.7 }}
                 />
                 <h5 className="text-muted text-center">
-                  Aucun espace disponible pour le moment
+                  {t("no_space")}
                 </h5>
               </MDBCol>
             ) : (
@@ -87,14 +90,15 @@ function Reserver() {
                         <br />
                         🕒 {space.availableFrom} - {space.availableTo}
                         <br />
-                        👥 Capacité :{" "}
-                        {space.capacity ? space.capacity : "Non spécifiée"}{" "}
-                        personnes
+                        👥 {t("capacity")} :{" "}
+                        {space.capacity ? space.capacity : t("not_specified")}{" "}
+                        {t("per")}
                         <br />
                         💰{" "}
                         {space.montant
-                          ? `${space.montant} € par heure`
-                          : "Non spécifié"}
+  ? t("per_hour", { amount: space.montant })
+  : t("not_specified")}
+
                       </MDBCardText>
                       <MDBBtn
                         size="lg"
@@ -106,7 +110,7 @@ function Reserver() {
                         }}
                         onClick={() => handleReservation(space)}
                       >
-                        Réserver cet espace
+                        {t("reser")}
                       </MDBBtn>
                     </MDBCardBody>
                   </MDBCard>

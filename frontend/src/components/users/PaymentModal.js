@@ -3,8 +3,11 @@ import {
   MDBModal, MDBModalDialog, MDBModalContent, MDBModalHeader,
   MDBModalTitle, MDBModalBody, MDBModalFooter, MDBInput, MDBBtn
 } from 'mdb-react-ui-kit';
+import { useTranslation } from "react-i18next";
 
 function PaymentModal({ show, onClose, amount, onSuccess }) {
+  const { t } = useTranslation();
+
   const [paymentMethod, setPaymentMethod] = useState('carte');
   const [cardDetails, setCardDetails] = useState({
     number: '',
@@ -30,38 +33,38 @@ function PaymentModal({ show, onClose, amount, onSuccess }) {
       <MDBModalDialog>
         <MDBModalContent>
           <MDBModalHeader>
-            <MDBModalTitle>Paiement supplémentaire</MDBModalTitle>
+            <MDBModalTitle>{t("supp_paiment")}</MDBModalTitle>
           </MDBModalHeader>
           <MDBModalBody>
-            <p className='h5 mb-4'>Montant à payer: {amount.toFixed(2)}€</p>
+            <p className='h5 mb-4'>{t("amount_paid")} {amount.toFixed(2)}€</p>
             
             <select
               className='form-select mb-3'
               value={paymentMethod}
               onChange={e => setPaymentMethod(e.target.value)}
             >
-              <option value='carte'>Carte de crédit</option>
-              <option value='paypal'>PayPal</option>
-              <option value='virement'>Virement bancaire</option>
+              <option value='carte'>{t("credit")}</option>
+              <option value='paypal'>{t("paypal")}</option>
+              <option value='virement'>{t("vir")}</option>
             </select>
 
             {paymentMethod === 'carte' && (
               <>
                 <MDBInput
-                  label='Numéro de carte'
+                  label={t("number_card")}
                   value={cardDetails.number}
                   onChange={e => setCardDetails({...cardDetails, number: e.target.value})}
                   className='mb-2'
                 />
                 <div className='d-flex'>
                   <MDBInput
-                    label='Date expiration'
+                    label={t("exp_date")}
                     value={cardDetails.expiry}
                     onChange={e => setCardDetails({...cardDetails, expiry: e.target.value})}
                     className='me-2'
                   />
                   <MDBInput
-                    label='CVV'
+                    label={t("cvv")}
                     value={cardDetails.cvv}
                     onChange={e => setCardDetails({...cardDetails, cvv: e.target.value})}
                   />
@@ -71,14 +74,14 @@ function PaymentModal({ show, onClose, amount, onSuccess }) {
           </MDBModalBody>
           <MDBModalFooter>
             <MDBBtn color='secondary' onClick={onClose}>
-              Annuler
+              {t("cancel")}
             </MDBBtn>
             <MDBBtn
               color='primary'
               onClick={handlePayment}
               disabled={processing || (paymentMethod === 'carte' && (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv))}
             >
-              {processing ? 'Traitement...' : 'Payer'}
+              {processing ? t("trt") : t("pai")}
             </MDBBtn>
           </MDBModalFooter>
         </MDBModalContent>

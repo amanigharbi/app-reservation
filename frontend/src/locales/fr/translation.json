@@ -68,11 +68,193 @@
                 "reset_unknown_error": "Une erreur s'est produite. Veuillez réessayer.",
             
               
-          
+                "dashboard": "Tableau de bord",
+                "my_reservations": "Mes Réservations",
+                "book": "Réserver",
+                "profile": "Profil",
+                "logout_success": "Déconnexion réussie !",
+                "logout_error": "Erreur de déconnexion. Veuillez réessayer.",
+                "logout_error_generic": "Erreur lors de la déconnexion.",
+                "navbar_data_error": "Erreur lors de la récupération des données.",
+                "success": "Succès",
+                "default_action_message": "Une action a été effectuée.",
+                "user": "Utilisateur",
+            
           
           
       
    
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    
+        "dashboard_title": "Tableau de bord",
+        "carousel_title": "Premier Slide",
+        "carousel_text": "Explorez notre espace de travail moderne et collaboratif.",
+        "reservation_count": "Nombre de Réservations",
+        "space_count": "Nombre d'Espaces",
+        "total_amount": "Montant Total Payé",
+        "recent_reservations": "Réservations récentes",
+        "no_reservation_title": "Aucune réservation trouvée",
+        "no_reservation_text": "Vous n'avez pas encore effectué de réservation.",
+        "make_reservation": "Faire une réservation",
+        "view_details": "Voir Détails",
+        "details_title": "Détails de la Réservation",
+        "field": "Champ",
+        "value": "Valeur",
+        "code": "Code",
+        "date": "Date",
+        "service": "Service",
+        "location": "Lieu",
+        "arrival": "Heure d'arrivée",
+        "departure": "Heure de départ",
+        "duration": "Durée",
+        "participants": "Participants",
+        "amount": "Montant",
+        "payment": "Mode de paiement",
+        "status": "Statut",
+        "description": "Description",
+        "comments": "Commentaires",
+        "close": "Fermer",
+        "error_loading_dashboard": "Erreur lors de la récupération des données.",
+        
+         
+        
+            "action_performed": "Une action a été effectuée.",
+            "search": "Rechercher...",
+            "no_reservations_found": "Aucune réservation trouvée",
+      
+            "paid": "Payé",
+            "method": "Méthode",
+        
+            "space": "Espace",
+            "actions": "Actions",
+            "confirm_delete": "Confirmer la suppression",
+            "confirm_delete_message": "Êtes-vous sûr de vouloir supprimer cette réservation ?",
+            "cancel": "Annuler",
+            "delete": "Supprimer",
+            "deleting": "Suppression...",
+            "my_reminders": "Mes Rappels",
+            "no_reminders": "Aucun rappel trouvé",
+"reminder_of": "Rappel de la réservation {{code}}",
+            
+               
+                  "reservation_deleted": "Réservation supprimée !",
+                  "delete_error": "Erreur lors de la suppression.",
+                  "csv_exported": "Export CSV effectué !",
+                  "pdf_exported": "Export PDF effectué !",
+    
+              "to_cancled" :"A annulée",
+              "confirmed" :"Confirmée",
+              "cancled" :"Annulée",
+              "pending" :"En attente",
+              "refused" :"Refusée",
+              "archived" :"Archivée",
+              "unknown" :"Inconnu",
+
+              
+                "time_msg": "The selected time slot is already booked for this date.",
+                "err_conflit": "Conflict check error:",
+                "error_res": "Error loading the reservation",
+                "msg-err": "Departure time must be after arrival time",
+                "success_update": "Reservation successfully updated!",
+                "error_update": "Error during update.",
+                "error_put": "No reservation ID, unable to send PUT!",
+                "success_delete_req": "Reservation cancellation request successful.",
+                "error_req_delete": "Error during cancellation request.",
+                "update_res": "Edit Reservation",
+                "initial_dur": "Initial duration:",
+                "new_dur": "New duration:",
+                "supp": "Additional charge:",
+                "remb": "Refund:",
+                "final_total": "Final total:",
+                "history_update": "Change history",
+                "type": "Type",
+                "old_dur": "Previous duration",
+                "no_update": "No changes recorded.",
+                "cancel_res": "Cancel reservation",
+                "saving": "Saving...",
+                "save": "Save",
+                "confirm_cancel": "Confirm cancellation",
+                "sure_cancel": "Are you sure you want to cancel this reservation?",
+                "canceling": "Canceling...",
+
+                "supp_paiment":"Paiement supplémentaire",
+                "amount_paid" :"Montant à payer:",
+                "credit" :"Carte de crédit",
+                "paypal" :"PayPal",
+                "vir" :"Virement bancaire",
+                "number_card" :"Numéro de carte",
+                "exp_date" :"Date expiration",
+                "cvv" :"CVV",
+                "trt":"Traitement...",
+                "pai":"Payer",
+
+"rembou":"Remboursement",
+"mont_remb":"Montant à rembourser : ",
+"other" :"Autre",
+"id_trans":"ID de transaction (optionnel",
+"remb_conf":"Confirmer le remboursement",
+
+"error_fetch_space":"Erreur lors de la récupération des espaces : ",
+"reser_space" :"Réserver un Espace",
+"no_space":"Aucun espace disponible pour le moment",
+"capacity" : "Capacité",
+"per": "personnes",
+
+    "per_hour": "{{amount}} € par heure",
+    "not_specified": "Non spécifiée",
+    "reser" :"Réserver cet espace",
+    "service_required":"Le service est requis",
+    "date_required" :"La date est requise",
+    "part_required":"Le nombre de participants est requis",
+    "participantsExceeded": "Le nombre de participants dépasse la capacité maximale (${maxCapacity})",
+    "heureArriveeDepart_1": "L'heure doit être entre ",
+    "and" :"et",
+    "pay_required":"Le mode de paiement est requis",
+    "success_created":"Réservation créée avec succès !",
+    "error_created":"Erreur création réservation",
+    "title_res_space" :"Réservation pour l'espace",
+    "dispo":"Disponible",
+    "tarif":"Tarif",
+    "add_rappel_label" :"Ajouter un rappel (ex: 2025-04-20 10:00)",
+    "add_rappel" :"Ajouter un rappel ",
+    "remind":"Rappels",
+    "auc":"Aucun",
+    "prev":"Précédent",
+    "next":"Suivant",
+    "en_cr": "En cours...",
+    "conf_res":"Confirmer la réservation",
+    "perH"  :" (en heures)",
+    "eur_h":"€/heure",
+    
+    "error_user": "Impossible de récupérer les données utilisateur",
+    "success_profile":"Profil mis à jour avec succès!",
+    "error_profile" :"Erreur de mise à jour du profil",
+    "title_prof":"Mon Profil",
+    "no_poste":"Poste non défini",
+    "no_location":"Localisation inconnue",
+    "suivi":"Suivre",
+    "message":"Message",
+    "social_media" :"Réseaux Sociaux",
+    "update_info" :"Modifier mes informations",
+    "position":"Poste",
+    "website":"Site Web",
+    "choose" : "Choisir une image",
+    "update" :"Mettre à jour"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              
+                  
   }
   
