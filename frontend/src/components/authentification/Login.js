@@ -23,9 +23,12 @@ import { verifyToken } from "../../services/auth.api";
 import logo from "../../images/logo.png";
 import "../styles/Pages.css";
 import "mdb-react-ui-kit/dist/css/mdb.min.css";
+import LanguageDropdown from "../LanguageDropdown";
+
+import { useTranslation } from "react-i18next";
 
 function Login() {
-// eslint-disable-next-line
+  // eslint-disable-next-line
   const { userGet, setUser } = useContext(UserContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +39,8 @@ function Login() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  const { t } = useTranslation();
 
   // Ajout d'une vérification de token au chargement
   useEffect(() => {
@@ -92,18 +97,18 @@ function Login() {
       setUser(response.data.user);
 
       if (response.data.user?.role === "user") {
-        setSuccessMessage("Connexion réussie.");
+        setSuccessMessage(t("success_login"));
         navigate("/dashboard");
       } else if (response.data.user?.role === "admin") {
-        setSuccessMessage("Connexion réussie.");
+        setSuccessMessage(t("success_login"));
 
         localStorage.setItem("token", token);
 
         navigate("/admin");
       }
     } catch (err) {
-      console.error("Erreur Firebase:", err.code, err.message);
-      setError("Email ou mot de passe incorrect");
+      console.error(t("error"), err.code, err.message);
+      setError(t("error_login"));
     } finally {
       setLoading(false);
     }
@@ -121,16 +126,20 @@ function Login() {
         JSON.stringify({ email: result.user.email, token })
       );
 
-      setSuccessMessage("Connexion avec Google réussie.");
+      setSuccessMessage(t("success_google"));
       navigate("/dashboard");
     } catch (err) {
-      console.error("Erreur Google:", err);
-      setError("Erreur lors de la connexion avec Google.");
+      console.error(t("error_g"), err);
+      setError(t("error_google"));
     }
   };
 
   return (
-    <MDBContainer fluid className="p-12 my-5 h-custom">
+    <MDBContainer fluid className="p-6 my-5 h-custom">
+      <div className="d-flex justify-content-end px-4 pt-3">
+        <LanguageDropdown />
+      </div>
+
       <MDBRow>
         <MDBCol col="10" md="6">
           <img
@@ -155,7 +164,7 @@ function Login() {
           </div>
 
           <div className="d-flex flex-row align-items-center justify-content-center">
-            <p className="lead fw-normal mb-0 me-3">Se connecter avec</p>
+            <p className="lead fw-normal mb-0 me-3">{t("login_with")}</p>
 
             <MDBBtn
               floating
@@ -175,7 +184,7 @@ function Login() {
           </div>
 
           <div className="divider d-flex align-items-center my-4">
-            <p className="text-center fw-bold mx-3 mb-0">Ou</p>
+            <p className="text-center fw-bold mx-3 mb-0">{t("or")}</p>
           </div>
 
           {/* Affichage de l'erreur et du succès */}
@@ -190,7 +199,7 @@ function Login() {
 
           <MDBInput
             wrapperClass="mb-4"
-            label="Adresse e-mail"
+            label={t("email")}
             id="formControlLg"
             type="email"
             size="lg"
@@ -201,7 +210,7 @@ function Login() {
           <div className="position-relative">
             <MDBInput
               wrapperClass="mb-4"
-              label="Mot de passe"
+              label={t("password")}
               type={passwordVisible ? "text" : "password"}
               size="lg"
               value={password}
@@ -224,11 +233,11 @@ function Login() {
               name="flexCheck"
               value=""
               id="flexCheckDefault"
-              label="Se souvenir de moi"
+              label={t("remember")}
               checked={rememberMe}
               onChange={() => setRememberMe(!rememberMe)} // Gérer l'état de "Se souvenir de moi"
             />
-            <Link to="/reset-password">Mot de passe oublié ?</Link>
+            <Link to="/reset-password">{t("forget")}</Link>
           </div>
 
           <MDBBtn
@@ -243,17 +252,17 @@ function Login() {
             {loading ? (
               <>
                 <MDBSpinner role="status" size="sm" className="me-2" />
-                Chargement...
+                {t("loading")}
               </>
             ) : (
-              "Se connecter"
+              t("login")
             )}
           </MDBBtn>
           <div className="text-center text-md-center mt-4 pt-2">
             <p className="small fw-bold mt-2 pt-1 mb-2">
-              Vous n'avez pas de compte ?
+              {t("no_account")}
               <Link to="/register" className="link-danger">
-                S'inscrire
+              {t("signin")}
               </Link>
             </p>
           </div>
@@ -263,7 +272,7 @@ function Login() {
       <footer className="footer-log">
         <div className="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
           <div className="text-white mb-3 mb-md-0">
-            © 2025 ReserGo. Tous droits réservés.
+            {t("copyright")}
           </div>
 
           <div>

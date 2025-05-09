@@ -24,6 +24,7 @@ import Espaces from "./components/admin/Espaces";
 import EspaceDetails from "./components/admin/EspaceDetails";
 import Users from "./components/admin/Users";
 import UserDetails from "./components/admin/UserDetails";
+import "./i18n";
 
 const App = () => {
   return (

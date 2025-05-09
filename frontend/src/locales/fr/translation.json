@@ -1,0 +1,21 @@
+{
+    "login_with": "Se connecter avec",
+    "or": "Ou",
+    "email" : "Adresse e-mail",
+    "password" : "Mot de passe",
+    "remember" : "Se souvenir de moi",
+    "forget" : "Mot de passe oublié ?",
+    "loading" : "Chargement...",
+    "login" : "Se connecter",
+    "no_account" : "Vous n'avez pas de compte ?",
+    "signin" : "S'inscrire",
+    "copyright" : "© 2025 ReserGo. Tous droits réservés.",
+    "success_login" : "Connexion réussie.",
+    "error" : "Erreur Firebase:",
+    "error_login" : "Email ou mot de passe incorrect",
+    "success_google" : "Connexion avec Google réussie.",
+    "error_g" : "Erreur Google:",
+    "error_google" : "Erreur lors de la connexion avec Google.",
+    "logout": "Déconnexion"
+  }
+  

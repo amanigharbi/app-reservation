@@ -1,0 +1,21 @@
+{
+    "login_with": "Login with",
+    "or": "Or",
+    "email": "Email address",
+    "password": "Password",
+    "remember": "Remember me",
+    "forget": "Forgot password?",
+    "loading": "Loading...",
+    "login": "Log in",
+    "no_account": "Don't have an account?",
+    "signin": "Sign up",
+    "copyright": "© 2025 ReserGo. All rights reserved.",
+    "success_login": "Login successful.",
+    "error": "Firebase error:",
+    "error_login": "Incorrect email or password",
+    "success_google": "Google login successful.",
+    "error_g": "Google error:",
+    "error_google": "Error while logging in with Google.",
+    "logout": "Logout"
+  }
+  
