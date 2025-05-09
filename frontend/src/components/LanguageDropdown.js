@@ -13,6 +13,10 @@ function LanguageDropdown() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Normalize the language (e.g., "en-US" => "en")
+  const currentLangKey = i18n.language.split("-")[0];
+  const currentLang = LANGUAGES[currentLangKey] || LANGUAGES.en;
+
   const toggle = () => setOpen(!open);
 
   const changeLanguage = (lng) => {
@@ -33,8 +37,8 @@ function LanguageDropdown() {
   return (
     <div className="language-dropdown" ref={dropdownRef}>
       <button onClick={toggle} className="lang-btn">
-        <img src={LANGUAGES[i18n.language].flag} alt="flag" />
-        {LANGUAGES[i18n.language].label}
+        <img src={currentLang.flag} alt="flag" />
+        {currentLang.label}
       </button>
       {open && (
         <div className="lang-menu">

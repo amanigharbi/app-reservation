@@ -9,9 +9,12 @@ import moment from "moment";
 import { MDBBadge, MDBIcon, MDBCardTitle } from "mdb-react-ui-kit";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import Papa from "papaparse"; 
+import Papa from "papaparse";
+import { useTranslation } from "react-i18next";
 
 function Reservations() {
+  const { t } = useTranslation();
+
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("futures");
@@ -60,20 +63,20 @@ function Reservations() {
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
       case "annulation demandée":
-        return <MDBBadge color="warning">A annulée</MDBBadge>;
+        return <MDBBadge color="warning">{t("to_cancled")}</MDBBadge>;
       case "confirmée":
       case "acceptée":
-        return <MDBBadge color="success">Confirmée</MDBBadge>;
+        return <MDBBadge color="success">{t("confirmed")}</MDBBadge>;
       case "annulée":
-        return <MDBBadge color="danger">Annulée</MDBBadge>;
+        return <MDBBadge color="danger">{t("cancled")}</MDBBadge>;
       case "en attente":
-        return <MDBBadge color="dark">En attente</MDBBadge>;
+        return <MDBBadge color="dark">{t("pending")}</MDBBadge>;
       case "refusée":
-        return <MDBBadge color="danger">Refusée</MDBBadge>;
+        return <MDBBadge color="danger">{t("refused")}</MDBBadge>;
       case "archivé":
-        return <MDBBadge color="secondary">Archivé</MDBBadge>;
+        return <MDBBadge color="secondary">{t("archived")}</MDBBadge>;
       default:
-        return <MDBBadge color="light">Inconnu</MDBBadge>;
+        return <MDBBadge color="light">{t("unknown")}</MDBBadge>;
     }
   };
 
@@ -141,14 +144,14 @@ function Reservations() {
     ]);
 
     autoTable(doc, {
-      head: [["Client", "Espace", "Date", "Heure", "Statut"]],
+      head: [["Client", t("name_space"), t("date"), t("heur"), t("status")]],
       body: rows,
     });
     doc.save("reservations.pdf");
     setShowToast({
       type: "success",
       visible: true,
-      message: "Export PDF effectué !",
+      message: t("pdf_exported"),
     });
 
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
@@ -176,7 +179,7 @@ function Reservations() {
     setShowToast({
       type: "success",
       visible: true,
-      message: "Export CSV effectué !",
+      message: t("csv_exported"),
     });
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
   };
@@ -185,7 +188,7 @@ function Reservations() {
     <div className="flex flex-wrap gap-4 mb-4 items-center">
       <input
         type="text"
-        placeholder="Recherche"
+        placeholder={t("search")}
         className="border p-2 rounded shadow-sm"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
@@ -197,12 +200,12 @@ function Reservations() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="all">Tous les statuts</option>
-          <option value="acceptée">Confirmée</option>
-          <option value="en attente">En attente</option>
-          <option value="annulée">Annulée</option>
-          <option value="refusée">Refusée</option>
-          <option value="annulation_demandée">Annulation demandée</option>
+          <option value="all">{t("all")}</option>
+          <option value="acceptée">{t("confirmed")}</option>
+          <option value="en attente">{t("pending")}</option>
+          <option value="annulée">{t("cancled")}</option>
+          <option value="refusée">{t("refused")}</option>
+          <option value="annulation_demandée">{t("demand")}</option>
         </select>
       )}
 
@@ -211,9 +214,9 @@ function Reservations() {
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value)}
       >
-        <option value="date">Trier par date</option>
-        <option value="client">Trier par client</option>
-        <option value="space">Trier par espace</option>
+        <option value="date">{t("filtre_date")}</option>
+        <option value="client">{t("filtre_client")}</option>
+        <option value="space">{t("filtre_espace")}</option>
       </select>
 
       <select
@@ -221,8 +224,8 @@ function Reservations() {
         value={sortOrder}
         onChange={(e) => setSortOrder(e.target.value)}
       >
-        <option value="asc">Ascendant</option>
-        <option value="desc">Descendant</option>
+        <option value="asc">{t("asc")}</option>
+        <option value="desc">{t("desc")}</option>
       </select>
 
       <button
@@ -235,7 +238,7 @@ function Reservations() {
         }
         className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
       >
-        Exporter PDF
+        {t("export_pdf")}{" "}
       </button>
 
       <button
@@ -248,7 +251,7 @@ function Reservations() {
         }
         className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
       >
-        Exporter CSV
+        {t("export_csv")}
       </button>
     </div>
   );
@@ -259,11 +262,11 @@ function Reservations() {
         <thead className="bg-gray-100 text-xs uppercase text-gray-500">
           <tr>
             <th className="px-6 py-3 text-left">Client</th>
-            <th className="px-6 py-3 text-left">Espace</th>
-            <th className="px-6 py-3 text-left">Date</th>
-            <th className="px-6 py-3 text-left">Heure</th>
-            <th className="px-6 py-3 text-left">Statut</th>
-            <th className="px-6 py-3 text-right">Actions</th>
+            <th className="px-6 py-3 text-left">{t("space")}</th>
+            <th className="px-6 py-3 text-left">{t("date")}</th>
+            <th className="px-6 py-3 text-left">{t("heur")}</th>
+            <th className="px-6 py-3 text-left">{t("status")}</th>
+            <th className="px-6 py-3 text-right">{t("actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -285,7 +288,7 @@ function Reservations() {
                   className="text-blue-500 hover:underline"
                   onClick={() => navigate(`/admin/reservation/${res.id}`)}
                 >
-                  Voir
+                  {t("show")}
                 </button>
               </td>
             </tr>
@@ -296,7 +299,9 @@ function Reservations() {
   );
 
   if (loading) {
-    return <div className="text-center mt-10 text-gray-500">Chargement...</div>;
+    return (
+      <div className="text-center mt-10 text-gray-500">{t("loading")}</div>
+    );
   }
 
   const activeList =
@@ -345,7 +350,7 @@ function Reservations() {
               ></button>
             </div>
             <div className="toast-body">
-              {showToast.message || "Une action a été effectuée."}
+              {showToast.message || t("default_action_message")}
             </div>
           </div>
         </div>
@@ -353,7 +358,7 @@ function Reservations() {
 
       <MDBCardTitle className="text-primary mb-4">
         <MDBIcon icon="calendar" className="me-2" />
-        Gestion des réservations
+        {t("gest_res")}
       </MDBCardTitle>
 
       {/* Onglets */}
@@ -366,7 +371,7 @@ function Reservations() {
           }`}
           onClick={() => setActiveTab("futures")}
         >
-          Réservations à venir
+          {t("future_res")}
         </button>
         <button
           className={`ml-4 px-4 py-2 font-medium ${
@@ -376,7 +381,7 @@ function Reservations() {
           }`}
           onClick={() => setActiveTab("archived")}
         >
-          Réservations archivées
+          {t("archived_res")}
         </button>
       </div>
 

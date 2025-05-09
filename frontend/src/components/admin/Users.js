@@ -23,8 +23,11 @@ import {
 } from "../../services/profile.api";
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 function Users() {
+    const { t } = useTranslation();
+  
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState({
@@ -69,7 +72,7 @@ function Users() {
         console.error("Erreur lors du chargement des profils:", error);
         showToastWithTimeout({
           type: "error",
-          message: "Impossible de charger les utilisateurs.",
+          message: t("error_loading_users"),
         });
       } finally {
         setLoading(false);
@@ -77,7 +80,7 @@ function Users() {
     };
 
     if (token) loadProfils();
-  }, [token]);
+  }, [token,t]);
 
   const handleDeleteUser = async (userId) => {
     try {
@@ -85,7 +88,7 @@ function Users() {
       setLoadingDelete(true);
       showToastWithTimeout({
         type: "success",
-        message: "Utilisateur supprimé avec succès.",
+        message: t("success_delete_user"),
       });
 
       setUserData(userData.filter((user) => user.id !== userId));
@@ -94,7 +97,7 @@ function Users() {
       console.error("Erreur lors de la suppression de l'utilisateur:", error);
       showToastWithTimeout({
         type: "error",
-        message: "Erreur lors de la suppression de l'utilisateur.",
+        message: t("error_delete_user"),
       });
     } finally {
       setLoadingDelete(false);
@@ -107,19 +110,19 @@ function Users() {
 
     ["username", "firstName", "lastName", "email", "password"].forEach(
       (field) => {
-        if (!newUser[field]) errors[field] = "Ce champ est requis.";
+        if (!newUser[field]) errors[field] = t("champ_req");
       }
     );
 
     if (newUser.email && !emailRegex.test(newUser.email)) {
-      errors.email = "Adresse email invalide.";
+      errors.email = t("email_invalid");
     }
 
     if (Object.keys(errors).length > 0) {
       setInputErrors(errors);
       showToastWithTimeout({
         type: "error",
-        message: "Veuillez corriger les erreurs du formulaire.",
+        message: t("correct"),
       });
 
       return;
@@ -132,7 +135,7 @@ function Users() {
       setUserData([...userData, res.user]);
       showToastWithTimeout({
         type: "success",
-        message: "Utilisateur ajouté avec succès.",
+        message: t("success_add_user"),
       });
 
       setShowAddModal(false);
@@ -149,7 +152,7 @@ function Users() {
       console.error("Erreur lors de l'ajout:", error);
       showToastWithTimeout({
         type: "error",
-        message: "Erreur lors de l'ajout de l'utilisateurs.",
+        message: t("error_add_user"),
       });
     }
   };
@@ -167,7 +170,7 @@ function Users() {
     );
   });
 
-  if (loading) return <div className="text-center py-5">Chargement...</div>;
+  if (loading) return <div className="text-center py-5">{t("loading")}</div>;
 
   return (
     <MDBContainer className="py-2">
@@ -205,7 +208,7 @@ function Users() {
           <div className="d-flex justify-content-between align-items-center mb-4">
             <MDBCardTitle className="text-primary mb-0">
               <MDBIcon icon="users-cog" className="me-2" />
-              Gestion des Profils utilisateurs
+              {t("gest_users")}
             </MDBCardTitle>
 
             <MDBBtn
@@ -214,7 +217,7 @@ function Users() {
               style={{ textTransform: "none" }}
             >
               <MDBIcon icon="plus" className="me-2" />
-              Ajouter un utilisateur
+              {t("add_user")}
             </MDBBtn>
           </div>
           {/* Recherche */}
@@ -223,7 +226,7 @@ function Users() {
             <input
               type="text"
               className="form-control"
-              placeholder="Rechercher par nom, email ou poste"
+              placeholder={t("search")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -232,12 +235,12 @@ function Users() {
             <MDBTableHead light>
               <tr>
                 <th>#</th>
-                <th>Nom d'utilisateur</th>
-                <th>Nom complet</th>
-                <th>Email</th>
-                <th>Poste</th>
-                <th>Rôle</th>
-                <th>Actions</th>
+                <th>{t("username")}</th>
+                <th>{t("full_name")}</th>
+                <th>{t("email")}</th>
+                <th>{t("position")}</th>
+                <th>{t("role")}</th>
+                <th>{t("actions")}</th>
               </tr>
             </MDBTableHead>
             <MDBTableBody>
@@ -262,12 +265,12 @@ function Users() {
                     }
                   >
                     {user.role === "admin"
-                      ? "Administrateur"
+                      ? t("admin")
                       : user.role === "user"
-                      ? "Utilisateur"
+                      ? t("user")
                       : user.role === "superAdmin"
                       ? "Super Administrateur"
-                      : "Invité"}
+                      : t("invite")}
                   </td>
                   <td>
                     <div className="d-flex gap-2">
@@ -342,7 +345,7 @@ function Users() {
         <MDBModalDialog>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Ajouter un utilisateur</MDBModalTitle>
+              <MDBModalTitle>{t("add_user")}r</MDBModalTitle>
               <MDBBtn
                 className="btn-close"
                 color="none"
@@ -352,10 +355,10 @@ function Users() {
             <MDBModalBody>
               <form>
                 {[
-                  { label: "Nom d'utilisateur", name: "username" },
-                  { label: "Prénom", name: "firstName" },
-                  { label: "Nom", name: "lastName" },
-                  { label: "Email", name: "email", type: "email" },
+                  { label: t("username"), name: "username" },
+                  { label: t("first_name"), name: "firstName" },
+                  { label: t("last_name"), name: "lastName" },
+                  { label: t("email"), name: "email", type: "email" },
                 ].map(({ label, name, type = "text" }) => (
                   <div className="mb-3" key={name}>
                     <label>{label}</label>
@@ -377,7 +380,7 @@ function Users() {
                   </div>
                 ))}
                 <div className="mb-3">
-                  <label>Mot de passe</label>
+                  <label>{t("password")}</label>
                   <div className="input-group">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -405,7 +408,7 @@ function Users() {
                   </div>
                 </div>
                 <div className="mb-3">
-                  <label>Poste</label>
+                  <label>{t("position")}</label>
                   <input
                     className="form-control"
                     value={newUser.position}
@@ -415,7 +418,7 @@ function Users() {
                   />
                 </div>
                 <div className="mb-3">
-                  <label>Rôle</label>
+                  <label>{t("role")}</label>
                   <select
                     className="form-select"
                     value={newUser.role}
@@ -423,8 +426,8 @@ function Users() {
                       setNewUser({ ...newUser, role: e.target.value })
                     }
                   >
-                    <option value="user">Utilisateur</option>
-                    <option value="admin">Administrateur</option>
+                    <option value="user">{t("user")}</option>
+                    <option value="admin">{t("admin")}</option>
                   </select>
                 </div>
               </form>
@@ -435,14 +438,14 @@ function Users() {
                 onClick={() => setShowAddModal(false)}
                 style={{ textTransform: "none" }}
               >
-                Annuler
+                {t("cancel")}
               </MDBBtn>
               <MDBBtn
                 color="success"
                 onClick={handleAddUser}
                 style={{ textTransform: "none" }}
               >
-                Ajouter
+                {t("add_user")}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>

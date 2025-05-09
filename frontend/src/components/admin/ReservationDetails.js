@@ -33,8 +33,11 @@ import {
   MDBModalFooter,
   MDBIcon,
 } from "mdb-react-ui-kit";
+import { useTranslation } from "react-i18next";
 
 const ReservationDetail = () => {
+  const { t } = useTranslation();
+
   const { id } = useParams();
   const [reservation, setReservation] = useState(null);
   const [error, setError] = useState("");
@@ -61,18 +64,18 @@ const ReservationDetail = () => {
       setShowToast({
         type: "success",
         visible: true,
-        message: "Réservation supprimée !",
+        message: t("reservation_deleted"),
       });
 
       setTimeout(() => {
         navigate("/admin/reservations");
       }, 2000);
     } catch (error) {
-      console.error("Erreur suppression:", error);
+      console.error(t("delete_error"), error);
       setShowToast({
         type: "error",
         visible: true,
-        message: "Erreur lors de la suppression.",
+        message: t("delete_error"),
       });
     } finally {
       setLoadingDelete(false);
@@ -86,18 +89,18 @@ const ReservationDetail = () => {
         setReservation(data);
       } catch (err) {
         console.error(err);
-        setError("Impossible de récupérer la réservation.");
+        setError(t("no_load_res"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchReservation();
-  }, [id,token]);
+  }, [id, token,t]);
 
-  if (loading) return <p>Chargement...</p>;
+  if (loading) return <p>{t("loading")}</p>;
   if (error) return <p>{error}</p>;
-  if (!reservation) return <p>Aucune réservation trouvée.</p>;
+  if (!reservation) return <p>{t("no_reservation_title")}</p>;
 
   const isPast = moment(reservation.date).isBefore(moment());
   const status = isPast ? "Archivé" : reservation.status || "Inconnu";
@@ -132,28 +135,26 @@ const ReservationDetail = () => {
       setShowToast({
         type: "success",
         visible: true,
-        message: "Statut mis à jour avec succès",
+        message: t("success_update_status"),
       });
       setReservation((prev) => ({
         ...prev,
         status: newStatus,
       }));
     } catch (error) {
-      console.error("Erreur lors de l'action admin:", error);
-      setError(
-        "Une erreur est survenue lors de la modification de la réservation."
-      );
+      console.error(t("error_update_status"), error);
+      setError(t("error_update_status"));
     }
   };
 
   const renderStatusBadge = (status) => {
     const badgeProps = {
-      "En attente": { color: "dark", text: "À confirmer" },
-      acceptée: { color: "success", text: "Confirmée" },
-      annulée: { color: "danger", text: "Annulée" },
-      Archivé: { color: "secondary", text: "Archivé" },
-      "annulation demandée": { color: "warning", text: "À annuler" },
-      refusée: { color: "danger", text: "Refusée" },
+      "En attente": { color: "dark", text: t("a_confirmed") },
+      acceptée: { color: "success", text: t("confirmed") },
+      annulée: { color: "danger", text: t("cancled") },
+      Archivé: { color: "secondary", text: t("archived") },
+      "annulation demandée": { color: "warning", text: t("to_cancled") },
+      refusée: { color: "danger", text: t("refused") },
     };
 
     const { color, text } = badgeProps[status] || {
@@ -178,7 +179,7 @@ const ReservationDetail = () => {
           style={{ textTransform: "none" }}
         >
           <MDBIcon icon="arrow-left" className="me-2" />
-          Retour aux réservations
+          {t("return_res")}
         </MDBBtn>
       </div>
       {/* ✅ TOAST SUCCÈS & ERREUR */}
@@ -221,7 +222,7 @@ const ReservationDetail = () => {
               ></button>
             </div>
             <div className="toast-body">
-              {showToast.message || "Une action a été effectuée."}
+              {showToast.message || t("default_action_message")}
             </div>
           </div>
         </div>
@@ -235,43 +236,43 @@ const ReservationDetail = () => {
       {/* Infos principales */}
       <div className="grid md:grid-cols-2 gap-4 bg-white shadow rounded-xl p-4">
         <p>
-          <CalendarDays className="inline mr-2" /> <strong>Date :</strong>{" "}
-          {moment(reservation.date).format("LL")}
+          <CalendarDays className="inline mr-2" />{" "}
+          <strong>{t("date")} :</strong> {moment(reservation.date).format("LL")}
         </p>
         <p>
-          <Clock className="inline mr-2" /> <strong>Heures :</strong>{" "}
+          <Clock className="inline mr-2" /> <strong>{t("heur")} :</strong>{" "}
           {reservation.heure_arrivee} - {reservation.heure_depart}
         </p>
         <p>
           <strong>
             <Clock className="inline mr-2" />
-            Durée :
+            {t("duration")} :
           </strong>{" "}
           {formatDuree(reservation.duree)}
         </p>
         <p>
-          <MapPin className="inline mr-2" /> <strong>Lieu :</strong>{" "}
+          <MapPin className="inline mr-2" /> <strong>{t("location")} :</strong>{" "}
           {reservation.lieu}
         </p>
         <p>
-          <Users className="inline mr-2" /> <strong>Participants :</strong>{" "}
-          {reservation.participants}
+          <Users className="inline mr-2" />{" "}
+          <strong>{t("participants")} :</strong> {reservation.participants}
         </p>
         <p>
           <CreditCard className="inline mr-2" />{" "}
-          <strong>Mode de paiement :</strong> {reservation.mode_paiement}
+          <strong>{t("payment")} :</strong> {reservation.mode_paiement}
         </p>
         <p>
           <strong>
-            <StickyNote className="inline mr-2" /> Description :
+            <StickyNote className="inline mr-2" /> {t("description")} :
           </strong>{" "}
-          {reservation.description || "Aucune"}
+          {reservation.description || t("auc")}
         </p>
         <p>
           <strong>
-            <MessageSquareText className="inline mr-2" /> Commentaires :
+            <MessageSquareText className="inline mr-2" /> {t("comments")} :
           </strong>{" "}
-          {reservation.commentaires || "Aucun"}
+          {reservation.commentaires || t("auc")}
         </p>
       </div>
       {/* Actions */}
@@ -285,7 +286,7 @@ const ReservationDetail = () => {
               }}
               className="bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 flex items-center gap-1"
             >
-              <BadgeCheck size={18} /> Confirmer
+              <BadgeCheck size={18} /> {t("conf")}
             </button>
             <button
               onClick={() => {
@@ -294,7 +295,7 @@ const ReservationDetail = () => {
               }}
               className="bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600 flex items-center gap-1"
             >
-              <XCircle size={18} /> Refuser
+              <XCircle size={18} /> {t("ref")}
             </button>
           </>
         )}
@@ -306,7 +307,7 @@ const ReservationDetail = () => {
             }}
             className="bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600"
           >
-            Confirmer l'annulation
+            {t("confirm_cancel")}
           </button>
         )}
         <button
@@ -316,12 +317,12 @@ const ReservationDetail = () => {
           }}
           className="bg-gray-500 text-white px-4 py-2 rounded-xl hover:bg-gray-600 flex items-center gap-1"
         >
-          <Trash2 size={18} /> Supprimer
+          <Trash2 size={18} /> {t("delete")}
         </button>
       </div>
       {/* Modifications */}
       <div>
-        <h3 className="text-xl font-semibold mb-2">Modifications</h3>
+        <h3 className="text-xl font-semibold mb-2">{t("updating")}</h3>
         {reservation.modifications && reservation.modifications.length > 0 ? (
           reservation.modifications.map((mod, index) => (
             <div
@@ -329,29 +330,29 @@ const ReservationDetail = () => {
               className="p-4 bg-blue-50 border-l-4 border-blue-400 rounded mb-3"
             >
               <p>
-                <strong>Date :</strong> {moment(mod.date).format("LL")}
+                <strong>{t("date")} :</strong> {moment(mod.date).format("LL")}
               </p>
               <p>
-                <strong>Ancienne durée :</strong> {mod.ancienneDuree} h
+                <strong>{t("old_duration")} :</strong> {mod.ancienneDuree} h
               </p>
               <p>
-                <strong>Nouvelle durée :</strong> {mod.nouvelleDuree} h
+                <strong>{t("new_duration")} :</strong> {mod.nouvelleDuree} h
               </p>
               <p>
-                <strong>Montant ajouté :</strong> {mod.montantAjoute} €
+                <strong>{t("add_amount")} :</strong> {mod.montantAjoute} €
               </p>
               <p>
-                <strong>Montant remboursé :</strong> {mod.montantRembourse} €
+                <strong>{t("amount_rem")} :</strong> {mod.montantRembourse} €
               </p>
             </div>
           ))
         ) : (
-          <p className="text-gray-500">Aucune modification enregistrée.</p>
+          <p className="text-gray-500">{t("no_update_yet")}</p>
         )}
       </div>
       {/* Paiements */}
       <div>
-        <h3 className="text-xl font-semibold mb-2">Paiements</h3>
+        <h3 className="text-xl font-semibold mb-2">{t("paim")}</h3>
         {reservation.paiements && reservation.paiements.length > 0 ? (
           reservation.paiements.map((pay, index) => (
             <div
@@ -359,46 +360,43 @@ const ReservationDetail = () => {
               className="p-4 bg-green-50 border-l-4 border-green-400 rounded mb-3"
             >
               <p>
-                <strong>Date :</strong> {moment(pay.date).format("LLL")}
+                <strong>{t("date")} :</strong> {moment(pay.date).format("LLL")}
               </p>
               <p>
-                <strong>Montant :</strong> {pay.montant} €
+                <strong>{t("amount")} :</strong> {pay.montant} €
               </p>
               <p>
-                <strong>Méthode :</strong> {pay.methode}
+                <strong>{t("method")} :</strong> {pay.methode}
               </p>
               <p>
-                <strong>ID transaction :</strong> {pay.transactionId}
+                <strong>{t("id_trans")} :</strong> {pay.transactionId}
               </p>
             </div>
           ))
         ) : (
-          <p className="text-gray-500">Aucun paiement enregistré.</p>
+          <p className="text-gray-500">{t("no_paim")}</p>
         )}
       </div>
-      MDBModalDialog
       {/* Modal */}
       <MDBModal open={showModal} onClose={setShowModal}>
         <MDBModalDialog>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Confirmer la suppression</MDBModalTitle>
+              <MDBModalTitle>{t("confirm_delete")}</MDBModalTitle>
               <MDBBtn
                 className="btn-close"
                 color="none"
                 onClick={() => setShowModal(false)}
               />
             </MDBModalHeader>
-            <MDBModalBody>
-              Êtes-vous sûr de vouloir supprimer cette réservation ?
-            </MDBModalBody>
+            <MDBModalBody>{t("confirm_delete_supp")} </MDBModalBody>
             <MDBModalFooter>
               <MDBBtn
                 color="secondary"
                 style={{ textTransform: "none" }}
                 onClick={() => setShowModal(false)}
               >
-                Annuler
+                {t("cancel")}
               </MDBBtn>
               <MDBBtn
                 color="danger"
@@ -412,10 +410,10 @@ const ReservationDetail = () => {
                       className="spinner-border spinner-border-sm me-2"
                       role="status"
                     />
-                    Suppression...
+                    {t("deleting")}
                   </>
                 ) : (
-                  "Supprimer"
+                  t("delete")
                 )}
               </MDBBtn>
             </MDBModalFooter>

@@ -22,7 +22,11 @@
     reauthenticateWithCredential,
   } from "firebase/auth";
   import { Modal, Button, Form } from "react-bootstrap";
+  import { useTranslation } from "react-i18next";
+
   function ProfilAdmin() {
+      const { t } = useTranslation();
+    
     const [adminData, setAdminData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showToast, setShowToast] = useState({
@@ -83,7 +87,7 @@
         setShowToast({
           type: "success",
           visible: true,
-          message: "Profil mis à jour avec succès!",
+          message: t("success_profile"),
         });
         window.location.reload();
         setTimeout(
@@ -91,11 +95,11 @@
           3000
         );
       } catch (error) {
-        console.error("Erreur de mise à jour du profil:", error);
+        console.error(t("error_profile"), error);
         setShowToast({
           type: "error",
           visible: true,
-          message: "Erreur lors de la mise à jour du profil.",
+          message: t("error_profile"),
         });
       }
     };
@@ -105,7 +109,7 @@
         setShowToast({
           type: "error",
           visible: true,
-          message: "Les mots de passe ne correspondent pas.",
+          message: t("validation_confirm_mismatch"),
         });
         return;
       }
@@ -114,10 +118,10 @@
         const auth = getAuth();
         const currentUser = auth.currentUser;
 
-        if (!currentUser) throw new Error("Aucun utilisateur connecté.");
+        if (!currentUser) throw new Error(t("no_user"));
 
         // Prompt for current password (you need to add an input field in your modal)
-        const currentPassword = prompt("Entrez votre mot de passe actuel :");
+        const currentPassword = prompt(t("actual_pass"));
 
         const credential = EmailAuthProvider.credential(
           currentUser.email,
@@ -131,27 +135,27 @@
         setShowToast({
           type: "success",
           visible: true,
-          message: "Mot de passe mis à jour avec succès.",
+          message: t("success_update_pass"),
         });
 
         setShowPasswordModal(false);
         setNewPassword("");
         setConfirmPassword("");
       } catch (error) {
-        console.error("Erreur de mise à jour du mot de passe:", error);
+        console.error(t("error_update_pass"), error);
         setShowToast({
           type: "error",
           visible: true,
           message:
-            error.message || "Erreur lors de la mise à jour du mot de passe.",
+            error.message || t("error_update_pass"),
         });
       }
     };
 
-    if (loading) return <div className="text-center py-5">Chargement...</div>;
+    if (loading) return <div className="text-center py-5">{t("loading")}</div>;
     if (!adminData)
       return (
-        <div className="text-danger text-center py-5">Erreur de chargement.</div>
+        <div className="text-danger text-center py-5">{t("error_loading")}</div>
       );
 
     return (
@@ -186,7 +190,7 @@
           </div>
         )}
 
-        <h3 className="text-primary fw-bold mb-4">Mon Profil Administrateur</h3>
+        <h3 className="text-primary fw-bold mb-4">{t("title_prof_admin")}</h3>
         <MDBRow>
           <MDBCol md="4">
             <MDBCard className="shadow border-0 bg-light">
@@ -214,7 +218,7 @@
                 <p className="text-muted">{user?.email}</p>
                 <p className="text-muted">{user?.position || "Super Admin"}</p>
                 <p className="text-muted">
-                  {user?.location || "Localisation inconnue"}
+                  {user?.location || t("unknown")}
                 </p>
                 <MDBBtn
                   color="danger"
@@ -222,7 +226,7 @@
                   style={{ textTransform: "none" }}
                   onClick={() => setShowPasswordModal(true)}
                 >
-                  Modifier le mot de passe
+                  {t("update_pass")}
                 </MDBBtn>
               </MDBCardBody>
             </MDBCard>
@@ -232,16 +236,16 @@
             <MDBCard className="shadow border-0 bg-light">
               <MDBCardBody>
                 <MDBCardTitle className="text-primary mb-4">
-                  Modifier mes informations
+                  {t("update_info")}
                 </MDBCardTitle>
                 {[
-                  { name: "username", label: "Nom d'utilisateur" },
-                  { name: "firstName", label: "Nom" },
-                  { name: "lastName", label: "Prénom" },
-                  { name: "position", label: "Poste" },
-                  { name: "location", label: "Localisation" },
-                  { name: "website", label: "Site Web" },
-                  { name: "email", label: "Email", type: "email" },
+                  { name: "username", label: t("username") },
+                  { name: "firstName", label: t("first_name") },
+                  { name: "lastName", label: t("last_name") },
+                  { name: "position", label: t("position") },
+                  { name: "location", label: t("location") },
+                  { name: "website", label: t("website") },
+                  { name: "email", label: t("email"), type: "email" },
                 ].map(({ name, label, type }) => (
                   <MDBInput
                     key={name}
@@ -256,7 +260,7 @@
                   />
                 ))}
                 <div className="mb-3">
-                  <label className="form-label">Photo de profil</label>
+                  <label className="form-label">{t("profile_img")}</label>
                   <input
                     type="file"
                     className="form-control"
@@ -270,7 +274,7 @@
                   onClick={handleUpdate}
                   style={{ textTransform: "none" }}
                 >
-                  Enregistrer les modifications
+                  {t("save")}
                 </MDBBtn>
               </MDBCardBody>
             </MDBCard>
@@ -287,12 +291,12 @@
           centered
         >
           <Modal.Header closeButton>
-            <Modal.Title>Changer le mot de passe</Modal.Title>
+            <Modal.Title>{t("update_pass")}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form>
               <Form.Group className="mb-3">
-                <Form.Label>Mot de passe actuel</Form.Label>
+                <Form.Label>{t("input_actual")}</Form.Label>
                 <div className="d-flex align-items-center">
                   <Form.Control
                     type={showCurrentPassword ? "text" : "password"}
@@ -311,7 +315,7 @@
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label>Nouveau mot de passe</Form.Label>
+                <Form.Label>{t("new_pass")}</Form.Label>
                 <div className="d-flex align-items-center">
                   <Form.Control
                     type={showNewPassword ? "text" : "password"}
@@ -330,7 +334,7 @@
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label>Confirmer le mot de passe</Form.Label>
+                <Form.Label>{t("confirm_password")}</Form.Label>
                 <div className="d-flex align-items-center">
                   <Form.Control
                     type={showConfirmPassword ? "text" : "password"}
@@ -354,10 +358,10 @@
               variant="secondary"
               onClick={() => setShowPasswordModal(false)}
             >
-              Annuler
+              {t("cancel")}
             </Button>
             <Button variant="primary" onClick={handlePasswordChange}>
-              Valider
+              {t("save")}
             </Button>
           </Modal.Footer>
         </Modal>

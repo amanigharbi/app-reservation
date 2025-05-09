@@ -22,8 +22,11 @@ import {
   MDBModalContent,
   MDBModalTitle,
 } from "mdb-react-ui-kit";
+import { useTranslation } from "react-i18next";
 
 function EspaceDetails() {
+  const { t } = useTranslation();
+
   const { spaceId } = useParams();
   const navigate = useNavigate();
   const [spaceDetails, setSpaceDetails] = useState(null);
@@ -48,17 +51,14 @@ function EspaceDetails() {
         const res = await fetchSpacesById(token, spaceId);
         setSpaceDetails(res);
       } catch (error) {
-        console.error(
-          "Erreur lors du chargement des détails de l'espace:",
-          error
-        );
+        console.error(t("error_space_data"), error);
       } finally {
         setLoading(false);
       }
     };
 
     if (spaceId && token) loadSpaceDetails();
-  }, [spaceId, token]);
+  }, [spaceId, token,t]);
 
   const showToastWithTimeout = ({ type, message }) => {
     setShowToast({ type, visible: true, message });
@@ -74,17 +74,17 @@ function EspaceDetails() {
       await deleteSpace(token, spaceId);
       showToastWithTimeout({
         type: "success",
-        message: "Espace supprimé avec succès.",
+        message: t("success_delete_space"),
       });
 
       setTimeout(() => {
         navigate("/admin/espaces"); // Rediriger après suppression
       }, 2000);
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'espace:", error);
+      console.error(t("error_delete_space"), error);
       showToastWithTimeout({
         type: "error",
-        message: "Erreur lors de la suppression de l'espace.",
+        message: t("error_delete_space"),
       });
     }
     setShowModal(false); // Fermer la modale après suppression
@@ -99,14 +99,12 @@ function EspaceDetails() {
       // Validation si on rend disponible
       if (available) {
         if (!fromTime?.trim() || !toTime?.trim()) {
-          setErrorMessage("Veuillez définir les heures de disponibilité.");
+          setErrorMessage(t("error_dispo_time"));
           return;
         }
 
         if (fromTime >= toTime) {
-          setErrorMessage(
-            "L'heure de début doit être inférieure à l'heure de fin."
-          );
+          setErrorMessage(t("error_inf"));
           return;
         }
 
@@ -128,18 +126,15 @@ function EspaceDetails() {
 
       showToastWithTimeout({
         type: "success",
-        message: "Disponibilité mise à jour avec succès.",
+        message: t("success_update_dispo"),
       });
 
       setShowAvailabilityModal(false); // Fermer la modale si tout est OK
     } catch (error) {
-      console.error(
-        "Erreur lors de la mise à jour de la disponibilité :",
-        error
-      );
+      console.error(t("eror_update_dispo"), error);
       showToastWithTimeout({
         type: "error",
-        message: "Échec de la mise à jour de la disponibilité.",
+        message: t("eror_update_dispo"),
       });
     } finally {
       setUpdatingAvailability(false);
@@ -148,7 +143,7 @@ function EspaceDetails() {
 
   const toggleModal = () => setShowModal(!showModal);
 
-  if (loading) return <div className="text-center py-5">Chargement...</div>;
+  if (loading) return <div className="text-center py-5">{t("loading")}</div>;
 
   // Format de l'heure: HH:mm
   const formatTime = (time) => {
@@ -157,7 +152,7 @@ function EspaceDetails() {
           hour: "2-digit",
           minute: "2-digit",
         })
-      : "Non renseigné";
+      : t("auc");
   };
 
   return (
@@ -173,7 +168,7 @@ function EspaceDetails() {
               style={{ textTransform: "none" }}
             >
               <MDBIcon icon="arrow-left" className="me-2" />
-              Retour à la liste des espaces
+              {t("return")}
             </MDBBtn>
           </div>
 
@@ -181,45 +176,46 @@ function EspaceDetails() {
           <MDBCardTitle className="text-primary fs-3 mb-4 d-flex align-items-center justify-content-between">
             <div>
               <MDBIcon icon="building" className="me-2" />
-              Détails de l'espace{" "}
-              <strong>{spaceDetails.name || "Espace inconnu"}</strong>
+              {t("space_details")}{" "}
+              <strong>{spaceDetails.name || t("space_unknow")}</strong>
             </div>
             <span
               className={`badge ${
                 spaceDetails.available ? "bg-success" : "bg-danger"
               } ms-3`}
             >
-              {spaceDetails.available ? "Disponible" : "Non disponible"}
+              {spaceDetails.available ? t("dispo") : t("no_dispo")}
             </span>
           </MDBCardTitle>
 
           {/* Détails de l'espace */}
           <MDBRow>
             <MDBCol md="6" className="mb-3">
-              <strong>Nom :</strong> {spaceDetails.name || "Non renseigné"}
+              <strong>{t("name_space")} :</strong>{" "}
+              {spaceDetails.name || t("auc")}
             </MDBCol>
             <MDBCol md="6" className="mb-3">
-              <strong>Prix de l'espace :</strong>{" "}
-              {spaceDetails.montant || "Non renseigné"} (€)
+              <strong>{t("price")} :</strong> {spaceDetails.montant || t("auc")}{" "}
+              (€)
             </MDBCol>
             <MDBCol md="6" className="mb-3">
-              <strong>Capacité :</strong>{" "}
-              {spaceDetails.capacity || "Non renseigné"}
+              <strong>{t("capacity")} :</strong>{" "}
+              {spaceDetails.capacity || t("auc")}
             </MDBCol>
             <MDBCol md="6" className="mb-3">
-              <strong>Localisation :</strong>{" "}
-              {spaceDetails.location || "Non renseigné"}
+              <strong>{t("location")} :</strong>{" "}
+              {spaceDetails.location || t("auc")}
             </MDBCol>
 
             {spaceDetails.available && (
               <MDBRow>
                 <MDBCol md="6" className="mb-3">
-                  <strong>Disponible à partir de :</strong>{" "}
+                  <strong>{t("dispo_from")}:</strong>{" "}
                   {formatTime(spaceDetails.availableFrom)}
                 </MDBCol>
 
                 <MDBCol md="6" className="mb-3">
-                  <strong>Jusqu'au :</strong>{" "}
+                  <strong>{t("dispo_to")} :</strong>{" "}
                   {formatTime(spaceDetails.availableTo)}
                 </MDBCol>
               </MDBRow>
@@ -242,9 +238,7 @@ function EspaceDetails() {
               }}
               disabled={updatingAvailability}
             >
-              {spaceDetails.available
-                ? "Rendre non disponible"
-                : "Rendre disponible"}
+              {spaceDetails.available ? t("make_no_dispo") : t("make_dispo")}
             </MDBBtn>
 
             <MDBBtn
@@ -252,7 +246,7 @@ function EspaceDetails() {
               style={{ textTransform: "none" }}
               onClick={toggleModal}
             >
-              Supprimer l'espace
+              {t("delete_space")}
             </MDBBtn>
           </div>
         </MDBCardBody>
@@ -298,7 +292,7 @@ function EspaceDetails() {
               ></button>
             </div>
             <div className="toast-body">
-              {showToast.message || "Une action a été effectuée."}
+              {showToast.message || t("default_action_message")}
             </div>
           </div>
         </div>
@@ -312,7 +306,7 @@ function EspaceDetails() {
         <MDBModalDialog>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Définir la période de disponibilité</MDBModalTitle>
+              <MDBModalTitle>{t("add_dispo")}</MDBModalTitle>
               <MDBBtn
                 className="btn-close"
                 color="none"
@@ -320,7 +314,7 @@ function EspaceDetails() {
               />
             </MDBModalHeader>
             <MDBModalBody>
-              <label>Disponible à partir de :</label>
+              <label>{t("dispo_from")} :</label>
               <input
                 type="time"
                 className="form-control mb-3"
@@ -328,7 +322,7 @@ function EspaceDetails() {
                 onChange={(e) => setAvailableFrom(e.target.value)}
               />
 
-              <label>Disponible jusqu'au :</label>
+              <label>{t("dispo_to")} :</label>
               <input
                 type="time"
                 className="form-control mb-3"
@@ -355,7 +349,7 @@ function EspaceDetails() {
                 onClick={() => setShowAvailabilityModal(false)}
                 style={{ textTransform: "none" }}
               >
-                Annuler
+                {t("cancel")}
               </MDBBtn>
               <MDBBtn
                 style={{ textTransform: "none" }}
@@ -363,9 +357,7 @@ function EspaceDetails() {
                 onClick={() => {
                   // Vérification avant soumission
                   if (availableFrom >= availableTo) {
-                    setErrorMessage(
-                      "L'heure de début doit être inférieure à l'heure de fin."
-                    );
+                    setErrorMessage(t("error_inf"));
                     return;
                   }
 
@@ -374,7 +366,7 @@ function EspaceDetails() {
                 }}
                 disabled={updatingAvailability}
               >
-                Sauvegarder
+                {t("save")}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>
@@ -386,26 +378,24 @@ function EspaceDetails() {
         <MDBModalDialog>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Confirmer la suppression</MDBModalTitle>
+              <MDBModalTitle>{t("confirm_delete")}</MDBModalTitle>
               <MDBBtn
                 className="btn-close"
                 color="none"
                 onClick={toggleModal}
               />
             </MDBModalHeader>
-            <MDBModalBody>
-              Êtes-vous sûr de vouloir supprimer cet espace ?
-            </MDBModalBody>
+            <MDBModalBody>{t("confirm_delete_space")} </MDBModalBody>
             <MDBModalFooter>
               <MDBBtn color="secondary" onClick={toggleModal}>
-                Annuler
+                {t("cancel")}
               </MDBBtn>
               <MDBBtn
                 color="danger"
                 onClick={handleDelete}
                 disabled={loadingDelete}
               >
-                {loadingDelete ? "Suppression en cours..." : "Supprimer"}
+                {loadingDelete ? t("deleting") : t("delete")}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>

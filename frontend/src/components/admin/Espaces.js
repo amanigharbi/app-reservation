@@ -24,7 +24,11 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import Papa from "papaparse";
+import { useTranslation } from "react-i18next";
+
 function Espaces() {
+  const { t } = useTranslation();
+
   const [spaces, setSpaces] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
@@ -67,7 +71,7 @@ function Espaces() {
       Montant: `${space.montant} €`,
       Disponibilité: space.available
         ? `${space.availableFrom} - ${space.availableTo}`
-        : "Non disponible",
+        : t("no_dispo"),
     }));
 
     const csv = Papa.unparse(csvData);
@@ -80,7 +84,7 @@ function Espaces() {
     setShowToast({
       type: "success",
       visible: true,
-      message: "Export CSV des espaces effectué !",
+      message: t("csv_exported"),
     });
 
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
@@ -89,7 +93,7 @@ function Espaces() {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(12);
-    doc.text("Liste des Espaces", 14, 16);
+    doc.text(t("space_details"), 14, 16);
 
     const rows = (spaces || []).map((space, index) => [
       index + 1,
@@ -99,12 +103,19 @@ function Espaces() {
       `${space.montant} €`,
       space.available
         ? `${space.availableFrom} - ${space.availableTo}`
-        : "Non disponible",
+        : t("no_dispo"),
     ]);
 
     autoTable(doc, {
       head: [
-        ["#", "Nom", "Localisation", "Capacité", "Montant", "Disponibilité"],
+        [
+          "#",
+          t("name_space"),
+          t("location"),
+          t("capacity"),
+          t("amount"),
+          t("disponi"),
+        ],
       ],
       body: rows,
       startY: 20,
@@ -115,7 +126,7 @@ function Espaces() {
     setShowToast({
       type: "success",
       visible: true,
-      message: "Export PDF des espaces effectué !",
+      message: t("pdf_exported"),
     });
 
     setTimeout(() => setShowToast({ type: "", visible: false }), 3000);
@@ -141,28 +152,28 @@ function Espaces() {
         const data = await fetchSpaces(token);
         setSpaces(data.spaces || []);
       } catch (err) {
-        console.error("Erreur lors du chargement des espaces :", err);
+        console.error(t("error_space_data"), err);
       } finally {
         setLoading(false);
       }
     };
 
     if (token) getSpaces();
-  }, [token, spaces]);
+  }, [token, spaces,t]);
 
   const handleAddSpace = async () => {
     let errors = {};
 
     // Validation des champs nécessaires
     ["name", "location", "montant", "capacity"].forEach((field) => {
-      if (!newSpace[field]) errors[field] = "Ce champ est requis.";
+      if (!newSpace[field]) errors[field] = t("champ_req");
     });
 
     // Si disponible est vrai, alors vérifier les champs availableFrom et availableTo
     if (newSpace.available) {
       if (!newSpace.availableFrom || !newSpace.availableTo) {
-        errors["availableFrom"] = "Ce champ est requis.";
-        errors["availableTo"] = "Ce champ est requis.";
+        errors["availableFrom"] = t("champ_req");
+        errors["availableTo"] = t("champ_req");
       } else {
         // Comparaison des heures
         const from = newSpace.availableFrom;
@@ -175,10 +186,8 @@ function Espaces() {
         const toTotal = toHour * 60 + toMinute;
 
         if (fromTotal >= toTotal) {
-          errors["availableFrom"] =
-            "L'heure de début doit être inférieure à l'heure de fin.";
-          errors["availableTo"] =
-            "L'heure de fin doit être supérieure à l'heure de début.";
+          errors["availableFrom"] = t("error_inf");
+          errors["availableTo"] = t("error_sup");
         }
       }
     }
@@ -187,7 +196,7 @@ function Espaces() {
       setInputErrors(errors);
       showToastWithTimeout({
         type: "error",
-        message: "Veuillez corriger les erreurs du formulaire.",
+        message: t("correct"),
       });
       return;
     }
@@ -200,7 +209,7 @@ function Espaces() {
       setSpaces([...spaces, res.newSpace]);
       showToastWithTimeout({
         type: "success",
-        message: "Espace ajouté avec succès.",
+        message: t("success_add_space"),
       });
 
       setShowAddModal(false);
@@ -214,10 +223,10 @@ function Espaces() {
         available: false,
       });
     } catch (error) {
-      console.error("Erreur lors de l'ajout:", error);
+      console.error(t("error_add_space"), error);
       showToastWithTimeout({
         type: "error",
-        message: "Erreur lors de l'ajout de l'espace.",
+        message: t("error_add_space"),
       });
     }
   };
@@ -234,13 +243,16 @@ function Espaces() {
           space.id === editingSpace.id ? editingSpace : space
         )
       );
-      showToastWithTimeout({ type: "success", message: "Espace mis à jour." });
+      showToastWithTimeout({
+        type: "success",
+        message: t("success_update_space"),
+      });
       setShowEditModal(false);
       // Recharger ou mettre à jour ta liste
     } catch (error) {
       showToastWithTimeout({
         type: "error",
-        message: "Échec de la mise à jour.",
+        message: t("error_update_space"),
       });
     }
   };
@@ -254,23 +266,25 @@ function Espaces() {
       setLoadingDelete(true);
       showToastWithTimeout({
         type: "success",
-        message: "Espace supprimé avec succès.",
+        message: t("success_delete_space"),
       });
 
       setSpaces(spaces);
       setShowModal(false);
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'espace:", error);
+      console.error(t("error_delete_space"), error);
       showToastWithTimeout({
         type: "error",
-        message: "Erreur lors de la suppression de l'espace.",
+        message: t("error_delete_space"),
       });
     } finally {
       setLoadingDelete(false);
     }
   };
   if (loading) {
-    return <div className="text-center mt-10 text-gray-500">Chargement...</div>;
+    return (
+      <div className="text-center mt-10 text-gray-500">{t("loading")}</div>
+    );
   }
 
   return (
@@ -306,7 +320,7 @@ function Espaces() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <MDBCardTitle className="text-primary mb-4">
           <MDBIcon icon="building" className="me-2" />
-          Gestion des espaces
+          {t("gest_space")}
         </MDBCardTitle>
         <MDBBtn
           color="success"
@@ -314,14 +328,14 @@ function Espaces() {
           style={{ textTransform: "none" }}
         >
           <MDBIcon icon="plus" className="me-2" />
-          Ajouter un espace
+          {t("add_space")}
         </MDBBtn>
       </div>
       <div className="flex flex-wrap gap-4 mb-4 items-center">
         <input
           type="text"
           className="form-control"
-          placeholder="Rechercher par nom ou localisation"
+          placeholder={t("search_field")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -330,17 +344,17 @@ function Espaces() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="all">Tous les statuts</option>
-          <option value="available">Disponible</option>
-          <option value="unavailable">Non disponible</option>
+          <option value="all">{t("all")}</option>
+          <option value="available">{t("dispo")}</option>
+          <option value="unavailable">{t("no_dispo")}</option>
         </select>{" "}
         <MDBBtn color="success" onClick={handleExportCSV}>
           <MDBIcon icon="file-csv" className="me-2" />
-          Exporter CSV
+          {t("export_csv")}
         </MDBBtn>
         <MDBBtn color="danger" onClick={handleExportPDF}>
           <MDBIcon icon="file-pdf" className="me-2" />
-          Exporter PDF
+          {t("export_pdf")}
         </MDBBtn>
       </div>
 
@@ -348,13 +362,13 @@ function Espaces() {
         <table className="min-w-full text-sm text-gray-700">
           <thead className="bg-gray-100 text-xs uppercase text-gray-500">
             <tr>
-              <th className="px-6 py-3 text-left">Nom</th>
-              <th className="px-6 py-3 text-left">Localisation</th>
-              <th className="px-6 py-3 text-left">Capacité</th>
-              <th className="px-6 py-3 text-left">Montant (€)</th>
-              <th className="px-6 py-3 text-left">Disponibilité</th>
-              <th className="px-6 py-3 text-left">Statut</th>
-              <th>Actions</th>
+              <th className="px-6 py-3 text-left">{t("name_space")}</th>
+              <th className="px-6 py-3 text-left">{t("location")}</th>
+              <th className="px-6 py-3 text-left">{t("capacity")}</th>
+              <th className="px-6 py-3 text-left">{t("amount")} (€)</th>
+              <th className="px-6 py-3 text-left">{t("disponi")} </th>
+              <th className="px-6 py-3 text-left">{t("status")} </th>
+              <th>{t("actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -372,9 +386,9 @@ function Espaces() {
                   </td>
                   <td className="px-6 py-4">
                     {space.available ? (
-                      <MDBBadge color="success">Disponible</MDBBadge>
+                      <MDBBadge color="success">{t("dispo")}</MDBBadge>
                     ) : (
-                      <MDBBadge color="danger">Non disponible</MDBBadge>
+                      <MDBBadge color="danger">{t("no_dispo")}</MDBBadge>
                     )}
                   </td>
                   <td>
@@ -408,7 +422,7 @@ function Espaces() {
             ) : (
               <tr>
                 <td colSpan="6" className="text-center p-6 text-gray-400">
-                  Aucun espace disponible.
+                  {t("no_space")}
                 </td>
               </tr>
             )}
@@ -421,19 +435,19 @@ function Espaces() {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Modifier l'espace</Modal.Title>
+          <Modal.Title>{t("update_space")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {["name", "location", "montant", "capacity"].map((field) => (
             <div key={field} className="mb-3">
               <label>
                 {field === "name"
-                  ? "Nom de l'espace"
+                  ? t("name_space")
                   : field === "location"
-                  ? "Adresse de l'espace"
+                  ? t("location")
                   : field === "montant"
-                  ? "Prix de l'espace"
-                  : "Capacité de l'espace"}
+                  ? t("price")
+                  : t("capacity")}
               </label>
               <input
                 type="text"
@@ -447,7 +461,7 @@ function Espaces() {
           ))}
 
           <div className="mb-3">
-            <label>Disponibilité</label>
+            <label>{t("disponi")}</label>
             <select
               className="form-select"
               value={editingSpace?.available ? "true" : "false"}
@@ -458,15 +472,15 @@ function Espaces() {
                 })
               }
             >
-              <option value="true">Disponible</option>
-              <option value="false">Non disponible</option>
+              <option value="true">{t("dispo")}</option>
+              <option value="false">{t("no_dispo")}</option>
             </select>
           </div>
 
           {editingSpace?.available && (
             <>
               <div className="mb-3">
-                <label>Disponible à partir de</label>
+                <label>{t("dispo_from")}</label>
                 <input
                   type="time"
                   className="form-control"
@@ -480,7 +494,7 @@ function Espaces() {
                 />
               </div>
               <div className="mb-3">
-                <label>Jusqu'à</label>
+                <label>{t("dispo_to")}</label>
                 <input
                   type="time"
                   className="form-control"
@@ -502,14 +516,14 @@ function Espaces() {
             onClick={() => setShowEditModal(false)}
             style={{ textTransform: "none" }}
           >
-            Annuler
+            {t("cancel")}
           </MDBBtn>
           <MDBBtn
             color="primary"
             onClick={handleUpdateSpace}
             style={{ textTransform: "none" }}
           >
-            Sauvegarder
+            {t("save")}
           </MDBBtn>
         </Modal.Footer>
       </Modal>
@@ -519,7 +533,7 @@ function Espaces() {
         <MDBModalDialog>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Ajouter un espace</MDBModalTitle>
+              <MDBModalTitle>{t("add_space")}</MDBModalTitle>
               <MDBBtn
                 className="btn-close"
                 color="none"
@@ -531,10 +545,10 @@ function Espaces() {
               <form>
                 {/* Champs de base avec libellés personnalisés */}
                 {[
-                  { name: "name", label: "Nom de l'espace" },
-                  { name: "location", label: "Adresse de l'espace" },
-                  { name: "montant", label: "Prix de l'espace" },
-                  { name: "capacity", label: "Capacité de l'espace" },
+                  { name: "name", label: t("name_space") },
+                  { name: "location", label: t("location") },
+                  { name: "montant", label: t("price") },
+                  { name: "capacity", label: t("capacity") },
                 ].map(({ name, label }) => (
                   <div className="mb-3" key={name}>
                     <label>{label}</label>
@@ -558,7 +572,7 @@ function Espaces() {
 
                 {/* Select Disponibilité */}
                 <div className="mb-3">
-                  <label>Disponibilité</label>
+                  <label>{t("disponi")}</label>
                   <select
                     className="form-select"
                     value={newSpace.available ? "true" : "false"}
@@ -571,8 +585,8 @@ function Espaces() {
                       })
                     }
                   >
-                    <option value="true">Disponible</option>
-                    <option value="false">Non disponible</option>
+                    <option value="true">{t("dispo")}</option>
+                    <option value="false">{t("no_dispo")}</option>
                   </select>
                 </div>
 
@@ -580,7 +594,7 @@ function Espaces() {
                 {newSpace.available && (
                   <>
                     <div className="mb-3">
-                      <label>Disponible à partir de</label>
+                      <label>{t("dispo_from")}</label>
                       <input
                         type="time"
                         className={`form-control ${
@@ -601,7 +615,7 @@ function Espaces() {
                       )}
                     </div>
                     <div className="mb-3">
-                      <label>Jusqu'à</label>
+                      <label>{t("dispo_to")}</label>
                       <input
                         type="time"
                         className={`form-control ${
@@ -632,14 +646,14 @@ function Espaces() {
                 onClick={() => setShowAddModal(false)}
                 style={{ textTransform: "none" }}
               >
-                Annuler
+                {t("cancel")}
               </MDBBtn>
               <MDBBtn
                 color="success"
                 onClick={handleAddSpace}
                 style={{ textTransform: "none" }}
               >
-                Ajouter
+                {t("add_space")}
               </MDBBtn>
             </MDBModalFooter>
           </MDBModalContent>
@@ -650,20 +664,17 @@ function Espaces() {
         <MDBModalDialog>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Confirmer la suppression</MDBModalTitle>
+              <MDBModalTitle>{t("confirm_delete")}</MDBModalTitle>
               <MDBBtn
                 className="btn-close"
                 color="none"
                 onClick={() => setShowModal(false)}
               />
             </MDBModalHeader>
-            <MDBModalBody>
-              Êtes-vous sûr de vouloir supprimer l'espace ? Cette action est
-              irréversible.
-            </MDBModalBody>
+            <MDBModalBody>{t("confirm_delete_space")}</MDBModalBody>
             <MDBModalFooter>
               <MDBBtn color="secondary" onClick={() => setShowModal(false)}>
-                Annuler
+                {t("cancel")}
               </MDBBtn>
               <MDBBtn
                 color="danger"
@@ -676,10 +687,10 @@ function Espaces() {
                       className="spinner-border spinner-border-sm me-2"
                       role="status"
                     />
-                    Suppression...
+                    {t("deleting")}
                   </>
                 ) : (
-                  "Supprimer"
+                  t("delete")
                 )}
               </MDBBtn>
             </MDBModalFooter>

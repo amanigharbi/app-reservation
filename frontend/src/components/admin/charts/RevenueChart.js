@@ -1,6 +1,9 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from "recharts";
+import { useTranslation } from "react-i18next";
 
 function RevenueChart({ revenueData }) {
+      const { t } = useTranslation();
+  
   const months = Object.keys(revenueData);
 
   const data = months.map((key) => {
@@ -14,7 +17,7 @@ function RevenueChart({ revenueData }) {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-lg font-semibold mb-4">Revenus par Mois (€)</h2>
+      <h2 className="text-lg font-semibold mb-4">{t("revenue")} (€)</h2>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />

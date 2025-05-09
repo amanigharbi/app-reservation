@@ -1,18 +1,22 @@
 import { MDBBadge } from "mdb-react-ui-kit";
+import { useTranslation } from "react-i18next";
+
 
 function SpaceTable({ spaces, onDelete }) {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
-      <h3 className="text-lg font-semibold mb-4">Espaces</h3>
+      <h3 className="text-lg font-semibold mb-4">{t("spaces")}</h3>
       <table className="min-w-full text-sm text-gray-700">
         <thead className="text-center">
           <tr className="bg-gray-100">
-            <th className="text-left p-2">Nom</th>
-            <th className="text-left p-2">Location</th>
-            <th className="text-left p-2">Capacité</th>
-            <th className="text-left p-2">Montant (€)</th>
-            <th className="text-left p-2">Disponibilité</th>
-            <th className="text-left p-2">Status</th>
+            <th className="text-left p-2">{t("name_space")}</th>
+            <th className="text-left p-2">{t("location")}</th>
+            <th className="text-left p-2">{t("capacity")}</th>
+            <th className="text-left p-2">{t("amount")} (€)</th>
+            <th className="text-left p-2">{t("disponi")}</th>
+            <th className="text-left p-2">{t("status")}</th>
           </tr>
         </thead>
         <tbody>
@@ -29,11 +33,11 @@ function SpaceTable({ spaces, onDelete }) {
                 <td className="p-2">
                   {space.available ? (
                     <MDBBadge color="success" className="ms-2">
-                      Disponible
+                      {t("dispo")}
                     </MDBBadge>
                   ) : (
                     <MDBBadge color="danger" className="ms-2">
-                      Non disponible
+                      {t("no_dispo")}
                     </MDBBadge>
                   )}
                 </td>
@@ -42,7 +46,7 @@ function SpaceTable({ spaces, onDelete }) {
           ) : (
             <tr>
               <td colSpan="6" className="text-center p-4 text-gray-400">
-                Aucun espace disponible
+                {t("no_space")}
               </td>
             </tr>
           )}

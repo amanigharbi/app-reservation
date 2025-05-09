@@ -1,14 +1,16 @@
 import { MDBBadge } from "mdb-react-ui-kit";
 import moment from "moment";
+import { useTranslation } from "react-i18next";
 
 function ReservationTable({ reservations }) {
+    const { t } = useTranslation();
+  
   // Séparer les réservations passées et futures
   const today = moment();
   const futureReservations = reservations.filter((res) =>
     moment(res.date).isAfter(today)
   );
   const archivedReservations = reservations.filter((res) =>
-    
     moment(res.date).isBefore(today)
   );
 
@@ -17,37 +19,37 @@ function ReservationTable({ reservations }) {
       case "annulation_demandée":
         return (
           <MDBBadge color="warning" className="ms-2">
-            A annulée
+            {t("to_cancled")}
           </MDBBadge>
         );
       case "annulée":
         return (
           <MDBBadge color="danger" className="ms-2">
-            Annulée
+            {t("cancled")}
           </MDBBadge>
         );
       case "En attente":
         return (
           <MDBBadge color="dark" className="ms-2">
-            En attente
+            {t("pending")}
           </MDBBadge>
         );
       case "acceptée":
         return (
           <MDBBadge color="success" className="ms-2">
-            Confirmée
+            {t("confirmed")}{" "}
           </MDBBadge>
         );
       case "refusée":
         return (
           <MDBBadge color="danger" className="ms-2">
-            Refusée
+            {t("refused")}{" "}
           </MDBBadge>
         );
       case "archivé":
         return (
           <MDBBadge color="secondary" className="ms-2">
-            Archivé
+            {t("archived")}
           </MDBBadge>
         );
       default:
@@ -57,16 +59,16 @@ function ReservationTable({ reservations }) {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
-      <h3 className="text-lg font-semibold mb-4">Réservations à venir</h3>
+      <h3 className="text-lg font-semibold mb-4">{t("future_res")}</h3>
       {/* Tableau des réservations à venir */}
       <table className="min-w-full text-sm text-gray-700">
         <thead>
           <tr className="bg-gray-100">
-            <th className="text-left p-2">Code</th>
-            <th className="text-left p-2">Espace</th>
-            <th className="text-left p-2">Date</th>
-            <th className="text-left p-2">Montant (€)</th>
-            <th className="text-left p-2">Statut</th>
+            <th className="text-left p-2">{t("code")}</th>
+            <th className="text-left p-2">{t("space")}</th>
+            <th className="text-left p-2">{t("date")}</th>
+            <th className="text-left p-2">{t("amount")} (€)</th>
+            <th className="text-left p-2">{t("status")}</th>
           </tr>
         </thead>
         <tbody>
@@ -85,7 +87,7 @@ function ReservationTable({ reservations }) {
           ) : (
             <tr>
               <td colSpan="5" className="text-center p-4 text-gray-400">
-                Aucune réservation à venir
+                {t("no_future_res")}
               </td>
             </tr>
           )}
@@ -95,15 +97,15 @@ function ReservationTable({ reservations }) {
       {/* Réservations archivées */}
       {archivedReservations.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-4">Réservations Archivées</h3>
+          <h3 className="text-lg font-semibold mb-4">{t("archived_res")}</h3>
           <table className="min-w-full text-sm text-gray-700">
             <thead>
               <tr className="bg-gray-100">
-                <th className="text-left p-2">Code</th>
-                <th className="text-left p-2">Espace</th>
-                <th className="text-left p-2">Date</th>
-                <th className="text-left p-2">Montant (€)</th>
-                <th className="text-left p-2">Statut</th>
+                <th className="text-left p-2">{t("code")}</th>
+                <th className="text-left p-2">{t("space")}</th>
+                <th className="text-left p-2">{t("date")}</th>
+                <th className="text-left p-2">{t("amount")} (€)</th>
+                <th className="text-left p-2">{t("status")}</th>
               </tr>
             </thead>
             <tbody>

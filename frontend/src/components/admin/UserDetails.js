@@ -22,10 +22,13 @@ import {
   MDBModalContent,
   MDBModalTitle,
 } from "mdb-react-ui-kit";
+import { useTranslation } from "react-i18next";
 
 const defaultImage = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 function UserDetails() {
+  const { t } = useTranslation();
+
   const { userId } = useParams();
   const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState(null);
@@ -55,7 +58,7 @@ function UserDetails() {
         setUserDetails(res.data);
       } catch (error) {
         console.error(
-          "Erreur lors du chargement des détails de l'utilisateur:",
+          t("error_loading_users"),
           error
         );
       } finally {
@@ -64,7 +67,7 @@ function UserDetails() {
     };
 
     if (userId && token) loadUserDetails();
-  }, [userId, token]);
+  }, [userId, token,t]);
 
   const handleDelete = async () => {
     try {
@@ -73,7 +76,7 @@ function UserDetails() {
       await deleteUser(token, userId); // Appel de la méthode deleteUser
       showToastWithTimeout({
         type: "success",
-        message: "Utilisateur supprimé avec succès.",
+        message: t("success_delete_user"),
       });
 
       setTimeout(() => {
@@ -83,7 +86,7 @@ function UserDetails() {
       console.error("Erreur lors de la suppression de l'utilisateur:", error);
       showToastWithTimeout({
         type: "error",
-        message: "Erreur lors de la suppression de l'utilisateur.",
+        message: t("error_delete_user"),
       });
     }
     setShowModal(false); // Fermer la modale après la suppression
@@ -105,13 +108,13 @@ function UserDetails() {
       setEditingRole(false);
       showToastWithTimeout({
         type: "success",
-        message: "Rôle mis à jour avec succès.",
+        message: t("success_update_role"),
       });
     } catch (err) {
       console.error("Erreur lors de la mise à jour du rôle :", err);
       showToastWithTimeout({
         type: "error",
-        message: "Échec de la mise à jour du rôle.",
+        message: t("error_update_role"),
       });
     } finally {
       setUpdating(false);
@@ -120,7 +123,7 @@ function UserDetails() {
 
   const toggleModal = () => setShowModal(!showModal); // Fonction pour ouvrir/fermer la modale
 
-  if (loading) return <div className="text-center py-5">Chargement...</div>;
+  if (loading) return <div className="text-center py-5">{t("loading")}</div>;
 
   return (
     <MDBContainer className="py-0">
@@ -135,14 +138,14 @@ function UserDetails() {
               style={{ textTransform: "none" }}
             >
               <MDBIcon icon="arrow-left" className="me-2" />
-              Retour à la liste des utilisateurs
+              {t("return_user")}
             </MDBBtn>
           </div>
 
           {/* Titre */}
           <MDBCardTitle className="text-primary fs-3 mb-4">
             <MDBIcon icon="user-circle" className="me-2" />
-            Profil de {userDetails.username || "Utilisateur inconnu"}
+            {t("profil_of")}  {userDetails.username || t("unknown")}
           </MDBCardTitle>
 
           {/* Profil utilisateur */}
@@ -164,20 +167,20 @@ function UserDetails() {
             <div className="w-100">
               <MDBRow>
                 <MDBCol md="6" className="mb-3">
-                  <strong>Nom complet :</strong>{" "}
-                  {userDetails.firstName || "Non renseigné"}{" "}
+                  <strong>{t("full_name")} :</strong>{" "}
+                  {userDetails.firstName || t("not_specified")}{" "}
                   {userDetails.lastName || ""}
                 </MDBCol>
                 <MDBCol md="6" className="mb-3">
-                  <strong>Email :</strong>{" "}
-                  {userDetails.email || "Non renseigné"}
+                  <strong>{t("email")} :</strong>{" "}
+                  {userDetails.email || t("not_specified")}
                 </MDBCol>
                 <MDBCol md="6" className="mb-3">
-                  <strong>Poste :</strong>{" "}
-                  {userDetails.position || "Non renseigné"}
+                  <strong>{t("position")} :</strong>{" "}
+                  {userDetails.position || t("not_specified")}
                 </MDBCol>
                 <MDBCol md="6" className="mb-3">
-                  <strong>Rôle :</strong>{" "}
+                  <strong>{t("role")} :</strong>{" "}
                   {editingRole ? (
                     <>
                       <select
@@ -185,8 +188,8 @@ function UserDetails() {
                         onChange={(e) => setNewRole(e.target.value)}
                         className="form-select form-select-sm d-inline w-auto mx-2"
                       >
-                        <option value="user">Utilisateur</option>
-                        <option value="admin">Administrateur</option>
+                        <option value="user">{t("user")}</option>
+                        <option value="admin">{t("admin")}</option>
                       </select>
                       <MDBBtn
                         color="success"
@@ -195,7 +198,7 @@ function UserDetails() {
                         disabled={updating}
                         style={{ textTransform: "none" }}
                       >
-                        Valider
+                        {t("valid")}
                       </MDBBtn>
                       <MDBBtn
                         color="light"
@@ -203,30 +206,30 @@ function UserDetails() {
                         onClick={() => setEditingRole(false)}
                         style={{ textTransform: "none" }}
                       >
-                        Annuler
+                        {t("cancel")}
                       </MDBBtn>
                     </>
                   ) : (
-                    <>{userDetails.role || "Non renseigné"}</>
+                    <>{userDetails.role || t("not_specified")}</>
                   )}
                 </MDBCol>
                 <MDBCol md="6" className="mb-3">
-                  <strong>Localisation :</strong>{" "}
-                  {userDetails.location || "Non renseigné"}
+                  <strong>{t("lieu")} :</strong>{" "}
+                  {userDetails.location || t("not_specified")}
                 </MDBCol>
                 <MDBCol md="6" className="mb-3">
-                  <strong>Inscription :</strong>{" "}
+                  <strong>{t("inscription")} :</strong>{" "}
                   {userDetails.createdAt && userDetails.createdAt._seconds
                     ? new Date(
                         userDetails.createdAt._seconds * 1000
                       ).toLocaleDateString()
-                    : "Non renseigné"}
+                    : t("not_specified")}
                 </MDBCol>
               </MDBRow>
 
               {/* Réseaux sociaux */}
               <div className="mt-4">
-                <strong>Réseaux sociaux :</strong>
+                <strong>{t("social_media")} :</strong>
                 <div className="d-flex gap-3 mt-2 flex-wrap">
                   {userDetails.facebook ||
                   userDetails.twitter ||
@@ -286,7 +289,7 @@ function UserDetails() {
                       )}
                     </>
                   ) : (
-                    <div className="text-muted ms-2">Aucun lien fourni</div>
+                    <div className="text-muted ms-2">{t("no_lien")}</div>
                   )}
                 </div>
               </div>
@@ -300,14 +303,14 @@ function UserDetails() {
               style={{ textTransform: "none" }}
               onClick={toggleModal}
             >
-              Supprimer l'utilisateur
+              {t("delete_user")}
             </MDBBtn>
             <MDBBtn
               color="warning"
               style={{ textTransform: "none" }}
               onClick={() => setEditingRole(true)}
             >
-              Modifier le rôle
+              {t("update_role")}
             </MDBBtn>
           </div>
         </MDBCardBody>
@@ -353,7 +356,7 @@ function UserDetails() {
               ></button>
             </div>
             <div className="toast-body">
-              {showToast.message || "Une action a été effectuée."}
+              {showToast.message || t("default_action_message")}
             </div>
           </div>
         </div>
@@ -364,7 +367,7 @@ function UserDetails() {
         <MDBModalDialog>
           <MDBModalContent>
             <MDBModalHeader>
-              <MDBModalTitle>Confirmer la suppression</MDBModalTitle>
+              <MDBModalTitle>{t("confirm_delete")}</MDBModalTitle>
               <MDBBtn
                 className="btn-close"
                 color="none"
@@ -372,8 +375,7 @@ function UserDetails() {
               />
             </MDBModalHeader>
             <MDBModalBody>
-              Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action
-              est irréversible.
+              {t("confirm_delete_user")}
             </MDBModalBody>
             <MDBModalFooter>
               <MDBBtn
@@ -381,7 +383,7 @@ function UserDetails() {
                 style={{ textTransform: "none" }}
                 onClick={() => setShowModal(false)}
               >
-                Annuler
+                {t("cancel")}
               </MDBBtn>
               <MDBBtn
                 color="danger"
@@ -395,10 +397,10 @@ function UserDetails() {
                       className="spinner-border spinner-border-sm me-2"
                       role="status"
                     />
-                    Suppression...
+                    {t("deleting")}
                   </>
                 ) : (
-                  "Supprimer"
+                  t("delete")
                 )}
               </MDBBtn>
             </MDBModalFooter>

@@ -5,8 +5,11 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { fetchProfile } from "../../services/profile.api";
 import { UserContext } from "../../contexts/UserContext";
-
+import LanguageDropdown from "../LanguageDropdown";
+import { useTranslation } from "react-i18next";
 function AdminLayout() {
+  const { t } = useTranslation();
+
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
 
@@ -45,7 +48,7 @@ function AdminLayout() {
       setShowToast({
         type: "success",
         visible: true,
-        message: "Déconnexion réussie !",
+        message: t("logout_success"),
       });
 
       // Attendre 3 secondes avant de rediriger vers la page de login
@@ -59,30 +62,30 @@ function AdminLayout() {
             setShowToast({
               type: "error",
               visible: true,
-              message: "Erreur de déconnexion. Veuillez réessayer.",
+              message: t("logout_error"),
             });
           });
       }, 2000);
     } catch (error) {
-      console.error("Erreur de déconnexion : ", error);
+      console.error(t("logout_error_generic"), error);
       setShowToast({
         type: "error",
         visible: true,
-        message: "Erreur lors de la déconnexion.",
+        message: t("logout_error_generic"),
       });
     }
   };
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full text-gray-500">
-        Chargement...
+        {t("loading")}
       </div>
     );
   }
   if (!adminData) {
     return (
       <div className="flex justify-center items-center h-full text-red-500">
-        Impossible de charger les données de l'admin.
+        {t("error_admin_info")}
       </div>
     );
   }
@@ -129,7 +132,7 @@ function AdminLayout() {
               ></button>
             </div>
             <div className="toast-body">
-              {showToast.message || "Une action a été effectuée."}
+              {showToast.message || t("default_action_message") }
             </div>
           </div>
         </div>
@@ -143,7 +146,7 @@ function AdminLayout() {
             src={
               user?.photoURL ||
               `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                user?.username || "Utilisateur"
+                user?.username || t("user")
               )}&background=fff&color=3B71CA&size=150`
             }
             alt="User Avatar"
@@ -167,7 +170,7 @@ function AdminLayout() {
                 : "block p-2 hover:bg-blue-800 rounded"
             }
           >
-            🏠 Dashboard
+            🏠 {t("Dashboard")}
           </NavLink>
           <NavLink
             style={{ color: "white" }}
@@ -178,7 +181,7 @@ function AdminLayout() {
                 : "block p-2 hover:bg-blue-800 rounded"
             }
           >
-            📅 Réservations
+            📅 {t("res")}
           </NavLink>
           <NavLink
             style={{ color: "white" }}
@@ -189,7 +192,7 @@ function AdminLayout() {
                 : "block p-2 hover:bg-blue-800 rounded"
             }
           >
-            🏢 Espaces
+            🏢 {t("spaces")}
           </NavLink>
           <NavLink
             style={{ color: "white" }}
@@ -200,7 +203,7 @@ function AdminLayout() {
                 : "block p-2 hover:bg-blue-800 rounded"
             }
           >
-            👥 Utilisateurs
+            👥 {t("users")}
           </NavLink>
         </nav>
       </div>
@@ -209,18 +212,20 @@ function AdminLayout() {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-white shadow p-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">Dashboard Admin</h1>
+          <h1 className="text-xl font-bold text-gray-800">{t("dash_admin")}</h1>
           <div className="flex items-center space-x-4">
+          <LanguageDropdown />
+
             <Link
               to="/admin/profilAdmin"
               className="flex items-center space-x-2 hover:bg-gray-100 px-3 py-1 rounded transition"
-              title="Voir le profil"
+              title={t("view")}
             >
               <img
                 src={
                   user?.photoURL ||
                   `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    user?.username || "Utilisateur"
+                    user?.username || t("user")
                   )}&background=3B71CA&color=fff&size=150`
                 }
                 alt="Profil"
@@ -234,7 +239,7 @@ function AdminLayout() {
             <button
               className="text-red-500 hover:text-red-700 transition"
               onClick={handleLogout}
-              title="Déconnexion"
+              title={t("logout")}
             >
               <MDBIcon icon="sign-out-alt" size="lg" />
             </button>
