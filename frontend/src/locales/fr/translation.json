@@ -16,6 +16,63 @@
     "success_google" : "Connexion avec Google réussie.",
     "error_g" : "Erreur Google:",
     "error_google" : "Erreur lors de la connexion avec Google.",
+   
+    
+        "register_with": "S'inscrire avec",
+        "first_name": "Prénom",
+        "last_name": "Nom",
+        "username": "Nom d'utilisateur",
+    
+        "confirm_password": "Confirmer le mot de passe",
+        "sign_up": "S'inscrire",
+        "already_have_account": "Vous avez déjà un compte ?",
+    
+        "success_register": "Utilisateur inscrit avec succès ! Vous allez être redirigé vers la page de connexion.",
+        "email_in_use": "Cette adresse e-mail est déjà utilisée. Veuillez vous connecter ou utiliser une autre.",
+        "register_error": "Une erreur est survenue lors de l'inscription.",
+        "google_success": "Connexion réussie avec Google ! Redirection en cours...",
+        "google_error": "Erreur lors de la connexion avec Google.",
+        "validation_first_name": "Le prénom est requis.",
+        "validation_last_name": "Le nom est requis.",
+        "validation_username": "Le nom d'utilisateur est requis.",
+        "validation_email_required": "L'adresse e-mail est requise.",
+        "validation_email_invalid": "Veuillez entrer un email valide.",
+        "validation_password_required": "Le mot de passe est requis.",
+        "validation_password_format": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.",
+        "validation_confirm_required": "La confirmation du mot de passe est requise.",
+        "validation_confirm_mismatch": "Les mots de passe ne correspondent pas.",
+        "validation_form_error": "Veuillez corriger les erreurs avant de soumettre le formulaire.",
+        
+        
+            "reset_title": "Réinitialiser le mot de passe",
+            "reset_email_required": "Veuillez entrer une adresse email.",
+            "reset_email_not_found": "Aucun utilisateur trouvé avec cet email.",
+            "reset_email_sent": "Un lien de réinitialisation a été envoyé à votre adresse email.",
+            "reset_error": "Une erreur s'est produite. Veuillez réessayer plus tard.",
+            "sending": "Envoi en cours...",
+            "send_reset_link": "Envoyer le lien de réinitialisation",
+            "back_to": "Retour à la page de",
+       
+            
+                "reset_title_form": "Réinitialiser votre mot de passe",
+                "new_password": "Nouveau mot de passe",
+                "reset_action": "Réinitialiser le mot de passe",
+                "reset_in_progress": "Réinitialisation en cours...",
+                "reset_code_invalid": "Code de réinitialisation invalide.",
+                "reset_password_length_error": "Le mot de passe doit contenir au moins 6 caractères.",
+                "reset_password_strength_error": "Le mot de passe doit contenir au moins une lettre et un chiffre.",
+                "reset_both_required": "Veuillez entrer les deux mots de passe.",
+                "reset_password_mismatch": "Les mots de passe ne correspondent pas.",
+                "reset_success": "Le mot de passe a été réinitialisé avec succès.",
+                "reset_link_expired": "Le lien de réinitialisation a expiré.",
+                "reset_unknown_error": "Une erreur s'est produite. Veuillez réessayer.",
+            
+              
+          
+          
+          
+      
+   
     "logout": "Déconnexion"
   }
   

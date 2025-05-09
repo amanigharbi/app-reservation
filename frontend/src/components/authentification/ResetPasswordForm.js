@@ -10,8 +10,10 @@ import {
   MDBInput,
   MDBIcon,
 } from "mdb-react-ui-kit";
-import logo from "../../images/logo.png"; // Importer le logo
+import logo from "../../images/logo.png";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import LanguageDropdown from "../LanguageDropdown";
 
 function ResetPasswordForm() {
   const [newPassword, setNewPassword] = useState("");
@@ -23,23 +25,24 @@ function ResetPasswordForm() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const urlParams = new URLSearchParams(location.search);
-  const oobCode = urlParams.get("oobCode"); // 'oobCode' est le code de réinitialisation dans l'URL
+  const oobCode = urlParams.get("oobCode");
 
   useEffect(() => {
     if (!oobCode) {
-      setError("Code de réinitialisation invalide.");
+      setError(t("reset_code_invalid"));
     }
-  }, [oobCode]);
+  }, [oobCode, t]);
 
   const validatePassword = (password) => {
     const minLength = 6;
     const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/;
     if (password.length < minLength)
-      return "Le mot de passe doit contenir au moins 6 caractères.";
+      return t("reset_password_length_error");
     if (!regex.test(password))
-      return "Le mot de passe doit contenir au moins une lettre et un chiffre.";
+      return t("reset_password_strength_error");
     return "";
   };
 
@@ -49,12 +52,12 @@ function ResetPasswordForm() {
     setMessage("");
 
     if (!newPassword || !confirmPassword) {
-      setError("Veuillez entrer les deux mots de passe.");
+      setError(t("reset_both_required"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t("reset_password_mismatch"));
       return;
     }
 
@@ -68,18 +71,16 @@ function ResetPasswordForm() {
 
     try {
       await confirmPasswordReset(auth, oobCode, newPassword);
-      setMessage("Le mot de passe a été réinitialisé avec succès.");
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      setMessage(t("reset_success"));
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       console.error(err);
       if (err.code === "auth/expired-action-code") {
-        setError("Le lien de réinitialisation a expiré.");
+        setError(t("reset_link_expired"));
       } else if (err.code === "auth/invalid-action-code") {
-        setError("Le code de réinitialisation est invalide.");
+        setError(t("reset_code_invalid"));
       } else {
-        setError("Une erreur s'est produite. Veuillez réessayer.");
+        setError(t("reset_unknown_error"));
       }
     } finally {
       setLoading(false);
@@ -88,12 +89,15 @@ function ResetPasswordForm() {
 
   return (
     <MDBContainer fluid className="p-12 my-5 h-custom">
+      <div className="d-flex justify-content-end px-4 pt-3">
+        <LanguageDropdown />
+      </div>
       <MDBRow>
         <MDBCol col="10" md="6">
           <img
-            src="https://plus.unsplash.com/premium_photo-1663076518116-0f0637626edf?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            src="https://plus.unsplash.com/premium_photo-1663076518116-0f0637626edf?q=80&w=1932&auto=format&fit=crop"
             className="img-fluid"
-            alt="Illustration de réservation"
+            alt="Reset password illustration"
           />
         </MDBCol>
 
@@ -103,28 +107,20 @@ function ResetPasswordForm() {
               src={logo}
               alt="ReserGo Logo"
               className="img-fluid"
-              style={{
-                maxWidth: "200px",
-                maxHeight: "150px",
-                marginTop: "-10%",
-              }}
+              style={{ maxWidth: "200px", maxHeight: "150px", marginTop: "-10%" }}
             />
           </div>
 
-          <h3 className="text-center mb-4">Réinitialiser votre mot de passe</h3>
+          <h3 className="text-center mb-4">{t("reset_title_form")}</h3>
 
-          {error && (
-            <p style={{ color: "red", textAlign: "center" }}>{error}</p>
-          )}
-          {message && (
-            <p style={{ color: "green", textAlign: "center" }}>{message}</p>
-          )}
+          {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
+          {message && <p style={{ color: "green", textAlign: "center" }}>{message}</p>}
 
           <div className="position-relative">
             <MDBInput
               wrapperClass="mb-4"
-              label="Nouveau mot de pass"
-              id="formControlLg"
+              label={t("new_password")}
+              id="newPassword"
               type={passwordVisible ? "text" : "password"}
               size="lg"
               value={newPassword}
@@ -133,20 +129,15 @@ function ResetPasswordForm() {
             <MDBIcon
               icon={passwordVisible ? "eye-slash" : "eye"}
               onClick={() => setPasswordVisible(!passwordVisible)}
-              style={{
-                position: "absolute",
-                right: "15px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                cursor: "pointer",
-              }}
+              style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}
             />
           </div>
+
           <div className="position-relative">
             <MDBInput
               wrapperClass="mb-4"
-              label="Confirmer le mot de passe"
-              id="formControlLg"
+              label={t("confirm_password")}
+              id="confirmPassword"
               type={passwordVisible ? "text" : "password"}
               size="lg"
               value={confirmPassword}
@@ -155,15 +146,10 @@ function ResetPasswordForm() {
             <MDBIcon
               icon={passwordVisible ? "eye-slash" : "eye"}
               onClick={() => setPasswordVisible(!passwordVisible)}
-              style={{
-                position: "absolute",
-                right: "15px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                cursor: "pointer",
-              }}
+              style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}
             />
           </div>
+
           <div className="text-center text-md-center mt-4 pt-2">
             <MDBBtn
               className="mb-0 px-5"
@@ -172,28 +158,20 @@ function ResetPasswordForm() {
               style={{ textTransform: "none" }}
               disabled={loading}
             >
-              {loading
-                ? "Réinitialisation en cours..."
-                : "Réinitialiser le mot de passe"}
+              {loading ? t("reset_in_progress") : t("reset_action")}
             </MDBBtn>
           </div>
 
           <div className="text-center mt-3">
-            <p>
-              Retour à la page de{" "}
-              <Link to="/login" className="link-danger">
-                connexion
-              </Link>
-            </p>
+            <p>{t("back_to")} <Link to="/login" className="link-danger">{t("login")}</Link></p>
           </div>
         </MDBCol>
       </MDBRow>
 
       <footer className="footer-log">
         <div className="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
-          <div className="text-white mb-3 mb-md-0">
-            © 2025 ReserGo. Tous droits réservés.
-          </div>
+          <div className="text-white mb-3 mb-md-0">{t("copyright")}</div>
+
           <div>
             <MDBBtn
               tag="a"
