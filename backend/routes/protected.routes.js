@@ -7,11 +7,12 @@ const { db } = require("../config/firebase.config");
 const app = express();
 const bcrypt = require("bcrypt");
 const admin = require("firebase-admin"); // pour Firebase Auth
+require("dotenv").config();
 
 // Autoriser les requêtes provenant de localhost:3000
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.REACT_APP_API_UR,
     credentials: true,
   })
 );
@@ -817,10 +818,11 @@ router.get("/spaces/:id", authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur récupération d'espace:", error);
-    res.status(500).json({ message: "Erreur serveur lors de la récupération." });
+    res
+      .status(500)
+      .json({ message: "Erreur serveur lors de la récupération." });
   }
 });
-
 
 router.post("/space", authenticate, async (req, res) => {
   try {

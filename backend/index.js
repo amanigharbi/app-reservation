@@ -4,11 +4,12 @@ const authRoutes = require("./routes/auth.routes");
 const protectedRoutes = require("./routes/protected.routes");
 
 const app = express();
+require("dotenv").config();
 
 // Configuration CORS
 app.use(
   cors({
-    origin: "http://localhost:3000", // Frontend React sur localhost:3000
+    origin: process.env.REACT_APP_API_URL, // Frontend React sur localhost:3000
     methods: ["GET", "POST", "PUT", "DELETE"], // Méthodes autorisées
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true, // Permet l'envoi des cookies
