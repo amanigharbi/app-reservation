@@ -113,7 +113,7 @@
     "deleting": "Suppression...",
     "my_reminders": "Mes Rappels",
     "no_reminders": "Aucun rappel trouvé",
-    "reminder_of": "Rappel de la réservation {{code}}",
+    "reminder_of": "Rappel de la réservation",
     "reservation_deleted": "Réservation supprimée !",
     "delete_error": "Erreur lors de la suppression.",
     "csv_exported": "Export CSV effectué !",

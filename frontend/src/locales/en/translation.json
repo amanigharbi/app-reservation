@@ -114,7 +114,7 @@
     "delete": "Delete",
     "deleting": "Deleting...",
     "no_reminders": "No reminders found",
-    "reminder_of": "Reminder of {{code}}",
+    "reminder_of": "Reminder of",
     "message": "Message",
     "toast_success_title": "Success",
     "toast_error_title": "Error",
