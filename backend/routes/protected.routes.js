@@ -160,28 +160,55 @@ router.put("/profile", authenticate, async (req, res) => {
       .json({ message: "Erreur lors de la mise à jour du profil" });
   }
 });
-const multer = require("multer");
-const path = require("path");
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+const multer = require("multer");
+const cloudinary = require("../config/cloudinary.config"); // ajuste le chemin
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
+// Stockage direct sur Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "profile-images", // tu peux changer le nom du dossier
+    allowed_formats: ["jpg", "png", "jpeg", "webp"],
   },
 });
 
 const upload = multer({ storage });
 
 router.post("/upload", authenticate, upload.single("image"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "Aucun fichier envoyé." });
+  try {
+    const imageUrl = req.file.path; // URL directe de l'image sur Cloudinary
+    console.log("imaaaage",imageUrl);
+    res.json({ imageUrl });
+  } catch (err) {
+    console.error("Erreur upload Cloudinary:", err);
+    res.status(500).json({ message: "Échec de l'upload d'image" });
   }
-
-  const imageUrl = `${process.env.NODE_APP_API_URL}/uploads/${req.file.filename}`;
-  res.json({ imageUrl });
 });
+
+// const multer = require("multer");
+// const path = require("path");
+
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, "uploads/");
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   },
+// });
+
+// const upload = multer({ storage });
+
+// router.post("/upload", authenticate, upload.single("image"), (req, res) => {
+//   if (!req.file) {
+//     return res.status(400).json({ message: "Aucun fichier envoyé." });
+//   }
+
+//   const imageUrl = `${process.env.NODE_APP_API_URL}/uploads/${req.file.filename}`;
+//   res.json({ imageUrl });
+// });
 
 // partie pour la gestion des réservations
 
