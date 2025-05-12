@@ -71,6 +71,8 @@ function Navbar() {
 
   return (
     <div className="dashboard-navbar d-flex align-items-center justify-content-between px-4 py-3 shadow bg-primary">
+    {          console.log("user img ",user?.photoURL)
+}
       {showToast.visible && (
         <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 9999 }}>
           <div className={`toast show fade text-white ${showToast.type === "success" ? "bg-success" : "bg-danger"}`} role="alert">
