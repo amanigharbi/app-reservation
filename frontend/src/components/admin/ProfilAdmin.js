@@ -59,7 +59,7 @@
       };
 
       if (token) loadProfilAdmin();
-    }, [token,setUser]);
+    }, [token,setUser,setAdminData]);
 
     const handleFileChange = async (e) => {
       const file = e.target.files[0];
@@ -89,7 +89,6 @@
           visible: true,
           message: t("success_profile"),
         });
-        window.location.reload();
         setTimeout(
           () => setShowToast({ type: "", visible: false, message: "" }),
           3000
