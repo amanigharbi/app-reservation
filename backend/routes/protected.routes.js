@@ -179,7 +179,7 @@ router.post("/upload", authenticate, upload.single("image"), (req, res) => {
     return res.status(400).json({ message: "Aucun fichier envoyé." });
   }
 
-  const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+  const imageUrl = `${process.env.NODE_APP_API_URL}/uploads/${req.file.filename}`;
   res.json({ imageUrl });
 });
 
